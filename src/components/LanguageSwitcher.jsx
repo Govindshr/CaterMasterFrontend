@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
 
-const API_KEY = 'AIzaSyAyhElk_yaEKMQ_JUDerR724FIRxiDmWUk'
+// const API_KEY = 'AIzaSyAyhElk_yaEKMQ_JUDerR724FIRxiDmWUk'
+const API_KEY = import.meta.env.VITE_GOOGLE_TRANSLATE_API_KEY;
+
 
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation()
