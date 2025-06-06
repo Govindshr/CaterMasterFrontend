@@ -1,13 +1,15 @@
+// Enhanced and compact user registration form
 import React, { useState } from 'react';
 import { postApi } from '@/services/nodeapi';
 import { config } from '@/services/nodeconfig';
+
 export default function UserRegistration() {
   const [formData, setFormData] = useState({
     fullName: '',
     mobile: '',
     password: '',
     confirmPassword: '',
-    userType: 'user'
+    userType: 'user',
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -34,9 +36,7 @@ export default function UserRegistration() {
   };
 
   const validatePasswordMatch = (password, confirmPassword) => {
-    setMatchError(
-      password === confirmPassword ? '' : 'Passwords do not match.'
-    );
+    setMatchError(password === confirmPassword ? '' : 'Passwords do not match.');
   };
 
   const validateMobile = (mobile) => {
@@ -44,126 +44,138 @@ export default function UserRegistration() {
     setMobileError(mobileRegex.test(mobile) ? '' : 'Enter valid 10-digit mobile number.');
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (passwordError || matchError || mobileError) return;
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (passwordError || matchError || mobileError) return;
 
-  const payload = {
-    fullName: formData.fullName,
-    mobile: formData.mobile,
-    password: formData.password,
-    userType: formData.userType,
-    status: 'active' // or set dynamically if needed
+    const payload = {
+      fullName: formData.fullName,
+      mobile: formData.mobile,
+      password: formData.password,
+      userType: formData.userType,
+      status: 'active',
+    };
+
+    try {
+      const res = await postApi(config.RegisterUser, payload);
+      alert('Registration successful!');
+      console.log(res.data);
+      setFormData({
+        fullName: '',
+        mobile: '',
+        password: '',
+        confirmPassword: '',
+        userType: 'user',
+      });
+    } catch (err) {
+      alert(err.response?.data?.message || 'Something went wrong. Please try again.');
+      console.error(err);
+    }
   };
 
-   try {
-      const response = await postApi(config.RegisterUser, payload);
-      // setLocations(response.data);
-      alert('Registration successful!');
-    console.log(res.data);
-    // Optionally reset form
-    setFormData({
-      fullName: '',
-      mobile: '',
-      password: '',
-      confirmPassword: '',
-      userType: 'user'
-    });
-    } catch (error) {
-       if (err.response?.data?.message) {
-      alert(err.response.data.message);
-    } else {
-      alert('Something went wrong. Please try again.');
-    }
-    console.error(err);
-    }
-
-};
-
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">User Registration</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-2">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-6 rounded-2xl shadow-xl w-full max-w-sm grid gap-4"
+      >
+        <h2 className="text-xl font-semibold text-center text-gray-800">User Registration</h2>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2">Full Name</label>
-          <input
-            type="text"
-            name="fullName"
-            value={formData.fullName}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-xl p-3"
-            required
-          />
-        </div>
+        <input
+          type="text"
+          name="fullName"
+          value={formData.fullName}
+          onChange={handleChange}
+          placeholder="Full Name"
+          className="input-style"
+          required
+        />
 
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2">Mobile Number</label>
+        <div>
           <input
             type="tel"
             name="mobile"
             value={formData.mobile}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-xl p-3"
+            placeholder="Mobile Number"
+            className="input-style"
             required
           />
-          {mobileError && <p className="text-red-600 text-sm mt-1">{mobileError}</p>}
+          {mobileError && <p className="error-text">{mobileError}</p>}
         </div>
 
-        <div className="mb-4 relative">
-          <label className="block text-gray-700 mb-2">Password</label>
+        <div className="relative">
           <input
             type={showPassword ? 'text' : 'password'}
             name="password"
             value={formData.password}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-xl p-3"
+            placeholder="Password"
+            className="input-style"
             required
           />
           <span
-            className="absolute right-4 top-11 text-sm text-blue-600 cursor-pointer"
+            className="toggle-password"
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? 'Hide' : 'Show'}
           </span>
-          {passwordError && <p className="text-red-600 text-sm mt-1">{passwordError}</p>}
+          {passwordError && <p className="error-text">{passwordError}</p>}
         </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2">Confirm Password</label>
+        <div>
           <input
             type={showPassword ? 'text' : 'password'}
             name="confirmPassword"
             value={formData.confirmPassword}
             onChange={handleChange}
-            className="w-full border border-gray-300 rounded-xl p-3"
+            placeholder="Confirm Password"
+            className="input-style"
             required
           />
-          {matchError && <p className="text-red-600 text-sm mt-1">{matchError}</p>}
+          {matchError && <p className="error-text">{matchError}</p>}
         </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2">User Type</label>
-          <select
-            name="userType"
-            value={formData.userType}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-xl p-3"
-          >
-            <option value="super admin">Super Admin</option>
-            <option value="user">User</option>
-          </select>
-        </div>
+        <select
+          name="userType"
+          value={formData.userType}
+          onChange={handleChange}
+          className="input-style"
+        >
+          <option value="super admin">Super Admin</option>
+          <option value="user">User</option>
+        </select>
 
         <button
           type="submit"
           disabled={!!passwordError || !!matchError || !!mobileError}
-          className="w-full bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700 transition disabled:bg-gray-400"
+          className="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition disabled:bg-gray-400"
         >
           Sign Up
         </button>
       </form>
+
+      <style jsx>{`
+        .input-style {
+          width: 100%;
+          padding: 0.75rem;
+          border-radius: 0.75rem;
+          border: 1px solid #d1d5db;
+        }
+        .toggle-password {
+          position: absolute;
+          top: 0.75rem;
+          right: 1rem;
+          font-size: 0.875rem;
+          color: #2563eb;
+          cursor: pointer;
+        }
+        .error-text {
+          color: #dc2626;
+          font-size: 0.75rem;
+          margin-top: 0.25rem;
+        }
+      `}</style>
     </div>
   );
 }
