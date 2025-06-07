@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Minus, Trash, ArrowLeft } from "lucide-react";
+import { Plus, Minus, Trash, ArrowLeft, Calendar, Users } from "lucide-react";
 
 export default function AddMenu() {
   const navigate = useNavigate();
@@ -145,195 +145,213 @@ export default function AddMenu() {
   };
 
   return (
-    <div className="p-6 max-w-8xl mx-auto">
-      <Card className="shadow-lg rounded-lg">
-        <CardHeader>
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-200">
-              Add Menu for Booking
-            </h1>
-            <Button
-              className="flex items-center bg-blue-600 hover:bg-blue-700"
-              onClick={() => navigate("/bookings")}
-            >
-              <ArrowLeft className="w-5 h-5 mr-2" /> Back
-            </Button>
-          </div>
-        </CardHeader>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <Card className="shadow-xl rounded-xl border-0 bg-white dark:bg-gray-800">
+          <CardHeader className="border-b border-gray-200 dark:border-gray-700">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  Add Menu for Booking
+                </h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Customize your menu for each day and meal
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={() => navigate("/bookings")}
+              >
+                <ArrowLeft className="w-4 h-4" /> Back to Bookings
+              </Button>
+            </div>
+          </CardHeader>
 
-        <CardContent>
-          {bookingDays.map((date, index) => (
-            <div key={index} className="mb-4 border-b pb-2">
-              {/* Date Label */}
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-200 mb-2">
-                {date}
-              </h3>
+          <CardContent className="p-6">
+            {bookingDays.map((date, index) => (
+              <div key={index} className="mb-8 last:mb-0">
+                <div className="flex items-center gap-2 mb-4">
+                  <Calendar className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                    {new Date(date).toLocaleDateString('en-US', { 
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </h3>
+                </div>
 
-              {/* Meal Types Inside Date */}
-              <div className="p-3 space-y-3">
-                {mealTypes.map((meal, mealIndex) => (
-                  <div key={mealIndex}>
-                    {/* Meal Type Header - Collapsible */}
+                <div className="space-y-4">
+                  {mealTypes.map((meal, mealIndex) => (
+                    <div key={mealIndex} className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                      <div
+                        className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer"
+                        onClick={() =>
+                          setExpandedMeal((prev) => ({
+                            ...prev,
+                            [date]: prev[date] === meal ? null : meal,
+                          }))
+                        }
+                      >
+                        <div className="flex items-center gap-3">
+                          <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                            {meal}
+                          </h4>
+                          {expandedMeal[date] === meal ? (
+                            <Minus className="w-5 h-5 text-gray-500" />
+                          ) : (
+                            <Plus className="w-5 h-5 text-gray-500" />
+                          )}
+                        </div>
 
-                    <div
-                      className="flex justify-between items-center cursor-pointer bg-blue-100 dark:bg-gray-700 p-2 rounded-md transition-all duration-300 ease-in-out"
-                      onClick={() =>
-                        setExpandedMeal((prev) => ({
-                          ...prev,
-                          [date]: prev[date] === meal ? null : meal,
-                        }))
-                      }
-                    >
-                      <h4 className="text-md font-semibold text-gray-900 dark:text-gray-200">
-                        {meal}
-                      </h4>
-                      <div >
-                       
-                        <Input
-                          type="number"
-                          // min={0}
-                          placeholder={"Enter No. OF People"}
-                          value={peopleCount[date][meal] }
-                          onChange={(e) => {
-                            const value = parseInt(e.target.value) || 0;
-                            setPeopleCount((prev) => ({
-                              ...prev,
-                              [date]: {
-                                ...prev[date],
-                                [meal]: value,
-                              },
-                            }));
-                          }}
-                          className="w-full rounded-lg border-gray-300 bg-white focus:ring-2 focus:ring-blue-500"
-                        />
+                        <div className="w-full sm:w-48">
+                          <Label className="text-sm text-gray-600 dark:text-gray-400 mb-1 block">
+                            Number of People
+                          </Label>
+                          <div className="relative">
+                            <Users className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                            <Input
+                              type="number"
+                              min="0"
+                              placeholder="Enter count"
+                              value={peopleCount[date][meal]}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value) || 0;
+                                setPeopleCount((prev) => ({
+                                  ...prev,
+                                  [date]: {
+                                    ...prev[date],
+                                    [meal]: value,
+                                  },
+                                }));
+                              }}
+                              className="pl-10 w-full rounded-lg border-gray-300 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                        </div>
                       </div>
 
-                      {expandedMeal[date] === meal ? (
-                        <Minus className="w-5 h-5 transition-transform transform rotate-180 duration-300" />
-                      ) : (
-                        <Plus className="w-5 h-5 transition-transform transform rotate-0 duration-300" />
-                      )}
-                    </div>
-
-                    {/* Category & Item Inputs (Smooth Opening) */}
-                    <div
-                      className={`overflow-hidden transition-[max-height] duration-500 ease-in-out ${
-                        expandedMeal[date] === meal
-                          ? "max-h-[500px] opacity-100"
-                          : "max-h-0 opacity-0"
-                      }`}
-                    >
-                      <div className="p-3 space-y-3">
-                        {/* Dropdowns & Add Button in a Row */}
-                        <div className="flex flex-col md:flex-row gap-4 w-full">
-                          <div className="flex w-full md:w-4/5 gap-4">
-                            {/* Category Dropdown */}
-                            <div className="w-1/2">
-                              <Label>Category</Label>
-                              <Select
-                                onValueChange={(value) =>
-                                  setSelectedCategory((prev) => ({
-                                    ...prev,
-                                    [date]: { ...prev[date], [meal]: value },
-                                  }))
-                                }
-                              >
-                                <SelectTrigger className="w-full rounded-lg border-gray-300 bg-white focus:ring-2 focus:ring-blue-500">
-                                  <SelectValue placeholder="Select Category" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-white border border-gray-300 shadow-lg rounded-md max-h-60 overflow-auto">
-                                  {categories.map((category) => (
-                                    <SelectItem
-                                      key={category.id}
-                                      value={category.id} // Store ID instead of name
-                                      className="px-3 py-2 hover:bg-blue-100 focus:bg-blue-200 cursor-pointer transition-all duration-150 rounded-md"
-                                    >
-                                      {category.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            {/* Item Name Dropdown */}
-                            <div className="w-1/2">
-                              <Label>Item Name</Label>
-                              <Select
-                                onValueChange={(value) =>
-                                  setSelectedItem((prev) => ({
-                                    ...prev,
-                                    [date]: { ...prev[date], [meal]: value },
-                                  }))
-                                }
-                              >
-                                <SelectTrigger className="w-full rounded-lg border-gray-300 bg-white focus:ring-2 focus:ring-blue-500">
-                                  <SelectValue placeholder="Select Item" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-white border border-gray-300 shadow-lg rounded-md max-h-60 overflow-auto">
-                                  {items
-                                    .filter(
-                                      (item) =>
-                                        item.categoryId ===
-                                        selectedCategory[date]?.[meal]
-                                    )
-                                    .map((item) => (
+                      <div
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                          expandedMeal[date] === meal
+                            ? "max-h-[500px] opacity-100 mt-4"
+                            : "max-h-0 opacity-0"
+                        }`}
+                      >
+                        <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <Label className="text-sm text-gray-600 dark:text-gray-400 mb-1 block">
+                                  Category
+                                </Label>
+                                <Select
+                                  onValueChange={(value) =>
+                                    setSelectedCategory((prev) => ({
+                                      ...prev,
+                                      [date]: { ...prev[date], [meal]: value },
+                                    }))
+                                  }
+                                >
+                                  <SelectTrigger className="w-full rounded-lg border-gray-300 bg-white dark:bg-gray-800">
+                                    <SelectValue placeholder="Select Category" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {categories.map((category) => (
                                       <SelectItem
-                                        key={item.id}
-                                        value={item.id} // Store ID instead of name
-                                        className="px-3 py-2 hover:bg-blue-100 focus:bg-blue-200 cursor-pointer transition-all duration-150 rounded-md"
+                                        key={category.id}
+                                        value={category.id}
                                       >
-                                        {item.name}
+                                        {category.name}
                                       </SelectItem>
                                     ))}
-                                </SelectContent>
-                              </Select>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div>
+                                <Label className="text-sm text-gray-600 dark:text-gray-400 mb-1 block">
+                                  Item Name
+                                </Label>
+                                <Select
+                                  onValueChange={(value) =>
+                                    setSelectedItem((prev) => ({
+                                      ...prev,
+                                      [date]: { ...prev[date], [meal]: value },
+                                    }))
+                                  }
+                                >
+                                  <SelectTrigger className="w-full rounded-lg border-gray-300 bg-white dark:bg-gray-800">
+                                    <SelectValue placeholder="Select Item" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {items
+                                      .filter(
+                                        (item) =>
+                                          item.categoryId ===
+                                          selectedCategory[date]?.[meal]
+                                      )
+                                      .map((item) => (
+                                        <SelectItem
+                                          key={item.id}
+                                          value={item.id}
+                                        >
+                                          {item.name}
+                                        </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+
+                            <div className="flex items-end">
+                              <Button
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2 flex items-center justify-center gap-2"
+                                onClick={() => addMenuItem(date, meal)}
+                              >
+                                <Plus className="w-4 h-4" />
+                                Add Item
+                              </Button>
                             </div>
                           </div>
 
-                          {/* Add Button (20% width) */}
-                          <div className="w-full md:w-1/5 flex items-end">
-                            <Button
-                              className="w-full flex items-center justify-center bg-red-300 hover:bg-red-500 rounded-lg py-2"
-                              onClick={() => addMenuItem(date, meal)}
-                            >
-                              <Plus className="w-5 h-5 mr-2" />
-                              Add Item
-                            </Button>
-                          </div>
-                        </div>
-
-                        {/* Display Added Items */}
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {menu[date][meal].map((entry, idx) => (
-                            <span
-                              key={idx}
-                              className="bg-purple-400 text-black font-bold px-2 py-1 rounded-md flex items-center gap-1"
-                            >
-                              {entry.item}
-                              <button
-                                onClick={() => removeMenuItem(date, meal, idx)}
+                          <div className="flex flex-wrap gap-2 mt-4">
+                            {menu[date][meal].map((entry, idx) => (
+                              <span
+                                key={idx}
+                                className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100 px-3 py-1.5 rounded-full flex items-center gap-2 text-sm font-medium"
                               >
-                                <Trash className="w-4 h-4" />
-                              </button>
-                            </span>
-                          ))}
+                                {entry.item}
+                                <button
+                                  onClick={() => removeMenuItem(date, meal, idx)}
+                                  className="hover:text-red-500 transition-colors"
+                                >
+                                  <Trash className="w-4 h-4" />
+                                </button>
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
 
-          <Button
-            onClick={handleSubmit}
-            className="bg-green-600 hover:bg-green-700 w-full mt-4"
-          >
-            Save Menu
-          </Button>
-        </CardContent>
-      </Card>
+            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <Button
+                onClick={handleSubmit}
+                className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-lg flex items-center justify-center gap-2"
+              >
+                Save Menu
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

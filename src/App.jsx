@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./components/Sidebar";
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
@@ -20,19 +20,49 @@ import ItemSubCategory from "./pages/Master/Item-Category/itemSubcategory";
 import ItemList from "./pages/Master/Item-Category/ItemsList";
 import UserRegistration from "./pages/User-Management/userRegistration";
 import UserLogin from "./pages/User-Management/userLogin";
+
 function AppWrapper() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const location = useLocation();
 
-  const hideLayoutFor = ["/register","/login"]; // 💡 add routes where layout should be hidden
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Initial check
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const hideLayoutFor = ["/register", "/login"];
   const isLayoutHidden = hideLayoutFor.includes(location.pathname.toLowerCase());
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const closeSidebar = () => {
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
+  };
+
   return (
-    <div className="flex h-screen overflow-hidden">
-      {!isLayoutHidden && <Sidebar isOpen={isSidebarOpen} />}
-      <div className="flex-1 flex flex-col">
-        {!isLayoutHidden && <Navbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />}
-        <div className="flex-1 overflow-y-auto p-6 bg-gray-100">
+    <div className="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-900">
+      {!isLayoutHidden && (
+        <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
+      )}
+      <div className="flex-1 flex flex-col min-h-screen">
+        {!isLayoutHidden && <Navbar toggleSidebar={toggleSidebar} />}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/register" element={<UserRegistration />} />
@@ -53,7 +83,7 @@ function AppWrapper() {
             <Route path="/items-list" element={<ItemList />} />
             <Route path="/add-item" element={<AddNewItem />} />
           </Routes>
-        </div>
+        </main>
       </div>
     </div>
   );

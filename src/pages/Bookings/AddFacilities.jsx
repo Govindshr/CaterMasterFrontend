@@ -31,25 +31,29 @@ export default function AddFacilities() {
   };
 
   return (
-    <div className="max-w-8xl mx-auto">
-      <Card className="shadow-lg rounded-lg p-6">
-        <CardHeader>
-          <h2 className="text-2xl font-bold">Manage Facilities</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-2 sm:px-4 py-6 mb-5">
+      <Card className="w-full max-w-4xl shadow-xl rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 mb-5">
+        <CardHeader className="w-full bg-gradient-to-r from-blue-600 to-blue-400 p-4 sm:p-6">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight text-center">Manage Facilities</h2>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-4">
+        <CardContent className="p-4 sm:p-6 bg-white dark:bg-gray-950">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {facilities.map((facility) => (
-              <label key={facility.id} className="flex items-center space-x-2">
+              <label
+                key={facility.id}
+                className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-900 px-3 py-3 shadow-sm border border-gray-200 dark:border-gray-800 transition-all cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950"
+              >
                 <Checkbox
                   checked={selectedFacilities.includes(facility.id)}
                   onCheckedChange={() => toggleFacility(facility.id)}
+                  className="w-5 h-5 rounded border-gray-300 focus:ring-2 focus:ring-blue-400"
                 />
-                <span>{facility.name}</span>
+                <span className="text-gray-800 dark:text-gray-200 font-medium text-base">{facility.name}</span>
               </label>
             ))}
           </div>
-          <div className="mt-6 flex justify-center">
-            <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleSubmit}>
+          <div className="mt-8 flex justify-center">
+            <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all text-base md:text-lg" onClick={handleSubmit}>
               Submit
             </Button>
           </div>
