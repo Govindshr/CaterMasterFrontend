@@ -272,45 +272,21 @@ export default function AddMenu() {
   const bookingDetails = { customerName: 'John Doe', eventName: 'Wedding Reception', venue: 'Grand Hall, City Center' };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-2 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
+
         <Card className="shadow-xl rounded-xl border-0 bg-white dark:bg-gray-800">
-          <CardHeader className="border-b border-gray-200 dark:border-gray-700">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  Add Menu for Booking
-                </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Add multiple occasions for each date. Select dishes by category and subcategory.
-                </p>
-              </div>
-              <Button
+    
+       
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
+              <h2 className="text-xl font-bold">Add Menu</h2>
+              
+                 <Button
                 variant="outline"
                 className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
                 onClick={() => navigate("/bookings")}
               >
                 <ArrowLeft className="w-4 h-4" /> Back to Bookings
               </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
-              <h2 className="text-xl font-bold">Add Menu</h2>
-              <button
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center gap-2"
-                onClick={() => generateMenuPDF({ 
-                  occasions, 
-                  bookingDetails: {
-                    customerName: 'John Doe',
-                    eventName: 'Wedding Reception',
-                    venue: 'Grand Hall, City Center'
-                  }
-                })}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m4-4H8m12 4V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2z" /></svg>
-                Print Menu
-              </button>
             </div>
             {/* Date Accordions */}
             <div className="space-y-4">
@@ -536,6 +512,21 @@ export default function AddMenu() {
               ))}
             </div>
             <div className="mt-8 flex justify-end">
+             
+              <Button
+                className="bg-green-600 hover:bg-green-800 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all text-base md:text-lg mr-2"
+                onClick={() => generateMenuPDF({ 
+                  occasions, 
+                  bookingDetails: {
+                    customerName: 'John Doe',
+                    eventName: 'Wedding Reception',
+                    venue: 'Grand Hall, City Center'
+                  }
+                })}
+              >
+                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m4-4H8m12 4V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2z" /></svg>
+                Print Menu
+              </Button>
               <Button
                 className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all text-base md:text-lg"
                 onClick={handleSave}
@@ -545,7 +536,6 @@ export default function AddMenu() {
             </div>
           </CardContent>
         </Card>
-      </div>
-    </div>
+      
   );
 }

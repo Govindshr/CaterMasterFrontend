@@ -40,7 +40,7 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Sidebar */}
       <div 
         className={`fixed lg:relative h-screen shadow-lg transition-all duration-300 z-50
-          ${isOpen ? "w-64 translate-x-0" : "-translate-x-full lg:translate-x-0 lg:w-16"}
+          ${isOpen ? "w-56 translate-x-0" : "-translate-x-full lg:translate-x-0 lg:w-16"}
           bg-gradient-to-b from-blue-600 to-blue-800 text-white
           dark:from-gray-900 dark:to-gray-800 dark:text-gray-300`}
       >
@@ -126,7 +126,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
               {/* Dropdown Submenu */}
               <div className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${isMasterOpen ? "max-h-80" : "max-h-0"}`}>
-                <ul className={`pl-8 space-y-2 transition-all duration-300 ${!isOpen && "hidden"}`}>
+                <ul className={`pl-2 space-y-2 transition-all duration-300 ${!isOpen && "hidden"}`}>
                   <li><Link to="/events" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Events</Link></li>
                   <li><Link to="/facilities" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Facilities</Link></li>
                   <li><Link to="/ingredients" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Ingredients</Link></li>
