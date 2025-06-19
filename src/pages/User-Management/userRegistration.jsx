@@ -88,6 +88,7 @@ export default function UserRegistration() {
           onChange={handleChange}
           placeholder="Full Name"
           className="input-style"
+           autoComplete="off"
           required
         />
 
@@ -98,6 +99,7 @@ export default function UserRegistration() {
             value={formData.mobile}
             onChange={handleChange}
             placeholder="Mobile Number"
+             autoComplete="off"
             className="input-style"
             required
           />
@@ -111,6 +113,7 @@ export default function UserRegistration() {
             value={formData.password}
             onChange={handleChange}
             placeholder="Password"
+             autoComplete="off"
             className="input-style"
             required
           />
@@ -131,6 +134,7 @@ export default function UserRegistration() {
             onChange={handleChange}
             placeholder="Confirm Password"
             className="input-style"
+             autoComplete="off"
             required
           />
           {matchError && <p className="error-text">{matchError}</p>}
@@ -142,7 +146,7 @@ export default function UserRegistration() {
           onChange={handleChange}
           className="input-style"
         >
-          <option value="super admin">Super Admin</option>
+          <option value="admin">Super Admin</option>
           <option value="user">User</option>
         </select>
 

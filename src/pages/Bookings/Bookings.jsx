@@ -24,40 +24,61 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 
 export default function Bookings() {
   const [showModal, setShowModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
 
   const navigate = useNavigate();
 
-  // Dummy data for bookings
+  // Dummy data for bookings with new fields
   const bookingsData = [
-    { id: "B001", name: "John Doe", venue: "Grand Hall", amount: "$5000" },
+    {
+      id: "B001",
+      customerName: "John Doe",
+      mobile: "9876543210",
+      event: "Wedding",
+      noOfDays: "2",
+      date: "",
+      startDate: "2025-06-10",
+      endDate: "2025-06-11",
+      venueAddress: "123 Main Street, City, Country",
+      venueLocation: "https://maps.google.com/?q=123+Main+Street",
+      userAddress: "456 User Lane, City, Country",
+      amount: "5000",
+      facilities: ["Dairy", "Vegetables"],
+    },
     {
       id: "B002",
-      name: "Alice Smith",
-      venue: "Sunset Garden",
-      amount: "$3200",
+      customerName: "Alice Smith",
+      mobile: "9123456789",
+      event: "Anniversary",
+      noOfDays: "1",
+      date: "2025-07-15",
+      startDate: "",
+      endDate: "",
+      venueAddress: "Sunset Garden, City",
+      venueLocation: "",
+      userAddress: "789 User Ave, City, Country",
+      amount: "3200",
+      facilities: ["Rashan"],
     },
     {
       id: "B003",
-      name: "Michael Brown",
-      venue: "Royal Palace",
-      amount: "$4500",
-    },
-    {
-      id: "B004",
-      name: "Emma Johnson",
-      venue: "Beach Resort",
-      amount: "$6000",
-    },
-    { id: "B005", name: "David Wilson", venue: "Luxury Club", amount: "$5500" },
-    {
-      id: "B006",
-      name: "Sophia White",
-      venue: "Skyline Hall",
-      amount: "$4200",
+      customerName: "Michael Brown",
+      mobile: "9988776655",
+      event: "Corporate Event",
+      noOfDays: "3",
+      date: "",
+      startDate: "2025-08-01",
+      endDate: "2025-08-03",
+      venueAddress: "Royal Palace, City",
+      venueLocation: "https://maps.google.com/?q=Royal+Palace",
+      userAddress: "321 User Blvd, City, Country",
+      amount: "4500",
+      facilities: ["Dairy", "Snacks", "Drinks"],
     },
   ];
 
@@ -85,8 +106,18 @@ export default function Bookings() {
     }
   };
 
+  const openModal = (booking) => {
+    setSelectedBooking(booking);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setSelectedBooking(null);
+  };
+
   return (
-    <div className="max-w-6xl mx-auto w-full">
+    <div className="max-w-6xl mx-auto  w-full">
       <Card className="shadow-lg rounded-lg mb-5">
         {/* Card Header with Title & Button */}
         <CardHeader className="flex flex-col md:flex-row md:justify-between md:items-center border-b p-4 gap-4 md:gap-0 bg-gradient-to-r from-blue-600 to-blue-400">
@@ -104,13 +135,14 @@ export default function Bookings() {
           {/* Desktop Table */}
           <div className="hidden md:block">
             <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-gray-100 dark:bg-gray-800">
+              <Table className="bg-white dark:bg-gray-800">
+                <TableHeader className="bg-gray-100 bg-white dark:bg-gray-800">
                   <TableRow>
                     <TableHead>Booking ID</TableHead>
                     <TableHead>Customer Name</TableHead>
-                    <TableHead>Venue</TableHead>
-                    <TableHead>Amount</TableHead>
+                    <TableHead>Mobile</TableHead>
+                    {/* <TableHead>Event</TableHead> */}
+                    <TableHead>Dates</TableHead>
                     <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -121,43 +153,27 @@ export default function Bookings() {
                       className="hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
                       <TableCell>{booking.id}</TableCell>
-                      <TableCell>{booking.name}</TableCell>
-                      <TableCell>{booking.venue}</TableCell>
-                      <TableCell>{booking.amount}</TableCell>
+                      <TableCell>{booking.customerName}</TableCell>
+                      <TableCell>{booking.mobile}</TableCell>
+                      {/* <TableCell>{booking.event}</TableCell> */}
+                      <TableCell>
+                        {booking.noOfDays === "1"
+                          ? booking.date
+                          : `${booking.startDate} to ${booking.endDate}`}
+                      </TableCell>
                       <TableCell className="flex flex-wrap justify-center space-x-2">
-                        <button
-                          className="flex items-center bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600 transition-all"
-                          onClick={() => navigate("/add-facilities")}
-                        >
-                          <Plus className="w-5 h-5" /> Facility
-                        </button>
-                        <button
-                          className="flex items-center bg-purple-500 text-white px-3 py-1 rounded-md text-sm hover:bg-purple-600 transition-all"
-                          onClick={() => navigate("/add-menu")}
-                        >
-                          <Plus className="w-5 h-5" /> Menu
-                        </button>
-                        <button
-                          className="flex items-center bg-yellow-500 text-white px-3 py-1 rounded-md text-sm hover:bg-yellow-600 transition-all"
-                          onClick={() => setShowModal(true)}
-                        >
-                          <Plus className="w-5 h-5" /> List
-                        </button>
-                        <button
-                          className="text-blue-500 hover:text-blue-700"
+                        <Button
+                          className="text-blue-500 hover:text-blue-700 bg-transparent p-2"
                           onClick={() => navigate("/view-booking")}
                         >
                           <Eye className="w-5 h-5" />
-                        </button>
-                        <button
-                          className="text-green-500 hover:text-green-700"
-                          onClick={() => navigate("/edit-booking")}
+                        </Button>
+                        <Button
+                          className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-md text-sm font-semibold ml-2"
+                          onClick={() => navigate("/add-menu")}
                         >
-                          <Pencil className="w-5 h-5" />
-                        </button>
-                        <button className="text-red-500 hover:text-red-700">
-                          <Trash2 className="w-5 h-5" />
-                        </button>
+                          Add Menu
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -177,53 +193,25 @@ export default function Bookings() {
                   <span className="text-xs font-semibold text-gray-400">Booking ID</span>
                   <span className="text-sm font-bold text-blue-700">{booking.id}</span>
                 </div>
-                <div className="text-lg font-semibold text-gray-800">{booking.name}</div>
-                <div className="flex items-center text-gray-500 text-sm">
-                  <span className="font-medium">Venue:</span>
-                  <span className="ml-1">{booking.venue}</span>
+                <div className="text-lg font-semibold text-gray-800">{booking.customerName}</div>
+                <div className="text-sm text-gray-500">Mobile: {booking.mobile}</div>
+                <div className="text-sm text-gray-500">Event: {booking.event}</div>
+                <div className="text-sm text-gray-500">
+                  Dates: {booking.noOfDays === "1" ? booking.date : `${booking.startDate} to ${booking.endDate}`}
                 </div>
-                <div className="flex items-center text-gray-500 text-sm">
-                  <span className="font-medium">Amount:</span>
-                  <span className="ml-1">{booking.amount}</span>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <button
-                    className="flex-1 flex items-center justify-center bg-green-500 text-white px-2 py-1 rounded-md text-xs font-semibold hover:bg-green-600 transition-all"
-                    onClick={() => navigate("/add-facilities")}
-                  >
-                    <Plus className="w-4 h-4 mr-1" /> Facility
-                  </button>
-                  <button
-                    className="flex-1 flex items-center justify-center bg-purple-500 text-white px-2 py-1 rounded-md text-xs font-semibold hover:bg-purple-600 transition-all"
-                    onClick={() => navigate("/add-menu")}
-                  >
-                    <Plus className="w-4 h-4 mr-1" /> Menu
-                  </button>
-                  <button
-                    className="flex-1 flex items-center justify-center bg-yellow-500 text-white px-2 py-1 rounded-md text-xs font-semibold hover:bg-yellow-600 transition-all"
-                    onClick={() => setShowModal(true)}
-                  >
-                    <Plus className="w-4 h-4 mr-1" /> List
-                  </button>
-                </div>
-                <div className="flex justify-between mt-2 gap-2">
-                  <button
-                    className="flex-1 flex items-center justify-center text-blue-500 bg-blue-50 rounded-md py-1 hover:text-blue-700"
+                <div className="flex justify-end mt-2 gap-2">
+                  <Button
+                    className="text-blue-500 hover:text-blue-700 bg-transparent p-2"
                     onClick={() => navigate("/view-booking")}
                   >
-                    <Eye className="w-4 h-4 mr-1" /> View
-                  </button>
-                  <button
-                    className="flex-1 flex items-center justify-center text-green-500 bg-green-50 rounded-md py-1 hover:text-green-700"
-                    onClick={() => navigate("/edit-booking")}
+                    <Eye className="w-5 h-5" />
+                  </Button>
+                  <Button
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-md text-xs font-semibold"
+                    onClick={() => navigate("/add-menu")}
                   >
-                    <Pencil className="w-4 h-4 mr-1" /> Edit
-                  </button>
-                  <button
-                    className="flex-1 flex items-center justify-center text-red-500 bg-red-50 rounded-md py-1 hover:text-red-700"
-                  >
-                    <Trash2 className="w-4 h-4 mr-1" /> Delete
-                  </button>
+                    Add Menu
+                  </Button>
                 </div>
               </div>
             ))}
@@ -270,30 +258,88 @@ export default function Bookings() {
           </div>
         </CardContent>
       </Card>
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-[300px]">
-            <h2 className="text-xl font-bold mb-4">Choose Option</h2>
-            <div className="space-y-2">
-              <Button  onClick={() => navigate("/generate-list")} className="w-full bg-blue-500 hover:bg-blue-600">
-                Auto Generated List 
-              </Button>
-              <Button  onClick={() => navigate("/generate-list")} className="w-full bg-green-500 hover:bg-green-600">
-                Semi Auto Generated List
-              </Button>
-              <Button onClick={() => navigate("/generate-list")} className="w-full bg-purple-500 hover:bg-purple-600">
-               Manual List 
-              </Button>
+
+      {/* Booking Details Modal */}
+      <Dialog open={showModal} onOpenChange={closeModal}>
+        <DialogContent className="bg-white dark:bg-gray-800 shadow-xl rounded-xl p-4 sm:p-6 w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">
+              Booking Details
+            </DialogTitle>
+          </DialogHeader>
+          {selectedBooking && (
+            <div className="space-y-4 mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">Customer Name:</span>
+                  <div className="text-gray-900 dark:text-gray-100">{selectedBooking.customerName}</div>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">Mobile:</span>
+                  <div className="text-gray-900 dark:text-gray-100">{selectedBooking.mobile}</div>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">Event:</span>
+                  <div className="text-gray-900 dark:text-gray-100">{selectedBooking.event}</div>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">No. of Days:</span>
+                  <div className="text-gray-900 dark:text-gray-100">{selectedBooking.noOfDays}</div>
+                </div>
+                {selectedBooking.noOfDays === "1" ? (
+                  <div>
+                    <span className="font-semibold text-gray-700 dark:text-gray-300">Date:</span>
+                    <div className="text-gray-900 dark:text-gray-100">{selectedBooking.date}</div>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <span className="font-semibold text-gray-700 dark:text-gray-300">Start Date:</span>
+                      <div className="text-gray-900 dark:text-gray-100">{selectedBooking.startDate}</div>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-gray-700 dark:text-gray-300">End Date:</span>
+                      <div className="text-gray-900 dark:text-gray-100">{selectedBooking.endDate}</div>
+                    </div>
+                  </>
+                )}
+                <div className="sm:col-span-2">
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">Venue Address:</span>
+                  <div className="text-gray-900 dark:text-gray-100">{selectedBooking.venueAddress || <span className="italic text-gray-400">N/A</span>}</div>
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">Venue Location:</span>
+                  <div className="text-gray-900 dark:text-gray-100">
+                    {selectedBooking.venueLocation ? (
+                      <a href={selectedBooking.venueLocation} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">View on Google Maps</a>
+                    ) : <span className="italic text-gray-400">N/A</span>}
+                  </div>
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">User Address:</span>
+                  <div className="text-gray-900 dark:text-gray-100">{selectedBooking.userAddress}</div>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">Advance/Booking Amount:</span>
+                  <div className="text-gray-900 dark:text-gray-100">{selectedBooking.amount || <span className="italic text-gray-400">N/A</span>}</div>
+                </div>
+                <div className="sm:col-span-2">
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">Extra Facilities:</span>
+                  <div className="text-gray-900 dark:text-gray-100">
+                    {selectedBooking.facilities && selectedBooking.facilities.length > 0 ? (
+                      <ul className="list-disc ml-5">
+                        {selectedBooking.facilities.map((f, i) => (
+                          <li key={i}>{f}</li>
+                        ))}
+                      </ul>
+                    ) : <span className="italic text-gray-400">N/A</span>}
+                  </div>
+                </div>
+              </div>
             </div>
-            <Button
-              className="mt-4 w-full bg-gray-300 hover:bg-gray-400"
-              onClick={() => setShowModal(false)}
-            >
-              Close
-            </Button>
-          </div>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

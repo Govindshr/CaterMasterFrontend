@@ -1,5 +1,7 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Sidebar from "./components/Sidebar";
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
@@ -20,6 +22,29 @@ import ItemSubCategory from "./pages/Master/Item-Category/itemSubcategory";
 import ItemList from "./pages/Master/Item-Category/ItemsList";
 import UserRegistration from "./pages/User-Management/userRegistration";
 import UserLogin from "./pages/User-Management/userLogin";
+import UserManagement from "./pages/User-Management/UserManagement";
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+
+// Public Route Component (for login and register)
+const PublicRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  
+  if (token) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
 
 function AppWrapper() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -30,30 +55,19 @@ function AppWrapper() {
     const handleResize = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      if (mobile) {
-        setIsSidebarOpen(false);
-      } else {
-        setIsSidebarOpen(true);
-      }
+      setIsSidebarOpen(!mobile);
     };
 
     window.addEventListener('resize', handleResize);
-    handleResize(); // Initial check
+    handleResize();
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const hideLayoutFor = ["/register", "/login"];
   const isLayoutHidden = hideLayoutFor.includes(location.pathname.toLowerCase());
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const closeSidebar = () => {
-    if (isMobile) {
-      setIsSidebarOpen(false);
-    }
-  };
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const closeSidebar = () => isMobile && setIsSidebarOpen(false);
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-900">
@@ -63,31 +77,125 @@ function AppWrapper() {
       <div className="flex-1 flex flex-col min-h-screen">
         {!isLayoutHidden && <Navbar toggleSidebar={toggleSidebar} />}
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/register" element={<UserRegistration />} />
-            <Route path="/login" element={<UserLogin />} />
-            <Route path="/bookings" element={<Bookings />} />
-            <Route path="/add-bookings" element={<AddBooking />} />
-            <Route path="/view-booking" element={<ViewBooking />} />
-            <Route path="/edit-booking" element={<EditBooking />} />
-            <Route path="/add-menu" element={<AddMenu />} />
-            <Route path="/add-facilities" element={<AddFacilities />} />
-            <Route path="/generate-list" element={<MenuSummary />} />
-            <Route path="/final-ingredient-list" element={<FinalIngredientList />} />
-            <Route path="/events" element={<Events />} />
-            <Route path="/facilities" element={<Facilities />} />
-            <Route path="/item-categories" element={<ItemCategory />} />
-            <Route path="/item-subcategories" element={<ItemSubCategory />} />
-            <Route path="/ingredients" element={<Ingredients />} />
-            <Route path="/items-list" element={<ItemList />} />
-            <Route path="/add-item" element={<AddNewItem />} />
+            <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={
+              <PublicRoute>
+                <UserLogin />
+              </PublicRoute>
+            } />
+            <Route path="/register" element={
+              <PublicRoute>
+                <UserRegistration />
+              </PublicRoute>
+            } />
+
+            {/* Protected Routes */}
+            <Route path="/" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/bookings" element={
+              <ProtectedRoute>
+                <Bookings />
+              </ProtectedRoute>
+            } />
+            <Route path="/add-bookings" element={
+              <ProtectedRoute>
+                <AddBooking />
+              </ProtectedRoute>
+            } />
+            <Route path="/view-booking" element={
+              <ProtectedRoute>
+                <ViewBooking />
+              </ProtectedRoute>
+            } />
+            <Route path="/edit-booking" element={
+              <ProtectedRoute>
+                <EditBooking />
+              </ProtectedRoute>
+            } />
+            <Route path="/add-menu" element={
+              <ProtectedRoute>
+                <AddMenu />
+              </ProtectedRoute>
+            } />
+            <Route path="/add-facilities" element={
+              <ProtectedRoute>
+                <AddFacilities />
+              </ProtectedRoute>
+            } />
+            <Route path="/generate-list" element={
+              <ProtectedRoute>
+                <MenuSummary />
+              </ProtectedRoute>
+            } />
+            <Route path="/final-ingredient-list" element={
+              <ProtectedRoute>
+                <FinalIngredientList />
+              </ProtectedRoute>
+            } />
+            <Route path="/events" element={
+              <ProtectedRoute>
+                <Events />
+              </ProtectedRoute>
+            } />
+            <Route path="/facilities" element={
+              <ProtectedRoute>
+                <Facilities />
+              </ProtectedRoute>
+            } />
+            <Route path="/item-categories" element={
+              <ProtectedRoute>
+                <ItemCategory />
+              </ProtectedRoute>
+            } />
+            <Route path="/item-subcategories" element={
+              <ProtectedRoute>
+                <ItemSubCategory />
+              </ProtectedRoute>
+            } />
+            <Route path="/ingredients" element={
+              <ProtectedRoute>
+                <Ingredients />
+              </ProtectedRoute>
+            } />
+            <Route path="/items-list" element={
+              <ProtectedRoute>
+                <ItemList />
+              </ProtectedRoute>
+            } />
+            <Route path="/add-item" element={
+              <ProtectedRoute>
+                <AddNewItem />
+              </ProtectedRoute>
+            } />
+            <Route path="/user-management" element={
+              <ProtectedRoute>
+                <UserManagement />
+              </ProtectedRoute>
+            } />
           </Routes>
         </main>
+      <ToastContainer
+  position="top-right"
+  autoClose={5000}
+  hideProgressBar={false}
+  newestOnTop={false}
+  closeOnClick
+  rtl={false}
+  pauseOnFocusLoss
+  draggable
+  pauseOnHover
+  theme="colored"
+/>
+
       </div>
     </div>
   );
 }
+
 
 function App() {
   return (

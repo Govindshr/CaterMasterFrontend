@@ -4,86 +4,82 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
+
+const eventOptions = [
+  "Anniversary",
+  "Wedding",
+  "Corporate Event",
+];
+
+const facilityOptions = [
+  "Dairy",
+  "Vegetables",
+  "Rashan",
+  "Fruits",
+  "Snacks",
+  "Drinks",
+];
 
 export default function AddBooking() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    bookingDateFrom: "",
-    bookingDateTo: "",
-    noOfDays: "",
     customerName: "",
-    contactNo: "",
-    email: "",
-    address: "",
-    venue: "",
-    eventName: "",
+    mobile: "",
+    event: "",
+    noOfDays: "1",
+    date: "",
+    startDate: "",
+    endDate: "",
+    venueAddress: "",
+    venueLocation: "",
+    userAddress: "",
     amount: "",
-    advance: "",
+    facilities: [],
   });
-
   const [errors, setErrors] = useState({});
-
-  const eventOptions = [
-    "Birth",
-    "BirthDay",
-    "Mundan",
-    "Engagement",
-    "Lagan & Vinayak",
-    "Basan",
-    "Nikasi",
-    "Mahila – Sangeet",
-    "Reception",
-    "Wedding Anniversary",
-    "Chudiyo ki Rasoi",
-    "Retirement",
-    "Death",
-    "Inauguration",
-    "Grah Pravesh",
-    "Religious Programme",
-    "Caste Programme",
-  ];
+  const [showLocationInput, setShowLocationInput] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const { name, value, type, checked } = e.target;
+    if (type === "checkbox") {
+      setFormData((prev) => ({
+        ...prev,
+        facilities: checked
+          ? [...prev.facilities, value]
+          : prev.facilities.filter((f) => f !== value),
+      }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const validate = () => {
+    let validationErrors = {};
+    if (!formData.customerName.trim()) validationErrors.customerName = "Required";
+    if (!formData.mobile.match(/^\d{10}$/)) validationErrors.mobile = "10-digit number";
+    if (!formData.event) validationErrors.event = "Select an event";
+    if (!formData.noOfDays.match(/^\d+$/) || Number(formData.noOfDays) < 1) validationErrors.noOfDays = "Enter valid number";
+    if (formData.noOfDays === "1") {
+      if (!formData.date) validationErrors.date = "Required";
+    } else {
+      if (!formData.startDate) validationErrors.startDate = "Required";
+      if (!formData.endDate) validationErrors.endDate = "Required";
+    }
+    if (!formData.venueAddress && !formData.venueLocation) {
+      validationErrors.venueAddress = "At least one venue field required";
+      validationErrors.venueLocation = "At least one venue field required";
+    }
+    if (!formData.userAddress.trim()) validationErrors.userAddress = "Required";
+    return validationErrors;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    let validationErrors = {};
-
-    if (!formData.bookingDateFrom)
-      validationErrors.bookingDateFrom = "Required";
-    if (!formData.bookingDateTo) validationErrors.bookingDateTo = "Required";
-    if (!formData.noOfDays.match(/^\d+$/))
-      validationErrors.noOfDays = "Only numbers";
-    if (!formData.customerName.match(/^[A-Za-z\s]+$/))
-      validationErrors.customerName = "Only alphabets";
-    if (!formData.contactNo.match(/^\d{10}$/))
-      validationErrors.contactNo = "10-digit number";
-    if (!formData.email.match(/^[\w-]+@([\w-]+\.)+[\w-]{2,4}$/))
-      validationErrors.email = "Invalid email";
-    if (!formData.venue.match(/^[A-Za-z\s]+$/))
-      validationErrors.venue = "Only alphabets";
-    if (!formData.amount.match(/^\d+$/))
-      validationErrors.amount = "Only numbers";
-    if (!formData.advance.match(/^\d+$/))
-      validationErrors.advance = "Only numbers";
-    if (!formData.eventName) validationErrors.eventName = "Select an event";
-
+    const validationErrors = validate();
     setErrors(validationErrors);
-
     if (Object.keys(validationErrors).length === 0) {
       alert("Booking Added Successfully! ✅");
       navigate("/bookings");
@@ -109,188 +105,157 @@ export default function AddBooking() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div>
-                <Label className="text-sm font-semibold text-gray-700">Booking Date From</Label>
-                <div className="relative mt-1">
-                  <Input
-                    type="date"
-                    name="bookingDateFrom"
-                    value={formData.bookingDateFrom}
-                    onChange={handleChange}
-                    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full pl-3 pr-3 py-2 bg-gray-50 dark:bg-gray-900"
-                  />
-                </div>
-                {errors.bookingDateFrom && (
-                  <p className="text-red-500 text-sm mt-1">{errors.bookingDateFrom}</p>
-                )}
-              </div>
-
-              <div>
-                <Label className="text-sm font-semibold text-gray-700">Booking Date To</Label>
-                <div className="relative mt-1">
-                  <Input
-                    type="date"
-                    name="bookingDateTo"
-                    value={formData.bookingDateTo}
-                    onChange={handleChange}
-                    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full pl-3 pr-3 py-2 bg-gray-50 dark:bg-gray-900"
-                  />
-                </div>
-                {errors.bookingDateTo && (
-                  <p className="text-red-500 text-sm mt-1">{errors.bookingDateTo}</p>
-                )}
-              </div>
-
-              <div>
-                <Label className="text-sm font-semibold text-gray-700">No of Days</Label>
-                <div className="relative mt-1">
-                  <Input
-                    type="text"
-                    name="noOfDays"
-                    placeholder="Enter No. Of Days"
-                    value={formData.noOfDays}
-                    onChange={handleChange}
-                    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full pl-3 pr-3 py-2 bg-gray-50 dark:bg-gray-900"
-                  />
-                </div>
-                {errors.noOfDays && (
-                  <p className="text-red-500 text-sm mt-1">{errors.noOfDays}</p>
-                )}
-              </div>
-
-              <div>
                 <Label className="text-sm font-semibold text-gray-700">Customer Name</Label>
-                <div className="relative mt-1">
-                  <Input
-                    type="text"
-                    name="customerName"
-                    value={formData.customerName}
-                    onChange={handleChange}
-                    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full pl-3 pr-3 py-2 bg-gray-50 dark:bg-gray-900"
-                  />
-                </div>
-                {errors.customerName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.customerName}</p>
-                )}
+                <Input
+                  type="text"
+                  name="customerName"
+                  value={formData.customerName}
+                  onChange={handleChange}
+                  className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+                />
+                {errors.customerName && <p className="text-red-500 text-sm mt-1">{errors.customerName}</p>}
               </div>
-
               <div>
-                <Label className="text-sm font-semibold text-gray-700">Contact No</Label>
-                <div className="relative mt-1">
-                  <Input
-                    type="text"
-                    name="contactNo"
-                    value={formData.contactNo}
-                    onChange={handleChange}
-                    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full pl-3 pr-3 py-2 bg-gray-50 dark:bg-gray-900"
-                  />
-                </div>
-                {errors.contactNo && (
-                  <p className="text-red-500 text-sm mt-1">{errors.contactNo}</p>
-                )}
+                <Label className="text-sm font-semibold text-gray-700">Mobile Number</Label>
+                <Input
+                  type="text"
+                  name="mobile"
+                  value={formData.mobile}
+                  onChange={handleChange}
+                  className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+                />
+                {errors.mobile && <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>}
               </div>
-
               <div>
-                <Label className="text-sm font-semibold text-gray-700">Email</Label>
-                <div className="relative mt-1">
-                  <Input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full pl-3 pr-3 py-2 bg-gray-50 dark:bg-gray-900"
-                  />
-                </div>
-                {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                )}
+                <Label className="text-sm font-semibold text-gray-700">Booking for Event</Label>
+                <select
+                  name="event"
+                  value={formData.event}
+                  onChange={handleChange}
+                  className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+                >
+                  <option value="">Select an event</option>
+                  {eventOptions.map((event, idx) => (
+                    <option key={idx} value={event}>{event}</option>
+                  ))}
+                </select>
+                {errors.event && <p className="text-red-500 text-sm mt-1">{errors.event}</p>}
               </div>
-
+              <div>
+                <Label className="text-sm font-semibold text-gray-700">No. of Days</Label>
+                <Input
+                  type="number"
+                  name="noOfDays"
+                  min="1"
+                  value={formData.noOfDays}
+                  onChange={handleChange}
+                  className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+                />
+                {errors.noOfDays && <p className="text-red-500 text-sm mt-1">{errors.noOfDays}</p>}
+              </div>
+              {/* Date fields conditional */}
+              {formData.noOfDays === "1" ? (
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">Date</Label>
+                  <Input
+                    type="date"
+                    name="date"
+                    value={formData.date}
+                    onChange={handleChange}
+                    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+                  />
+                  {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-700">Start Date</Label>
+                    <Input
+                      type="date"
+                      name="startDate"
+                      value={formData.startDate}
+                      onChange={handleChange}
+                      className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+                    />
+                    {errors.startDate && <p className="text-red-500 text-sm mt-1">{errors.startDate}</p>}
+                  </div>
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-700">End Date</Label>
+                    <Input
+                      type="date"
+                      name="endDate"
+                      value={formData.endDate}
+                      onChange={handleChange}
+                      className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+                    />
+                    {errors.endDate && <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>}
+                  </div>
+                </>
+              )}
               <div className="md:col-span-2">
-                <Label className="text-sm font-semibold text-gray-700">Address</Label>
-                <div className="relative mt-1">
-                  <Textarea
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full pl-3 pr-3 py-2 bg-gray-50 dark:bg-gray-900"
-                  />
-                </div>
+                <Label className="text-sm font-semibold text-gray-700">Venue Address</Label>
+                <Textarea
+                  name="venueAddress"
+                  value={formData.venueAddress}
+                  onChange={handleChange}
+                  className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+                  placeholder="Enter venue address (optional)"
+                />
+                {errors.venueAddress && <p className="text-red-500 text-sm mt-1">{errors.venueAddress}</p>}
               </div>
-
-              <div>
-                <Label className="text-sm font-semibold text-gray-700">Venue</Label>
-                <div className="relative mt-1">
-                  <Input
-                    type="text"
-                    name="venue"
-                    value={formData.venue}
-                    onChange={handleChange}
-                    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full pl-3 pr-3 py-2 bg-gray-50 dark:bg-gray-900"
-                  />
-                </div>
-                {errors.venue && (
-                  <p className="text-red-500 text-sm mt-1">{errors.venue}</p>
-                )}
+              <div className="md:col-span-2">
+                <Label className="text-sm font-semibold text-gray-700">Venue Location (Google)</Label>
+                <Input
+                  type="text"
+                  name="venueLocation"
+                  value={formData.venueLocation}
+                  onChange={handleChange}
+                  className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+                  placeholder="Paste Google Maps location link (optional)"
+                />
+                {errors.venueLocation && <p className="text-red-500 text-sm mt-1">{errors.venueLocation}</p>}
               </div>
-
-              <div>
-                <Label className="text-sm font-semibold text-gray-700">Event Name</Label>
-                <div className="relative mt-1">
-                  <Select
-                    name="eventName"
-                    value={formData.eventName}
-                    onValueChange={(value) => setFormData({ ...formData, eventName: value })}
-                  >
-                    <SelectTrigger className="rounded-lg border border-gray-300 mt-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900">
-                      <SelectValue placeholder="Select an event" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {eventOptions.map((event, index) => (
-                        <SelectItem key={index} value={event}>
-                          {event}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {errors.eventName && (
-                  <p className="text-red-500 text-sm mt-1">{errors.eventName}</p>
-                )}
+              <div className="md:col-span-2">
+                <Label className="text-sm font-semibold text-gray-700">User Address</Label>
+                <Textarea
+                  name="userAddress"
+                  value={formData.userAddress}
+                  onChange={handleChange}
+                  className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+                  placeholder="Enter user address"
+                />
+                {errors.userAddress && <p className="text-red-500 text-sm mt-1">{errors.userAddress}</p>}
               </div>
-
               <div>
-                <Label className="text-sm font-semibold text-gray-700">Amount</Label>
-                <div className="relative mt-1">
-                  <Input
-                    type="text"
-                    name="amount"
-                    value={formData.amount}
-                    onChange={handleChange}
-                    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full pl-3 pr-3 py-2 bg-gray-50 dark:bg-gray-900"
-                  />
-                </div>
-                {errors.amount && (
-                  <p className="text-red-500 text-sm mt-1">{errors.amount}</p>
-                )}
+                <Label className="text-sm font-semibold text-gray-700">Advance/Booking Amount</Label>
+                <Input
+                  type="number"
+                  name="amount"
+                  value={formData.amount}
+                  onChange={handleChange}
+                  className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+                  placeholder="Enter amount (optional)"
+                />
               </div>
-
-              <div>
-                <Label className="text-sm font-semibold text-gray-700">Advance</Label>
-                <div className="relative mt-1">
-                  <Input
-                    type="text"
-                    name="advance"
-                    value={formData.advance}
-                    onChange={handleChange}
-                    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full pl-3 pr-3 py-2 bg-gray-50 dark:bg-gray-900"
-                  />
+              <div className="md:col-span-2">
+                <Label className="text-sm font-semibold text-gray-700">Extra Facilities</Label>
+                <div className="flex flex-wrap gap-3 mt-2">
+                  {facilityOptions.map((facility, idx) => (
+                    <label key={idx} className="flex items-center gap-2 text-sm font-medium bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="facilities"
+                        value={facility}
+                        checked={formData.facilities.includes(facility)}
+                        onChange={handleChange}
+                        className="accent-blue-600"
+                      />
+                      {facility}
+                    </label>
+                  ))}
                 </div>
-                {errors.advance && (
-                  <p className="text-red-500 text-sm mt-1">{errors.advance}</p>
-                )}
               </div>
             </div>
-
             <div className="mt-8">
               <Button
                 type="submit"

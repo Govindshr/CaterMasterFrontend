@@ -16,6 +16,8 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  Calendar,
+  Search,
 } from "lucide-react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import {
@@ -36,190 +38,330 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-// import { config } from "@/services/nodeconfig";
-import { config } from "@/services/config";
-// import { postApi  } from "@/services/nodeapi";
-import { getApi, postApi } from "@/services/api";
+import { config } from "@/services/nodeconfig";
+// import { config } from "@/services/config";
+import { protectedGetApi,protectedPostApi} from "@/services/nodeapi";
+// import { getApi, postApi ,protected } from "@/services/api";
+
+// Dummy data for testing
+const dummyEvents = [
+  {
+    id: 1,
+    display_name: {
+      en: "Wedding Ceremony",
+      hi: "शादी समारोह"
+    }
+  },
+  {
+    id: 2,
+    display_name: {
+      en: "Birthday Party",
+      hi: "जन्मदिन पार्टी"
+    }
+  },
+  {
+    id: 3,
+    display_name: {
+      en: "Corporate Event",
+      hi: "कॉर्पोरेट कार्यक्रम"
+    }
+  },
+  {
+    id: 4,
+    display_name: {
+      en: "Anniversary Celebration",
+      hi: "वर्षगांठ समारोह"
+    }
+  },
+  {
+    id: 5,
+    display_name: {
+      en: "Graduation Party",
+      hi: "स्नातक पार्टी"
+    }
+  },
+  {
+    id: 6,
+    display_name: {
+      en: "Baby Shower",
+      hi: "बेबी शॉवर"
+    }
+  },
+  {
+    id: 7,
+    display_name: {
+      en: "Engagement Ceremony",
+      hi: "सगाई समारोह"
+    }
+  },
+  {
+    id: 8,
+    display_name: {
+      en: "Farewell Party",
+      hi: "विदाई पार्टी"
+    }
+  }
+];
+
 export default function Events() {
   const { i18n } = useTranslation();
   const navigate = useNavigate();
-  const [events, setEvents] = useState([]);
+  const [events, setEvents] = useState(dummyEvents); // Initialize with dummy data
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [nameEn, setNameEn] = useState("");
   const [nameHi, setNameHi] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const itemsPerPage = 5;
   const totalPages = Math.ceil(events.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
 
   useEffect(() => {
+    // Comment out the API call for now
     fetchEvents();
-  }, [i18n.language]); // 🔁 react when language changes
+  }, [i18n.language]);
 
   const fetchEvents = async () => {
     try {
-      const res = await getApi(config.GetEvents);
-      if (res.status === 200) {
-        setEvents(res.data.data); // .data inside .data
+      const token = localStorage.getItem("token");
+      const res = await protectedGetApi(config.GetEvents,token);
+      if (res.success === true) {
+        console.log(res.events)
+        setEvents(res.events);
       }
     } catch (error) {
       console.error("Error fetching events:", error);
+      // Fallback to dummy data if API fails
+      setEvents(dummyEvents);
     }
   };
 
-  const addEvent = async () => {
-    if (!nameEn.trim() || !nameHi.trim()) return;
+ const addEvent = async () => {
+  if (!nameEn.trim() || !nameHi.trim()) return;
 
-    try {
-      const response = await postApi(config.AddEvents, {
-        display_name: {
-          en: nameEn,
-          hi: nameHi,
-        },
-      });
-
-      if (response.status === 201) {
-        console.log("Event added:", response.data);
-        await fetchEvents(); // reload list
-        setIsModalOpen(false);
-        setNameEn("");
-        setNameHi("");
+  try {
+    const token = localStorage.getItem("token");
+    const response = await protectedPostApi(config.AddEvents, {
+      name: {
+        en: nameEn,
+        hi: nameHi,
       }
-    } catch (error) {
-      console.error("Error adding event:", error);
+    }, token);
+
+    if (response?.data) {
+      setEvents([...events, response.data]);
+      setIsModalOpen(false);
+      setNameEn("");
+      setNameHi("");
     }
-  };
+  } catch (error) {
+    console.error("Error adding event:", error);
+  }
+};
+
+
+  const filteredEvents = events.filter((event) =>
+    event.name?.[i18n.language]?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.name?.en?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <Card className="shadow-lg rounded-lg">
-        <CardHeader className="flex-row justify-between border-b p-4">
-          <h2 className="text-2xl font-bold">Events</h2>
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex bg-blue-600 w-40 hover:bg-blue-700">
-                <Plus className="w-5 h-5 mr-2" /> Add Event
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-white shadow-lg rounded-lg p-6 w-[400px]">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-bold text-gray-900">
-                  Add New Event
-                </DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3">
-                <Label className="text-gray-700">Event Name (English)</Label>
-                <Input
-                  type="text"
-                  placeholder="Enter event name in English"
-                  value={nameEn}
-                  onChange={(e) => setNameEn(e.target.value)}
-                />
-                <Label className="text-gray-700">Event Name (Hindi)</Label>
-                <Input
-                  type="text"
-                  placeholder="Enter event name in Hindi"
-                  value={nameHi}
-                  onChange={(e) => setNameHi(e.target.value)}
-                />
+    <div className="w-full min-h-screen bg-gray-50 dark:bg-gray-900 py-8 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <Card className="shadow-xl rounded-xl border-0 bg-white dark:bg-gray-800">
+          <CardHeader className="border-b border-gray-200 dark:border-gray-700 p-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  Events Management
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  Manage and organize your events
+                </p>
               </div>
-              <div className="flex justify-end space-x-2 mt-4">
-                <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700"
-                  onClick={addEvent}
-                >
-                  Save Event
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </CardHeader>
-
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader className="bg-gray-100 dark:bg-gray-800">
-                <TableRow>
-                  <TableHead>Event ID</TableHead>
-                  <TableHead>Event Name</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {events.length > 0 &&
-                  events?.map((event, index) => (
-                    <TableRow
-                      key={index}
-                      className="hover:bg-gray-100 dark:hover:bg-gray-800"
+              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2">
+                    <Plus className="w-5 h-5" /> Add New Event
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-white dark:bg-gray-800 shadow-xl rounded-xl p-6 w-[90vw] max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                      Add New Event
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Event Name (English)
+                      </Label>
+                      <Input
+                        type="text"
+                        placeholder="Enter event name in English"
+                        value={nameEn}
+                        onChange={(e) => setNameEn(e.target.value)}
+                        className="mt-1 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Event Name (Hindi)
+                      </Label>
+                      <Input
+                        type="text"
+                        placeholder="Enter event name in Hindi"
+                        value={nameHi}
+                        onChange={(e) => setNameHi(e.target.value)}
+                        className="mt-1 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end space-x-3 mt-6">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsModalOpen(false)}
+                      className="px-4 py-2 rounded-lg"
                     >
-                      <TableCell>{event.id}</TableCell>
+                      Cancel
+                    </Button>
+                    <Button
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                      onClick={addEvent}
+                    >
+                      Save Event
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </CardHeader>
 
-                      <TableCell>
-                        {event.display_name?.[i18n.language] ||
-                          event.display_name?.en}
-                      </TableCell>
-                      <TableCell className="flex justify-center space-x-3">
-                        <button className="text-red-500 hover:text-red-700">
-                          <Trash2 className="w-5 h-5" />
-                        </button>
+          <CardContent className="p-6">
+            <div className="mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Input
+                  type="text"
+                  placeholder="Search events..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+                />
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+              <Table>
+                <TableHeader className="bg-gray-50 dark:bg-gray-800/50">
+                  <TableRow>
+                    <TableHead className="font-semibold text-gray-900 dark:text-gray-100">
+                      Event ID
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-900 dark:text-gray-100">
+                      Event Name
+                    </TableHead>
+                    <TableHead className="text-center font-semibold text-gray-900 dark:text-gray-100">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredEvents.length > 0 ? (
+                    filteredEvents.map((event, index) => (
+                      <TableRow
+                        key={index}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                      >
+                        <TableCell className="font-medium text-gray-900 dark:text-gray-100">
+                          {event._id}
+                        </TableCell>
+                        <TableCell className="text-gray-700 dark:text-gray-300">
+                          {event.name?.[i18n.language] ||
+                            event.name?.en}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-center space-x-3">
+                            <button
+                              className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                              title="Delete Event"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center py-8 text-gray-500 dark:text-gray-400">
+                        No events found
                       </TableCell>
                     </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </div>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
 
-          <div className="flex justify-end mt-4">
-            <Pagination>
-              <PaginationContent className="flex items-center space-x-2">
-                <PaginationItem>
-                  <PaginationPrevious
-                    onClick={() =>
-                      currentPage > 1 && setCurrentPage(currentPage - 1)
-                    }
-                    disabled={currentPage === 1}
-                    className="cursor-pointer"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </PaginationPrevious>
-                </PaginationItem>
+            {filteredEvents.length > 0 && (
+              <div className="flex justify-center mt-6">
+                <Pagination>
+                  <PaginationContent className="flex items-center space-x-2">
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() =>
+                          currentPage > 1 && setCurrentPage(currentPage - 1)
+                        }
+                        disabled={currentPage === 1}
+                        className={`cursor-pointer rounded-lg ${
+                          currentPage === 1
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                        }`}
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </PaginationPrevious>
+                    </PaginationItem>
 
-                {[...Array(totalPages)].map((_, index) => (
-                  <PaginationItem key={index}>
-                    <button
-                      className={`px-3 py-1 rounded-lg ${
-                        currentPage === index + 1
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-200 text-gray-800"
-                      }`}
-                      onClick={() => setCurrentPage(index + 1)}
-                    >
-                      {index + 1}
-                    </button>
-                  </PaginationItem>
-                ))}
+                    {[...Array(totalPages)].map((_, index) => (
+                      <PaginationItem key={index}>
+                        <button
+                          className={`px-4 py-2 rounded-lg transition-colors ${
+                            currentPage === index + 1
+                              ? "bg-blue-600 text-white"
+                              : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                          }`}
+                          onClick={() => setCurrentPage(index + 1)}
+                        >
+                          {index + 1}
+                        </button>
+                      </PaginationItem>
+                    ))}
 
-                <PaginationItem>
-                  <PaginationNext
-                    onClick={() =>
-                      currentPage < totalPages &&
-                      setCurrentPage(currentPage + 1)
-                    }
-                    disabled={currentPage === totalPages}
-                    className="cursor-pointer"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </PaginationNext>
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        </CardContent>
-      </Card>
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() =>
+                          currentPage < totalPages &&
+                          setCurrentPage(currentPage + 1)
+                        }
+                        disabled={currentPage === totalPages}
+                        className={`cursor-pointer rounded-lg ${
+                          currentPage === totalPages
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                        }`}
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </PaginationNext>
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

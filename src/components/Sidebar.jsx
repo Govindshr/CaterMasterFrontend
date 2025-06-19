@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react"; 
 import { Link } from "react-router-dom";
-import { LayoutDashboard, Calendar, ChevronDown, Settings, X } from "lucide-react";
+import { LayoutDashboard, Calendar, ChevronDown, Settings, X, Users } from "lucide-react";
 // import './../../src/index.css'
 export default function Sidebar({ isOpen, onClose }) {
   const [isMasterOpen, setIsMasterOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [userProfile, setUserProfile] = useState(null);
 
   useEffect(() => {
     const handleResize = () => {
@@ -14,6 +15,17 @@ export default function Sidebar({ isOpen, onClose }) {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Get user profile from localStorage
+  useEffect(() => {
+    const localUser = localStorage.getItem("user");
+    if (localUser) {
+      setUserProfile(JSON.parse(localUser));
+    }
+  }, []);
+
+  // Check if user is admin
+  const isAdmin = userProfile?.userType === "super admin" || userProfile?.userType === "admin";
 
   return (
     <>
@@ -70,6 +82,25 @@ export default function Sidebar({ isOpen, onClose }) {
                 </Link>
               </div>
             </li>
+
+            {/* User Management - Admin Only */}
+            {isAdmin && (
+              <>
+                <li className={`${!isOpen && "hidden"} px-4 py-2 text-sm font-semibold uppercase text-gray-300`}>
+                  Administration
+                </li>
+                <li>
+                  <div className="flex items-center hover:bg-blue-500/50 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <Link to="/user-management" className="flex items-center p-4 rounded-md w-full">
+                      <Users className={`w-5 h-5 text-white ${isOpen ? "mr-3" : ""}`} />
+                      <span className={`${!isOpen ? "hidden" : "inline"} transition-all duration-300 text-white`}>
+                        User Management
+                      </span>
+                    </Link>
+                  </div>
+                </li>
+              </>
+            )}
 
             {/* Master Section */}
             <li className={`${!isOpen && "hidden"} px-4 py-2 text-sm font-semibold uppercase text-gray-300`}>
