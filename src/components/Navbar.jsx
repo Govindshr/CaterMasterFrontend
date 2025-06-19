@@ -100,7 +100,7 @@ const handleLogout = () => {
   };
 
   return (
-    <nav className="bg-white dark:bg-gray-900 shadow-md flex justify-between items-center px-4 md:px-6 py-3 transition-all sticky top-0 z-30">
+    <nav className="bg-white dark:bg-gray-900 shadow-md flex justify-between items-center px-4 md:px-6 py-1 transition-all sticky top-0 z-30">
       {/* Left - Sidebar Toggle + Title */}
       <div className="flex items-center gap-4">
         {/* Sidebar Toggle Button */}
