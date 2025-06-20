@@ -15,6 +15,7 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  Settings,
 } from "lucide-react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import {
@@ -30,6 +31,8 @@ import { useNavigate } from "react-router-dom";
 export default function Bookings() {
   const [showModal, setShowModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [dropdownIdx, setDropdownIdx] = useState(null);
+  const [dropdownMobileIdx, setDropdownMobileIdx] = useState(null);
 
   const navigate = useNavigate();
 
@@ -117,7 +120,7 @@ export default function Bookings() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto  w-full">
+    <div className="max-w-8xl mx-auto  w-full">
       <Card className="shadow-lg rounded-lg mb-5">
         {/* Card Header with Title & Button */}
         <CardHeader className="flex flex-col md:flex-row md:justify-between md:items-center border-b p-4 gap-4 md:gap-0 bg-gradient-to-r from-blue-600 to-blue-400">
@@ -161,19 +164,38 @@ export default function Bookings() {
                           ? booking.date
                           : `${booking.startDate} to ${booking.endDate}`}
                       </TableCell>
-                      <TableCell className="flex flex-wrap justify-center space-x-2">
+                      <TableCell className="flex flex-wrap justify-center space-x-2 relative">
                         <Button
-                          className="text-blue-500 hover:text-blue-700 bg-transparent p-2"
+                          className="text-blue-500 hover:text-blue-700 hover:bg-white bg-transparent p-2"
                           onClick={() => navigate("/view-booking")}
                         >
                           <Eye className="w-5 h-5" />
                         </Button>
                         <Button
-                          className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-md text-sm font-semibold ml-2"
-                          onClick={() => navigate("/add-menu")}
+                          className="text-gray-600 hover:text-blue-700 bg-transparent p-2 ml-2"
+                          onClick={() => setDropdownIdx(dropdownIdx === index ? null : index)}
+                          variant="ghost"
+                          size="icon"
                         >
-                          Add Menu
+                          <Settings className="w-5 h-5" />
                         </Button>
+                        {/* Dropdown menu */}
+                        {dropdownIdx === index && (
+                          <div className="absolute z-20 right-0 mt-10 w-40 bg-white border rounded-lg shadow-lg flex flex-col text-left animate-fade-in">
+                            <button
+                              className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
+                              onClick={() => { setDropdownIdx(null); navigate("/add-menu"); }}
+                            >
+                              Add Menu
+                            </button>
+                            <button
+                              className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
+                              onClick={() => { setDropdownIdx(null); navigate("/generate-list"); }}
+                            >
+                              Generate List
+                            </button>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -199,7 +221,7 @@ export default function Bookings() {
                 <div className="text-sm text-gray-500">
                   Dates: {booking.noOfDays === "1" ? booking.date : `${booking.startDate} to ${booking.endDate}`}
                 </div>
-                <div className="flex justify-end mt-2 gap-2">
+                <div className="flex justify-end mt-2 gap-2 relative">
                   <Button
                     className="text-blue-500 hover:text-blue-700 bg-transparent p-2"
                     onClick={() => navigate("/view-booking")}
@@ -207,11 +229,30 @@ export default function Bookings() {
                     <Eye className="w-5 h-5" />
                   </Button>
                   <Button
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-md text-xs font-semibold"
-                    onClick={() => navigate("/add-menu")}
+                    className="text-gray-600 hover:text-blue-700 bg-transparent p-2"
+                    onClick={() => setDropdownMobileIdx(dropdownMobileIdx === index ? null : index)}
+                    variant="ghost"
+                    size="icon"
                   >
-                    Add Menu
+                    <Settings className="w-5 h-5" />
                   </Button>
+                  {/* Dropdown menu for mobile */}
+                  {dropdownMobileIdx === index && (
+                    <div className="absolute z-20 right-0 mt-10 w-40 bg-white border rounded-lg shadow-lg flex flex-col text-left animate-fade-in">
+                      <button
+                        className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
+                        onClick={() => { setDropdownMobileIdx(null); navigate("/add-menu"); }}
+                      >
+                        Add Menu
+                      </button>
+                      <button
+                        className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
+                        onClick={() => { setDropdownMobileIdx(null); navigate("/generate-list"); }}
+                      >
+                        Generate List
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
