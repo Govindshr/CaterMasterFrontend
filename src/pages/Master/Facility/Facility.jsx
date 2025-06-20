@@ -43,6 +43,11 @@ export default function Facilities() {
   const [nameEn, setNameEn] = useState("");
   const [nameHi, setNameHi] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [type, setType] = useState("Occasion");
+const [price, setPrice] = useState("");
+const [isPaid, setIsPaid] = useState(false);
+
+
 
   const itemsPerPage = 5;
   const totalPages = Math.ceil(facilities.length / itemsPerPage);
@@ -65,12 +70,16 @@ export default function Facilities() {
   const addFacility = async () => {
     if (!nameEn.trim() || !nameHi.trim()) return;
     try {
-      await postApi(config.AddFacility, {
-        name: {
-          en: nameEn,
-          hi: nameHi,
-        },
-      });
+    await postApi(config.AddFacility, {
+  name: {
+    en: nameEn,
+    hi: nameHi,
+  },
+  type,
+  price: isPaid ? parseFloat(price) : 0,
+});
+
+
       setIsModalOpen(false);
       setNameEn("");
       setNameHi("");
@@ -115,6 +124,47 @@ export default function Facilities() {
                   className="rounded-lg border-gray-300"
                 />
               </div>
+             <Label className="text-gray-700">Facility Type</Label>
+<select
+  value={type}
+  onChange={(e) => setType(e.target.value)}
+  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
+>
+  <option value="Occasion">Occasion</option>
+  <option value="Booking">Booking</option>
+</select>
+
+<Label className="text-gray-700 mt-3">Is Paid</Label>
+<div className="flex items-center space-x-4">
+  <button
+    onClick={() => setIsPaid(!isPaid)}
+    className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-300 ${
+      isPaid ? "bg-green-500" : "bg-gray-300"
+    }`}
+  >
+    <div
+      className={`bg-white w-6 h-6 rounded-full shadow-md transform duration-300 ${
+        isPaid ? "translate-x-6" : ""
+      }`}
+    />
+  </button>
+  <span>{isPaid ? "Paid" : "Free"}</span>
+</div>
+
+
+{isPaid && (
+  <>
+    <Label className="text-gray-700 mt-2">Price</Label>
+    <Input
+      type="number"
+      placeholder="Enter price"
+      value={price}
+      onChange={(e) => setPrice(e.target.value)}
+      className="rounded-lg border-gray-300"
+    />
+  </>
+)}
+
               <div className="flex justify-end space-x-2 mt-4">
                 <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                   Cancel
@@ -135,16 +185,22 @@ export default function Facilities() {
             <Table>
               <TableHeader className="bg-gray-100 dark:bg-gray-800">
                 <TableRow>
-                  <TableHead>Facility ID</TableHead>
+                  {/* <TableHead>Facility ID</TableHead> */}
                   <TableHead>Facility Name</TableHead>
+                  <TableHead>Type</TableHead>
+<TableHead>Price</TableHead>
+
                   <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {selectedFacilities.map((facility, index) => (
                   <TableRow key={index} className="hover:bg-gray-100 dark:hover:bg-gray-800">
-                    <TableCell>{facility._id || `F${index + 1}`}</TableCell>
+                    {/* <TableCell>{facility._id || `F${index + 1}`}</TableCell> */}
                     <TableCell>{facility.name?.[i18n.language] || facility.name?.en}</TableCell>
+                    <TableCell>{facility.type}</TableCell>
+<TableCell>{facility.price}</TableCell>
+
                     <TableCell className="flex justify-center space-x-3">
                       <button className="text-red-500 hover:text-red-700">
                         <Trash2 className="w-5 h-5" />

@@ -17,28 +17,30 @@ const facilityOptions = [
   "Dairy",
   "Vegetables",
   "Rashan",
-  "Fruits",
-  "Snacks",
-  "Drinks",
+  "Coal",
+  "Tables",
 ];
 
 export default function AddBooking() {
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    customerName: "",
-    mobile: "",
-    event: "",
-    noOfDays: "1",
-    date: "",
-    startDate: "",
-    endDate: "",
-    venueAddress: "",
-    venueLocation: "",
-    userAddress: "",
-    amount: "",
-    facilities: [],
-  });
+const [formData, setFormData] = useState({
+  customerName: "",
+  mobile: "",
+  alternateName: "",           // ✅ New
+  alternateMobile: "",         // ✅ New
+  event: "",
+  noOfDays: "1",
+  date: "",
+  startDate: "",
+  endDate: "",
+  venueAddress: "",
+  venueLocation: "",
+  userAddress: "",
+  amount: "",
+  facilities: [],
+});
+
   const [errors, setErrors] = useState({});
   const [showLocationInput, setShowLocationInput] = useState(false);
 
@@ -126,6 +128,30 @@ export default function AddBooking() {
                 />
                 {errors.mobile && <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>}
               </div>
+              <div>
+  <Label className="text-sm font-semibold text-gray-700">Alternate Contact Name</Label>
+  <Input
+    type="text"
+    name="alternateName"
+    value={formData.alternateName}
+    onChange={handleChange}
+    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+    placeholder="Enter alternate contact name"
+  />
+</div>
+
+<div>
+  <Label className="text-sm font-semibold text-gray-700">Alternate Contact Number</Label>
+  <Input
+    type="text"
+    name="alternateMobile"
+    value={formData.alternateMobile}
+    onChange={handleChange}
+    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+    placeholder="Enter 10-digit number"
+  />
+</div>
+
               <div>
                 <Label className="text-sm font-semibold text-gray-700">Booking for Event</Label>
                 <select

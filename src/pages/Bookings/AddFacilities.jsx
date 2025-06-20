@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 export default function AddFacilities() {
   const [selectedFacilities, setSelectedFacilities] = useState([]);
+  const [paidFacilities, setPaidFacilities] = useState({});
 
   const facilities = [
     { id: "F001", name: "Dairy" },
@@ -23,10 +24,35 @@ export default function AddFacilities() {
     setSelectedFacilities((prev) =>
       prev.includes(id) ? prev.filter((facilityId) => facilityId !== id) : [...prev, id]
     );
+    setPaidFacilities((prev) => {
+      const updated = { ...prev };
+      if (updated[id]) delete updated[id];
+      return updated;
+    });
+  };
+
+  const handlePaidToggle = (id) => {
+    setPaidFacilities((prev) => ({
+      ...prev,
+      [id]: { isPaid: !prev[id]?.isPaid, price: prev[id]?.price || "" },
+    }));
+  };
+
+  const handlePriceChange = (id, value) => {
+    setPaidFacilities((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], price: value },
+    }));
   };
 
   const handleSubmit = () => {
-    const selectedFacilityObjects = facilities.filter(facility => selectedFacilities.includes(facility.id));
+    const selectedFacilityObjects = facilities
+      .filter(facility => selectedFacilities.includes(facility.id))
+      .map(facility => ({
+        ...facility,
+        isPaid: paidFacilities[facility.id]?.isPaid || false,
+        price: paidFacilities[facility.id]?.isPaid ? paidFacilities[facility.id]?.price : undefined,
+      }));
     console.log("Selected Facilities:", selectedFacilityObjects);
   };
 
@@ -41,14 +67,38 @@ export default function AddFacilities() {
             {facilities.map((facility) => (
               <label
                 key={facility.id}
-                className="flex items-center space-x-3 bg-gray-50 dark:bg-gray-900 px-3 py-3 shadow-sm border border-gray-200 dark:border-gray-800 transition-all cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950"
+                className="flex flex-col gap-2 bg-gray-50 dark:bg-gray-900 px-3 py-3 shadow-sm border border-gray-200 dark:border-gray-800 transition-all cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950 rounded-lg"
               >
-                <Checkbox
-                  checked={selectedFacilities.includes(facility.id)}
-                  onCheckedChange={() => toggleFacility(facility.id)}
-                  className="w-5 h-5 rounded border-gray-300 focus:ring-2 focus:ring-blue-400"
-                />
-                <span className="text-gray-800 dark:text-gray-200 font-medium text-base">{facility.name}</span>
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    checked={selectedFacilities.includes(facility.id)}
+                    onCheckedChange={() => toggleFacility(facility.id)}
+                    className="w-5 h-5 rounded border-gray-300 focus:ring-2 focus:ring-blue-400"
+                  />
+                  <span className="text-gray-800 dark:text-gray-200 font-medium text-base">{facility.name}</span>
+                </div>
+                {selectedFacilities.includes(facility.id) && (
+                  <div className="flex items-center gap-2 mt-2 ml-7">
+                    <input
+                      type="checkbox"
+                      id={`isPaid-${facility.id}`}
+                      checked={!!paidFacilities[facility.id]?.isPaid}
+                      onChange={() => handlePaidToggle(facility.id)}
+                      className="accent-blue-600 w-4 h-4"
+                    />
+                    <label htmlFor={`isPaid-${facility.id}`} className="text-sm text-gray-700 dark:text-gray-300 select-none">Is Paid?</label>
+                    {paidFacilities[facility.id]?.isPaid && (
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Price"
+                        value={paidFacilities[facility.id]?.price || ""}
+                        onChange={e => handlePriceChange(facility.id, e.target.value)}
+                        className="ml-3 w-24 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-400 text-sm"
+                      />
+                    )}
+                  </div>
+                )}
               </label>
             ))}
           </div>
