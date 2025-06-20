@@ -6,9 +6,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash, ArrowLeft, Calendar, ChevronDown, ChevronUp } from "lucide-react";
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable'; // ensures autoTable is attached
-// Dummy data for categories, subcategories, dishes, facilities, occasions, meal types, serving types
+import jsPDF from 'jspdf';
+
+
+
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { DateTabContent } from "./DateTabContent";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+
 const categories = [
   { id: "1", name: "Sweets" },
   { id: "2", name: "Namkeen" },
@@ -54,108 +64,129 @@ const mealTypes = [
 ];
 const servingTypes = ["Buffet", "Table Chair", "Plated", "Family Style"];
 
-// Dummy booking dates
-const bookingDates = ["2025-06-10", "2025-06-11"];
-
-function generateMenuPDF({occasions, bookingDetails}) {
-  const doc = new jsPDF();
-
-  // Company Header
-  doc.setFontSize(18);
-  doc.text('SFS', 15, 18);
-  doc.setFontSize(14);
-  doc.text('Shrigni Food Services', 30, 18);
-  doc.setFontSize(10);
-  doc.text('Menu Plan', 15, 28);
-  doc.setLineWidth(0.5);
-  doc.line(15, 30, 195, 30);
-
-  let y = 36;
-  // Dummy booking details
-  const customer = bookingDetails?.customerName || 'John Doe';
-  const event = bookingDetails?.eventName || 'Wedding Reception';
-  const venue = bookingDetails?.venue || 'Grand Hall, City Center';
-  doc.text(`Customer: ${customer}`, 15, y);
-  doc.text(`Event: ${event}`, 100, y);
-  y += 6;
-  doc.text(`Venue: ${venue}`, 15, y);
-  y += 8;
-
-  Object.keys(occasions).forEach(date => {
-    doc.setFontSize(12);
-    doc.text(`Date: ${date}`, 15, y);
-    y += 6;
-    occasions[date].forEach((occ, idx) => {
-      doc.setFontSize(11);
-      doc.text(`Occasion ${idx + 1}: ${occ.occasionName || 'Lunch'}`, 20, y);
-      y += 5;
-      const tableBody = [
-        [
-          'Meal Type',
-          occ.mealType || 'Buffet',
-          'Time',
-          occ.time || '12:00 PM',
-        ],
-        [
-          'Guests',
-          occ.guests || '100',
-          'Serving Type',
-          occ.servingType || 'Plated',
-        ],
-        [
-          'Venue',
-          occ.venue || venue,
-          'Facilities',
-          (occ.facilities && occ.facilities.join(', ')) || 'Standard',
-        ],
-      ];
-       console.log(typeof doc.autoTable); 
-      doc.autoTable({
-    startY: y,
-    head: [['', '', '', '']],
-    body: tableBody,
-    theme: 'plain',
-    styles: { fontSize: 9, cellPadding: 1 },
-    margin: { left: 20, right: 15 },
-    didDrawCell: () => {},
-  });
-  
-      y = doc.lastAutoTable.finalY + 2;
-      // Menu Items
-      doc.setFontSize(10);
-      doc.text('Menu:', 25, y);
-      y += 4;
-      const menuItems = (occ.menu && occ.menu.length > 0) ? occ.menu : ['Paneer Tikka', 'Dal Makhani', 'Naan', 'Gulab Jamun'];
-      menuItems.forEach(item => {
-        doc.text(`- ${item}`, 30, y);
-        y += 4;
-      });
-      y += 2;
-      if (y > 260) { doc.addPage(); y = 20; }
+const bookingDates = ["2025-06-10", "2025-06-11", "2025-06-12", "2025-06-13"];
+function drawDetailsTable(doc, y, rows) {
+  const colX = [20, 60, 110, 150];
+  rows.forEach((row, i) => {
+    colX.forEach((x, j) => {
+      doc.setFontSize(9);
+      doc.text(row[j] || '-', x, y);
     });
-    y += 2;
-    if (y > 260) { doc.addPage(); y = 20; }
+    y += 6;
   });
+  return y;
+}
 
-  // Notes and Footer
-  y += 6;
-  if (y > 260) { doc.addPage(); y = 20; }
+function generateMenuPDF({ occasions, bookingDetails }) {
+  const doc = new jsPDF('p', 'mm', 'a4');
+
+  const customer = bookingDetails?.customerName || 'श्रीमान अशोक जी टंडन केसव जी';
+  const venue = bookingDetails?.venue || 'अनन्ता रिसोर्ट';
+  const mobile1 = bookingDetails?.mobile1 || '9252490297';
+  const mobile2 = bookingDetails?.mobile2 || '8871076396';
+
+  let y = 15;
+
+  // Header: Title + tagline
   doc.setFontSize(10);
-  doc.text('Notes:', 15, y);
-  y += 5;
-  doc.text('• Please confirm the menu and guest count 2 days prior to the event.', 18, y);
-  y += 5;
-  doc.text('• For any changes, contact us at 9876543210 or info@shrignifood.com', 18, y);
+  doc.setFont(undefined, 'italic');
+  doc.text('A Complete Food Solution', 105, y, { align: 'center' });
+
+  y += 7;
+  doc.setFontSize(22);
+  doc.setFont(undefined, 'bold');
+  doc.text('Shringi Food Services', 105, y, { align: 'center' });
+
   y += 8;
   doc.setFontSize(11);
-  doc.text('Thank you for choosing Shrigni Food Services!', 15, y);
+  doc.setFont(undefined, 'normal');
+  doc.text('Impressive Selection For Any Occasion', 105, y, { align: 'center' });
 
-  doc.save('Menu_ShrigniFoodServices.pdf');
+  y += 10;
+  doc.setLineWidth(0.5);
+  doc.rect(10, 10, 190, 277); // outer border
+
+  // Customer Info Table
+  y += 4;
+  doc.setFontSize(10);
+  doc.text(`Name Of Customer :-`, 12, y);
+  doc.text(customer, 60, y);
+  doc.text(`M.N.:`, 150, y);
+  doc.text(mobile1, 160, y);
+  y += 6;
+  doc.text(`Venue :-`, 12, y);
+  doc.text(venue, 60, y);
+  doc.text(mobile2, 160, y);
+
+  // Divider
+  y += 8;
+  doc.setFont(undefined, 'bold');
+  doc.text('Menu:', 105, y, { align: 'center' });
+
+  y += 5;
+
+  // Loop Dates & Occasions
+  Object.keys(occasions).forEach(date => {
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.text(formatDateHindi(date), 105, y, { align: 'center' });
+    y += 4;
+
+    occasions[date].forEach((occ) => {
+      const occLabel = `${occ.occasionName || '-'} ${occ.guests || ''}आदमी ${formatTimeHindi(occ.startTime)}`;
+      doc.setFont(undefined, 'normal');
+      doc.text(`• ${occLabel}`, 12, y);
+      y += 4;
+
+      const dishList = (occ.menu.length ? occ.menu : ['राजभोग', 'गुलाब जामुन', 'पनीर']).join(' , ');
+      const lines = doc.splitTextToSize(dishList, 180);
+      lines.forEach(line => {
+        doc.text(`- ${line}`, 16, y);
+        y += 4;
+        if (y > 270) { doc.addPage(); y = 20; }
+      });
+
+      y += 2;
+    });
+
+    y += 4;
+  });
+
+  // Footer
+  y = 270;
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'bold');
+  doc.text('Om Prakash Shringi', 20, y);
+  doc.text('Chandra Shekhar Shringi', 85, y);
+  doc.text('Naval Shringi', 160, y);
+  y += 5;
+  doc.setFont(undefined, 'normal');
+  doc.setFontSize(9);
+  doc.text('94143-94181', 25, y);
+  doc.text('96944-87748', 95, y);
+  doc.text('98282-89454', 165, y);
+
+  y += 8;
+  doc.setFont(undefined, 'bolditalic');
+  doc.setFontSize(11);
+  doc.text('Batak Bheru Para , Nahar Ka Chottha Bundi(Raj.)', 105, y, { align: 'center' });
+
+  doc.save('Shringi_Menu.pdf');
 }
+function formatDateHindi(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('hi-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function formatTimeHindi(timeStr) {
+  if (!timeStr) return '';
+  const [h, m] = timeStr.split(':');
+  return `${h}:${m} बजे`;
+}
+
 
 export default function AddMenu() {
   const navigate = useNavigate();
-  // Occasions state: { [date]: [occasion, ...] }
   const [occasions, setOccasions] = useState(
     bookingDates.reduce((acc, date) => {
       acc[date] = [
@@ -175,56 +206,44 @@ export default function AddMenu() {
       return acc;
     }, {})
   );
-  // Menu filter state (per occasion)
-  const [menuFilter, setMenuFilter] = useState({ category: "", subcategory: "", search: "" });
-  // Accordion state
-  const [openDate, setOpenDate] = useState(bookingDates[0]);
-  const [openOccasion, setOpenOccasion] = useState({ [bookingDates[0]]: 0 });
 
-  // Add new occasion for a date
   const addOccasion = (date) => {
-    setOccasions((prev) => {
-      const newOccasions = {
-        ...prev,
-        [date]: [
-          ...prev[date],
-          {
-            occasionName: "",
-            date,
-            mealType: "",
-            startTime: "",
-            endTime: "",
-            guests: "",
-            menu: [],
-            servingType: "",
-            exactVenue: "",
-            facilities: [],
-          },
-        ],
-      };
-      return newOccasions;
-    });
-    setOpenOccasion((prev) => ({ ...prev, [date]: occasions[date] ? occasions[date].length : 0 }));
+    setOccasions((prev) => ({
+      ...prev,
+      [date]: [
+        ...prev[date],
+        {
+          occasionName: "",
+          date,
+          mealType: "",
+          startTime: "",
+          endTime: "",
+          guests: "",
+          menu: [],
+          servingType: "",
+          exactVenue: "",
+          facilities: [],
+        },
+      ],
+    }));
   };
-  // Remove occasion
+
   const removeOccasion = (date, idx) => {
     setOccasions((prev) => {
       const updated = prev[date].filter((_, i) => i !== idx);
+      if(updated.length === 0) {
+        return {
+             ...prev, 
+             [date]: [{
+                occasionName: "", date, mealType: "", startTime: "", endTime: "",
+                guests: "", menu: [], servingType: "", exactVenue: "", facilities: [],
+             }]
+        };
+      }
       return { ...prev, [date]: updated };
     });
-    setOpenOccasion((prev) => {
-      const occs = occasions[date].filter((_, i) => i !== idx);
-      let newIdx = 0;
-      if (occs.length > 1 && prev[date] === idx && idx > 0) newIdx = idx - 1;
-      return { ...prev, [date]: occs.length ? newIdx : null };
-    });
   };
-  // When switching dates, always open the first occasion if none is selected
-  const handleDateAccordion = (date) => {
-    setOpenDate(date === openDate ? null : date);
-    setOpenOccasion((prev) => ({ ...prev, [date]: 0 }));
-  };
-  // Handle occasion field change
+
   const handleOccasionChange = (date, idx, field, value) => {
     setOccasions((prev) => {
       const updated = [...prev[date]];
@@ -232,18 +251,18 @@ export default function AddMenu() {
       return { ...prev, [date]: updated };
     });
   };
-  // Handle menu selection
-  const handleMenuChange = (date, idx, dishId) => {
+
+  const handleMenuChange = (date, idx, dishName) => {
     setOccasions((prev) => {
       const updated = [...prev[date]];
-      const menu = updated[idx].menu.includes(dishId)
-        ? updated[idx].menu.filter((id) => id !== dishId)
-        : [...updated[idx].menu, dishId];
+      const menu = updated[idx].menu.includes(dishName)
+        ? updated[idx].menu.filter((name) => name !== dishName)
+        : [...updated[idx].menu, dishName];
       updated[idx] = { ...updated[idx], menu };
       return { ...prev, [date]: updated };
     });
   };
-  // Handle facilities selection
+
   const handleFacilitiesChange = (date, idx, facility) => {
     setOccasions((prev) => {
       const updated = [...prev[date]];
@@ -255,287 +274,125 @@ export default function AddMenu() {
     });
   };
 
-  // Filtered dishes for menu selection
-  const filteredDishes = dishes.filter((d) => {
-    const catMatch = !menuFilter.category || d.categoryId === menuFilter.category;
-    const subcatMatch = !menuFilter.subcategory || d.subcategoryId === menuFilter.subcategory;
-    const searchMatch = !menuFilter.search || d.name.toLowerCase().includes(menuFilter.search.toLowerCase());
-    return catMatch && subcatMatch && searchMatch;
-  });
-
-  // Save handler
   const handleSave = () => {
-    alert("Menu saved! (Check console for data)");
-    console.log("Occasions:", occasions);
+    console.log("Saving data:", occasions);
+    generateMenuPDF({ occasions, bookingDetails: {} });
   };
-
-  const bookingDetails = { customerName: 'John Doe', eventName: 'Wedding Reception', venue: 'Grand Hall, City Center' };
+  
+  const formatDate = (dateString) => {
+    return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', {
+        weekday: 'long', month: 'short', day: 'numeric'
+    });
+  }
 
   return (
+    <div className="p-2 sm:p-4 md:p-6 max-w-7xl mx-auto bg-white min-h-screen pb-24 sm:pb-0">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 pb-4 border-b">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Add Menu</h1>
+            <Button variant="outline" onClick={() => navigate(-1)} className="w-full sm:w-auto">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Bookings
+            </Button>
+        </div>
 
-        <Card className="shadow-xl rounded-xl border-0 bg-white dark:bg-gray-800">
-    
-       
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex flex-wrap items-center justify-between mb-4 gap-2">
-              <h2 className="text-xl font-bold">Add Menu</h2>
-              
-                 <Button
-                variant="outline"
-                className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() => navigate("/bookings")}
-              >
-                <ArrowLeft className="w-4 h-4" /> Back to Bookings
-              </Button>
-            </div>
-            {/* Date Accordions */}
-            <div className="space-y-4">
-              {bookingDates.map((date, dIdx) => (
-                <div key={date} className="border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900">
-                  <button
-                    type="button"
-                    className="w-full flex justify-between items-center px-4 py-3 text-lg font-semibold text-blue-700 dark:text-blue-300 focus:outline-none"
-                    onClick={() => handleDateAccordion(date)}
-                  >
-                    <span className="flex items-center gap-2">
-                      <Calendar className="w-5 h-5 text-blue-600" />
-                      {new Date(date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                    </span>
-                    {openDate === date ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                  </button>
-                  {openDate === date && (
-                    <div className="p-4 pt-0">
-                      {/* Occasion Tabs/Accordions */}
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {occasions[date].map((occ, idx) => (
-                          <div key={idx} className="flex items-center">
-                            <button
-                              type="button"
-                              className={`flex items-center px-4 py-2 rounded-t-lg border-b-2 font-medium transition-colors ${openOccasion[date] === idx ? 'bg-blue-100 dark:bg-blue-800 border-blue-600 text-blue-700 dark:text-blue-200' : 'bg-gray-100 dark:bg-gray-800 border-transparent text-gray-700 dark:text-gray-300'}`}
-                              onClick={() => setOpenOccasion((prev) => ({ ...prev, [date]: idx }))}
-                            >
-                              <span>Occasion {idx + 1}</span>
-                              {occasions[date].length > 1 && (
-                                <button
-                                  type="button"
-                                  className="ml-2 text-red-500 hover:text-red-700 focus:outline-none"
-                                  onClick={e => { e.stopPropagation(); removeOccasion(date, idx); }}
-                                  tabIndex={-1}
-                                  aria-label="Delete Occasion"
-                                >
-                                  <Trash className="w-4 h-4" />
-                                </button>
-                              )}
-                            </button>
-                          </div>
-                        ))}
-                        <Button
-                          size="sm"
-                          className="ml-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
-                          onClick={() => addOccasion(date)}
-                        >
-                          <Plus className="w-4 h-4 mr-1" /> Add Occasion
-                        </Button>
-                      </div>
-                      {/* Occasion Accordion/Form */}
-                      {occasions[date].map((occ, idx) => (
-                        <div key={idx} className={`transition-all duration-300 ${openOccasion[date] === idx ? 'block' : 'hidden'}`}>
-                          <Card className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 mb-4">
-                            <div className="flex justify-between items-center mb-2">
-                              <span className="font-semibold text-blue-700 dark:text-blue-300">Occasion {idx + 1}</span>
-                              {occasions[date].length > 1 && (
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  className="text-red-500 hover:text-red-700"
-                                  onClick={() => removeOccasion(date, idx)}
-                                >
-                                  <Trash className="w-4 h-4" />
-                                </Button>
-                              )}
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div>
-                                <Label>Occasion Name</Label>
-                                <select
-                                  className="w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm bg-white dark:bg-gray-800 mt-1"
-                                  value={occ.occasionName}
-                                  onChange={e => handleOccasionChange(date, idx, "occasionName", e.target.value)}
-                                >
-                                  <option value="">Select Occasion</option>
-                                  {occasionNames.map((o, i) => (
-                                    <option key={i} value={o}>{o}</option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div>
-                                <Label>Meal Type</Label>
-                                <select
-                                  className="w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm bg-white dark:bg-gray-800 mt-1"
-                                  value={occ.mealType}
-                                  onChange={e => handleOccasionChange(date, idx, "mealType", e.target.value)}
-                                >
-                                  <option value="">Select Meal Type</option>
-                                  {mealTypes.map((m, i) => (
-                                    <option key={i} value={m}>{m}</option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div>
-                                <Label>Start Time</Label>
-                                <Input
-                                  type="time"
-                                  value={occ.startTime}
-                                  onChange={e => handleOccasionChange(date, idx, "startTime", e.target.value)}
-                                  className="w-full"
-                                />
-                              </div>
-                              <div>
-                                <Label>End Time</Label>
-                                <Input
-                                  type="time"
-                                  value={occ.endTime}
-                                  onChange={e => handleOccasionChange(date, idx, "endTime", e.target.value)}
-                                  className="w-full"
-                                />
-                              </div>
-                              <div>
-                                <Label>No. of Guests</Label>
-                                <Input
-                                  type="number"
-                                  min="1"
-                                  value={occ.guests}
-                                  onChange={e => handleOccasionChange(date, idx, "guests", e.target.value)}
-                                  className="w-full"
-                                />
-                              </div>
-                              <div>
-                                <Label>Serving Type</Label>
-                                <select
-                                  className="w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm bg-white dark:bg-gray-800 mt-1"
-                                  value={occ.servingType}
-                                  onChange={e => handleOccasionChange(date, idx, "servingType", e.target.value)}
-                                >
-                                  <option value="">Select Serving Type</option>
-                                  {servingTypes.map((s, i) => (
-                                    <option key={i} value={s}>{s}</option>
-                                  ))}
-                                </select>
-                              </div>
-                              <div className="sm:col-span-2">
-                                <Label>Exact Venue</Label>
-                                <Input
-                                  type="text"
-                                  value={occ.exactVenue}
-                                  onChange={e => handleOccasionChange(date, idx, "exactVenue", e.target.value)}
-                                  className="w-full"
-                                />
-                              </div>
-                              <div className="sm:col-span-2">
-                                <Label>Facilities</Label>
-                                <div className="flex flex-wrap gap-2 mt-1">
-                                  {facilities.map((f, i) => (
-                                    <label key={i} className="flex items-center gap-2 text-sm font-medium bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-lg cursor-pointer">
-                                      <input
-                                        type="checkbox"
-                                        checked={occ.facilities.includes(f)}
-                                        onChange={() => handleFacilitiesChange(date, idx, f)}
-                                        className="accent-blue-600"
-                                      />
-                                      {f}
-                                    </label>
-                                  ))}
-                                </div>
-                              </div>
-                              {/* Menu Selection */}
-                              <div className="sm:col-span-2">
-                                <Label>Menu (Dishes)</Label>
-                                <div className="flex flex-wrap gap-2 mb-2 mt-1">
-                                  <select
-                                    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm bg-white dark:bg-gray-800"
-                                    value={menuFilter.category}
-                                    onChange={e => setMenuFilter(f => ({ ...f, category: e.target.value, subcategory: "" }))}
-                                  >
-                                    <option value="">All Categories</option>
-                                    {categories.map((cat) => (
-                                      <option key={cat.id} value={cat.categoryId || cat.id}>{cat.name}</option>
-                                    ))}
-                                  </select>
-                                  <select
-                                    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm bg-white dark:bg-gray-800"
-                                    value={menuFilter.subcategory}
-                                    onChange={e => setMenuFilter(f => ({ ...f, subcategory: e.target.value }))}
-                                    disabled={!menuFilter.category}
-                                  >
-                                    <option value="">All Subcategories</option>
-                                    {subcategories.filter(sc => !menuFilter.category || sc.categoryId === menuFilter.category).map((sc) => (
-                                      <option key={sc.id} value={sc.id}>{sc.name}</option>
-                                    ))}
-                                  </select>
-                                  <Input
-                                    type="text"
-                                    placeholder="Search dish..."
-                                    value={menuFilter.search}
-                                    onChange={e => setMenuFilter(f => ({ ...f, search: e.target.value }))}
-                                    className="w-40"
-                                  />
-                                </div>
-                                <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                                  {filteredDishes.length === 0 && (
-                                    <span className="text-gray-400 italic">No dishes found.</span>
-                                  )}
-                                  {filteredDishes.map((dish) => (
-                                    <label key={dish.id} className="flex items-center gap-2 text-sm font-medium bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-lg cursor-pointer">
-                                      <input
-                                        type="checkbox"
-                                        checked={occ.menu.includes(dish.id)}
-                                        onChange={() => handleMenuChange(date, idx, dish.id)}
-                                        className="accent-blue-600"
-                                      />
-                                      {dish.name}
-                                    </label>
-                                  ))}
-                                </div>
-                                {occ.menu.length > 0 && (
-                                  <div className="mt-2 text-xs text-gray-500">
-                                    Selected: {occ.menu.length} dish{occ.menu.length > 1 ? "es" : ""}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </Card>
-                        </div>
+        {/* Desktop Tabs (sm and up) */}
+        <div className="hidden sm:block">
+          <Tabs defaultValue={bookingDates[0]} className="w-full">
+              <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  <TabsList className="flex flex-nowrap w-max rounded-none border-b bg-transparent p-0">
+                      {bookingDates.map(date => (
+                          <TabsTrigger 
+                              key={date} 
+                              value={date} 
+                              className="relative flex-shrink-0 h-11 rounded-none border-b-2 border-transparent bg-transparent px-3 sm:px-4 pb-3 pt-2 font-semibold text-muted-foreground shadow-none transition-none hover:text-blue-700 data-[state=active]:border-blue-600 data-[state=active]:text-blue-700 data-[state=active]:shadow-none"
+                          >
+                              <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
+                              <span className="truncate">{formatDate(date)}</span>
+                          </TabsTrigger>
                       ))}
-                    </div>
-                  )}
-                </div>
+                  </TabsList>
+              </div>
+              {bookingDates.map(date => (
+                  <TabsContent 
+                      key={date} 
+                      value={date} 
+                      className="bg-gray-50/60 p-2 sm:p-4 rounded-b-lg mt-0 border-x border-b"
+                  >
+                      <h2 className="text-lg sm:text-xl font-bold text-gray-700 mb-4 px-2 sm:px-0">
+                          Editing Menu for: <span className="text-blue-700">{formatDate(date)}</span>
+                      </h2>
+                      <DateTabContent
+                          date={date}
+                          occasionsForDate={occasions[date]}
+                          addOccasion={addOccasion}
+                          removeOccasion={removeOccasion}
+                          handleOccasionChange={handleOccasionChange}
+                          handleFacilitiesChange={handleFacilitiesChange}
+                          handleMenuChange={handleMenuChange}
+                          occasionNames={occasionNames}
+                          mealTypes={mealTypes}
+                          servingTypes={servingTypes}
+                          facilities={facilities}
+                          categories={categories}
+                          subcategories={subcategories}
+                          dishes={dishes}
+                      />
+                  </TabsContent>
               ))}
-            </div>
-            <div className="mt-8 flex justify-end">
-             
-              <Button
-                className="bg-green-600 hover:bg-green-800 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all text-base md:text-lg mr-2"
-                onClick={() => generateMenuPDF({ 
-                  occasions, 
-                  bookingDetails: {
-                    customerName: 'John Doe',
-                    eventName: 'Wedding Reception',
-                    venue: 'Grand Hall, City Center'
-                  }
-                })}
-              >
-                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m4-4H8m12 4V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2z" /></svg>
-                Print Menu
-              </Button>
-              <Button
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all text-base md:text-lg"
-                onClick={handleSave}
-              >
-                Submit
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      
+          </Tabs>
+        </div>
+
+        {/* Mobile Accordion (below sm) */}
+        <div className="block sm:hidden">
+          <Accordion type="single" collapsible className="w-full">
+            {bookingDates.map((date, idx) => (
+              <AccordionItem value={`date-${date}`} key={date} className="border-t">
+                <AccordionTrigger className="p-3 bg-white hover:bg-gray-50 rounded-md text-base font-semibold flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-blue-600" />
+                  <span>{formatDate(date)}</span>
+                </AccordionTrigger>
+                <AccordionContent className="p-2 bg-gray-50/60">
+                  <DateTabContent
+                    date={date}
+                    occasionsForDate={occasions[date]}
+                    addOccasion={addOccasion}
+                    removeOccasion={removeOccasion}
+                    handleOccasionChange={handleOccasionChange}
+                    handleFacilitiesChange={handleFacilitiesChange}
+                    handleMenuChange={handleMenuChange}
+                    occasionNames={occasionNames}
+                    mealTypes={mealTypes}
+                    servingTypes={servingTypes}
+                    facilities={facilities}
+                    categories={categories}
+                    subcategories={subcategories}
+                    dishes={dishes}
+                  />
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+
+        {/* Save Button: sticky on mobile, normal on desktop */}
+       <div className="flex flex-col sm:flex-row justify-end gap-2 mt-8">
+  <Button
+    onClick={() => generateMenuPDF({ occasions, bookingDetails: {
+      customerName: 'John Doe',
+      eventName: 'Wedding Reception',
+      venue: 'Lawn B'
+    }})}
+    variant="outline"
+    size="lg"
+    className="text-blue-600 border-blue-600 hover:bg-blue-50"
+  >
+    Print Menu
+  </Button>
+
+  <Button onClick={handleSave} size="lg" className="bg-green-600 hover:bg-green-700 text-white">
+    Save Menu
+  </Button>
+</div>
+
+    </div>
   );
 }
