@@ -11,6 +11,18 @@ export default function AddNewItem() {
   const [category, setCategory] = useState({ en: "Sweet", hi: "मिठाई" });
   const [subcategory, setSubcategory] = useState({ en: "", hi: "" });
   const [ingredients, setIngredients] = useState([{ name: "", quantity: "" }]);
+const [majorIngredient, setMajorIngredient] = useState("");
+const [majorQty, setMajorQty] = useState("");
+const [minorIngredients, setMinorIngredients] = useState([
+  { ingredient_id: "", quantity: "" }
+]);
+const [sufficientFor, setSufficientFor] = useState("");
+const [notes, setNotes] = useState("");
+const ingredientOptions = [
+  { id: "milk", name: "Milk" },
+  { id: "sugar", name: "Sugar" },
+  { id: "cardamom", name: "Cardamom" },
+]; // Replace with API fetch later
 
   const categories = [
     { en: "Sweet", hi: "मिठाई" },
@@ -20,9 +32,9 @@ export default function AddNewItem() {
 
   const subcategories = {
     Sweet: [
-      { en: "Ladoo", hi: "लड्डू" },
-      { en: "Barfi", hi: "बर्फी" },
-      { en: "Jalebi", hi: "जलेबी" },
+      { en: "Milk", hi: "दूध" },
+      { en: "Dry Fruit", hi: "मेवा" },
+      { en: "Maida", hi: "मेडा" },
     ],
     "Main Course": [
       { en: "Paneer", hi: "पनीर" },
@@ -50,11 +62,24 @@ export default function AddNewItem() {
     setIngredients(updated);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log({ itemName, category, subcategory, ingredients });
-    // send to backend
+ const handleSubmit = (e) => {
+  e.preventDefault();
+
+  const payload = {
+    itemName,
+    category,
+    subcategory,
+    majorIngredient,
+    majorQty,
+    minorIngredients,
+    sufficientFor,
+    notes,
   };
+
+  console.log("Payload:", payload);
+  // Send to backend API
+};
+
 
   return (
     <div className="max-w-8xl mx-auto">
@@ -128,35 +153,102 @@ export default function AddNewItem() {
                 />
               </div>
             </div>
+<div className="flex space-x-4">
+  <div className="w-1/2">
+    <Label>Major Ingredient</Label>
+    <Select onValueChange={(val) => setMajorIngredient(val)}>
+      <SelectTrigger>
+        <SelectValue placeholder="Select major ingredient" />
+      </SelectTrigger>
+      <SelectContent>
+        {ingredientOptions.map((opt) => (
+          <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
 
-            {/* Ingredients */}
-            <div>
-              <Label>Ingredients</Label>
-              {ingredients.map((ing, i) => (
-                <div key={i} className="flex space-x-2 mt-2">
-                  <Input
-                    placeholder="Name"
-                    value={ing.name}
-                    onChange={(e) =>
-                      handleIngredientChange(i, "name", e.target.value)
-                    }
-                  />
-                  <Input
-                    placeholder="Quantity (gm)"
-                    value={ing.quantity}
-                    onChange={(e) =>
-                      handleIngredientChange(i, "quantity", e.target.value)
-                    }
-                  />
-                  <Button variant="destructive" onClick={() => removeIngredient(i)}>
-                    <Trash2 className="w-5 h-5" />
-                  </Button>
-                </div>
-              ))}
-              <Button className="mt-3" onClick={addIngredient}>
-                <Plus className="w-5 h-5 mr-2" /> Add Ingredient
-              </Button>
-            </div>
+  <div className="w-1/2">
+    <Label>Major Quantity</Label>
+    <Input
+      type="text"
+      placeholder="e.g., 1kg"
+      value={majorQty}
+      onChange={(e) => setMajorQty(e.target.value)}
+    />
+  </div>
+</div>
+
+          <div>
+  <Label>Minor Ingredients</Label>
+  {minorIngredients.map((ing, i) => (
+    <div key={i} className="flex space-x-2 mt-2">
+      <Select
+        value={ing.ingredient_id}
+        onValueChange={(val) => {
+          const updated = [...minorIngredients];
+          updated[i].ingredient_id = val;
+          setMinorIngredients(updated);
+        }}
+      >
+        <SelectTrigger className="w-1/2">
+          <SelectValue placeholder="Ingredient" />
+        </SelectTrigger>
+        <SelectContent>
+          {ingredientOptions.map((opt) => (
+            <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Input
+        className="w-1/2"
+        placeholder="Quantity"
+        value={ing.quantity}
+        onChange={(e) => {
+          const updated = [...minorIngredients];
+          updated[i].quantity = e.target.value;
+          setMinorIngredients(updated);
+        }}
+      />
+
+      <Button variant="destructive" onClick={() =>
+        setMinorIngredients(minorIngredients.filter((_, idx) => idx !== i))
+      }>
+        <Trash2 className="w-5 h-5" />
+      </Button>
+    </div>
+  ))}
+
+  <Button className="mt-3" onClick={() =>
+    setMinorIngredients([...minorIngredients, { ingredient_id: "", quantity: "" }])
+  }>
+    <Plus className="w-5 h-5 mr-2" /> Add Minor Ingredient
+  </Button>
+</div>
+
+<div className="flex space-x-4 mt-4">
+  <div className="w-1/2">
+    <Label>Sufficient For</Label>
+    <Input
+      type="number"
+      placeholder="Guests"
+      value={sufficientFor}
+      onChange={(e) => setSufficientFor(e.target.value)}
+    />
+  </div>
+  <div className="w-1/2">
+    <Label>Notes (optional)</Label>
+    <Input
+      type="text"
+      placeholder="Extra details..."
+      value={notes}
+      onChange={(e) => setNotes(e.target.value)}
+    />
+  </div>
+</div>
+
+
 
             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
               Save Item

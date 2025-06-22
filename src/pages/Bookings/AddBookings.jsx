@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 const eventOptions = [
   "Anniversary",
   "Wedding",
@@ -90,7 +91,7 @@ const [formData, setFormData] = useState({
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-2 sm:px-4 py-6 mb-5">
-      <Card className="w-full max-w-4xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800 mb-5">
+      <Card className="w-full max-w-6xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800 mb-5">
         <CardHeader className="w-full bg-gradient-to-r from-blue-600 to-blue-400 p-4 sm:p-6">
           <div className="flex justify-between items-center w-full">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight">Add Booking</h2>
@@ -153,18 +154,28 @@ const [formData, setFormData] = useState({
 </div>
 
               <div>
-                <Label className="text-sm font-semibold text-gray-700">Booking for Event</Label>
-                <select
-                  name="event"
-                  value={formData.event}
-                  onChange={handleChange}
-                  className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
-                >
-                  <option value="">Select an event</option>
-                  {eventOptions.map((event, idx) => (
-                    <option key={idx} value={event}>{event}</option>
-                  ))}
-                </select>
+               <Label className="text-sm font-semibold text-gray-700">Booking for Event</Label>
+<Select
+  value={formData.event}
+  onValueChange={(value) =>
+    setFormData((prev) => ({ ...prev, event: value }))
+  }
+>
+  <SelectTrigger>
+    <SelectValue placeholder="Select event" />
+  </SelectTrigger>
+  <SelectContent>
+    {eventOptions.map((event) => (
+      <SelectItem key={event} value={event}>
+        {event}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+{errors.event && (
+  <p className="text-red-500 text-sm mt-1">{errors.event}</p>
+)}
+
                 {errors.event && <p className="text-red-500 text-sm mt-1">{errors.event}</p>}
               </div>
               <div>

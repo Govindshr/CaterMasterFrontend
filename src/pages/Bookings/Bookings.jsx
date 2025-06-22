@@ -141,6 +141,7 @@ export default function Bookings() {
               <Table className="bg-white dark:bg-gray-800">
                 <TableHeader className="bg-gray-100 bg-white dark:bg-gray-800">
                   <TableRow>
+                    
                     <TableHead>Booking ID</TableHead>
                     <TableHead>Customer Name</TableHead>
                     <TableHead>Mobile</TableHead>
