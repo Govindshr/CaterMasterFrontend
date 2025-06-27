@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState ,useEffect} from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate ,useParams } from "react-router-dom";
+import { protectedGetApi } from "@/services/nodeapi";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { config } from "@/services/nodeconfig";
 import { Plus, Trash, ArrowLeft, Calendar, ChevronDown, ChevronUp } from "lucide-react";
 import jsPDF from 'jspdf';
 
@@ -63,8 +65,6 @@ const mealTypes = [
   "Full Day Servings",
 ];
 const servingTypes = ["Buffet", "Table Chair", "Plated", "Family Style"];
-
-const bookingDates = ["2025-06-10", "2025-06-11", "2025-06-12", "2025-06-13"];
 function drawDetailsTable(doc, y, rows) {
   const colX = [20, 60, 110, 150];
   rows.forEach((row, i) => {
@@ -186,26 +186,52 @@ function formatTimeHindi(timeStr) {
 
 
 export default function AddMenu() {
+  
   const navigate = useNavigate();
-  const [occasions, setOccasions] = useState(
-    bookingDates.reduce((acc, date) => {
-      acc[date] = [
-        {
-          occasionName: "",
-          date,
+  const { id } = useParams();
+ const [bookingDates, setBookingDates] = useState([]);
+const [occasions, setOccasions] = useState({});
+const [selectedDate, setSelectedDate] = useState("");
+
+
+ useEffect(() => {
+  const fetchOccasionsOfBooking = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await protectedGetApi(`${config.AddBooking}/${id}/occasions/list`, token);
+      const occasionList = response.data || [];
+
+      const grouped = {};
+
+      occasionList.forEach((item) => {
+        const date = item.date.split("T")[0]; // extract YYYY-MM-DD
+        if (!grouped[date]) grouped[date] = [];
+
+        grouped[date].push({
+          ...item,
+          menu: [],
           mealType: "",
           startTime: "",
           endTime: "",
           guests: "",
-          menu: [],
           servingType: "",
           exactVenue: "",
           facilities: [],
-        },
-      ];
-      return acc;
-    }, {})
-  );
+        });
+      });
+
+      const dates = Object.keys(grouped);
+      setBookingDates(dates);
+      setOccasions(grouped);
+      if (dates.length > 0) setSelectedDate(dates[0]); // 🔥 auto-select first date
+    } catch (err) {
+      console.error("Failed to fetch booking occasions:", err);
+    }
+  };
+
+  fetchOccasionsOfBooking();
+}, [id]);
+
 
   const addOccasion = (date) => {
     setOccasions((prev) => ({
@@ -296,7 +322,7 @@ export default function AddMenu() {
 
         {/* Desktop Tabs (sm and up) */}
         <div className="hidden sm:block">
-          <Tabs defaultValue={bookingDates[0]} className="w-full">
+       <Tabs value={selectedDate} onValueChange={setSelectedDate} className="w-full">
               <div className="w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                   <TabsList className="flex flex-nowrap w-max rounded-none border-b bg-transparent p-0">
                       {bookingDates.map(date => (

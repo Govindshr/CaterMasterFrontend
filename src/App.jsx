@@ -23,6 +23,8 @@ import ItemList from "./pages/Master/Item-Category/ItemsList";
 import UserRegistration from "./pages/User-Management/userRegistration";
 import UserLogin from "./pages/User-Management/userLogin";
 import UserManagement from "./pages/User-Management/UserManagement";
+import OccasionTypes from "./pages/Master/OccasionTypes/OccasionType";
+import ServingTypes from "./pages/Master/ServingTypes/ServingTypes";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -106,7 +108,7 @@ function AppWrapper() {
                 <AddBooking />
               </ProtectedRoute>
             } />
-            <Route path="/view-booking" element={
+            <Route path="/view-booking/:id" element={
               <ProtectedRoute>
                 <ViewBooking />
               </ProtectedRoute>
@@ -116,7 +118,7 @@ function AppWrapper() {
                 <EditBooking />
               </ProtectedRoute>
             } />
-            <Route path="/add-menu" element={
+            <Route path="/add-menu/:id" element={
               <ProtectedRoute>
                 <AddMenu />
               </ProtectedRoute>
@@ -139,6 +141,16 @@ function AppWrapper() {
             <Route path="/events" element={
               <ProtectedRoute>
                 <Events />
+              </ProtectedRoute>
+            } />
+            <Route path="/occasion-types" element={
+              <ProtectedRoute>
+                <OccasionTypes />
+              </ProtectedRoute>
+            } />
+             <Route path="/serving-types" element={
+              <ProtectedRoute>
+                <ServingTypes />
               </ProtectedRoute>
             } />
             <Route path="/facilities" element={

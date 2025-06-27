@@ -128,6 +128,8 @@ export default function Sidebar({ isOpen, onClose }) {
               <div className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${isMasterOpen ? "max-h-80" : "max-h-0"}`}>
                 <ul className={`pl-2 space-y-2 transition-all duration-300 ${!isOpen && "hidden"}`}>
                   <li><Link to="/events" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Events</Link></li>
+                  <li><Link to="/occasion-types" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Occasion-Types</Link></li>
+                  <li><Link to="/serving-types" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Serving-Types</Link></li>
                   <li><Link to="/facilities" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Facilities</Link></li>
                   <li><Link to="/ingredients" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Ingredients</Link></li>
                   <li><Link to="/item-categories" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Item-Categories</Link></li>

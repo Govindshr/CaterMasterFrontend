@@ -73,6 +73,19 @@ export const protectedPostApi = async (endpoint, data = {}, token) => {
         throw error;
     }
 };
+export const protectedDeleteApi = async (endpoint, token) => {
+  try {
+    const response = await api.delete(endpoint, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Protected DELETE request to ${endpoint} failed:`, error);
+    throw error;
+  }
+};
 
 
 export const postApiWithFile = async (endpoint, data = {}, files = {}) => {

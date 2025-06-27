@@ -1,49 +1,81 @@
-import { useState } from "react";
+import { useState ,useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
-
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-const eventOptions = [
-  "Anniversary",
-  "Wedding",
-  "Corporate Event",
-];
+import { protectedPostApi ,protectedGetApi} from "@/services/nodeapi";
+import { config } from "@/services/nodeconfig";
 
-const facilityOptions = [
-  "Dairy",
-  "Vegetables",
-  "Rashan",
-  "Coal",
-  "Tables",
-];
+
+
+
 
 export default function AddBooking() {
   const navigate = useNavigate();
-
-const [formData, setFormData] = useState({
-  customerName: "",
-  mobile: "",
-  alternateName: "",           // ✅ New
-  alternateMobile: "",         // ✅ New
-  event: "",
-  noOfDays: "1",
-  date: "",
-  startDate: "",
-  endDate: "",
-  venueAddress: "",
-  venueLocation: "",
-  userAddress: "",
-  amount: "",
-  facilities: [],
-});
+   const { i18n } = useTranslation();
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
+const [eventOptions,setEventOptions] =useState([])
+const [facilityOptions,setFacilityOptions] = useState([])
+  const [formData, setFormData] = useState({
+    customerName: "",
+    mobile: "",
+    alternateName: "",           // ✅ New
+    alternateMobile: "",         // ✅ New
+    event: "",
+    noOfDays: "1",
+    date: "",
+    startDate: "",
+    endDate: "",
+    venueAddress: "",
+    venueLocation: "",
+    userAddress: "",
+    amount: "",
+    facilities: [],
+  });
 
   const [errors, setErrors] = useState({});
   const [showLocationInput, setShowLocationInput] = useState(false);
+
+    useEffect(() => {
+    // Comment out the API call for now
+    fetchEvents();
+    fetchFacilities()
+  }, [i18n.language]);
+
+    const fetchEvents = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await protectedGetApi(config.GetEvents, token);
+      if (res.success === true) {
+        setEventOptions(res.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching events:", error);
+      // Fallback to dummy data if API fails
+      setEventOptions([]);
+    }
+  };
+
+    const fetchFacilities = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await protectedGetApi(config.GetFacilities, token);
+
+    const bookingFacilities = (res?.data || []).filter(
+      (facility) => facility.scope === "booking"
+    );
+
+    setFacilityOptions(bookingFacilities);
+  } catch (error) {
+    console.error("Error fetching facilities:", error);
+  }
+};
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -79,15 +111,77 @@ const [formData, setFormData] = useState({
     return validationErrors;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const validationErrors = validate();
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length === 0) {
+const formatDataForAPI = () => {
+ const formattedFacilities = formData.facilities.map(id => ({
+  facilityId: id,
+  quantity: 1,
+  customCost: 0,
+}));
+
+
+  const payload = {
+    customerName: {
+      en: formData.customerName,
+      hi: formData.customerName,
+    },
+    mobileNumber: formData.mobile,
+    eventTypeId: formData.event,
+    noOfDays: parseInt(formData.noOfDays),
+    startDate: formData.noOfDays === "1" ? formData.date : formData.startDate,
+    venueAddress: formData.venueAddress || "",
+    googleVenueLocation: formData.venueLocation || "",
+    customerAddress: formData.userAddress,
+    advanceAmount: formData.amount ? parseFloat(formData.amount) : 0,
+    alternateContact: {
+      name: formData.alternateName,
+      number: formData.alternateMobile,
+    },
+    facilities: formattedFacilities,
+  };
+
+  if (formData.noOfDays !== "1") {
+    payload.endDate = formData.endDate;
+  }
+
+  return payload;
+};
+
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setApiError("");
+
+  const apiData = formatDataForAPI();
+  const validationErrors = validate();
+  setErrors(validationErrors);
+
+  if (Object.keys(validationErrors).length === 0) {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Authentication token not found");
+
+      const response = await protectedPostApi(config.AddBooking, apiData, token);
+
+      if (response.success && response.data?._id) {
+        // ✅ Call generate occasions API after successful booking
+        const generateUrl = `${config.AddBooking}/${response.data._id}/generate-occasions`;
+        await protectedPostApi(generateUrl, {}, token);
+      }
+
       alert("Booking Added Successfully! ✅");
       navigate("/bookings");
+    } catch (error) {
+      console.error("Error adding booking or generating occasions:", error);
+      setApiError(
+        error.response?.data?.message || error.message || "Failed to add booking"
+      );
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }
+};
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-2 sm:px-4 py-6 mb-5">
@@ -105,6 +199,11 @@ const [formData, setFormData] = useState({
           </div>
         </CardHeader>
         <CardContent className="p-4 sm:p-6 bg-white dark:bg-gray-950">
+          {apiError && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              {apiError}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div>
@@ -130,53 +229,49 @@ const [formData, setFormData] = useState({
                 {errors.mobile && <p className="text-red-500 text-sm mt-1">{errors.mobile}</p>}
               </div>
               <div>
-  <Label className="text-sm font-semibold text-gray-700">Alternate Contact Name</Label>
-  <Input
-    type="text"
-    name="alternateName"
-    value={formData.alternateName}
-    onChange={handleChange}
-    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
-    placeholder="Enter alternate contact name"
-  />
-</div>
-
-<div>
-  <Label className="text-sm font-semibold text-gray-700">Alternate Contact Number</Label>
-  <Input
-    type="text"
-    name="alternateMobile"
-    value={formData.alternateMobile}
-    onChange={handleChange}
-    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
-    placeholder="Enter 10-digit number"
-  />
-</div>
-
+                <Label className="text-sm font-semibold text-gray-700">Alternate Contact Name</Label>
+                <Input
+                  type="text"
+                  name="alternateName"
+                  value={formData.alternateName}
+                  onChange={handleChange}
+                  className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+                  placeholder="Enter alternate contact name"
+                />
+              </div>
               <div>
-               <Label className="text-sm font-semibold text-gray-700">Booking for Event</Label>
-<Select
-  value={formData.event}
-  onValueChange={(value) =>
-    setFormData((prev) => ({ ...prev, event: value }))
-  }
->
-  <SelectTrigger>
-    <SelectValue placeholder="Select event" />
-  </SelectTrigger>
-  <SelectContent>
-    {eventOptions.map((event) => (
-      <SelectItem key={event} value={event}>
-        {event}
-      </SelectItem>
-    ))}
-  </SelectContent>
-</Select>
-{errors.event && (
-  <p className="text-red-500 text-sm mt-1">{errors.event}</p>
-)}
-
-                {errors.event && <p className="text-red-500 text-sm mt-1">{errors.event}</p>}
+                <Label className="text-sm font-semibold text-gray-700">Alternate Contact Number</Label>
+                <Input
+                  type="text"
+                  name="alternateMobile"
+                  value={formData.alternateMobile}
+                  onChange={handleChange}
+                  className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+                  placeholder="Enter 10-digit number"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-semibold text-gray-700">Booking for </Label>
+                <Select
+                  value={formData.event}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({ ...prev, event: value }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select event" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {eventOptions.map((event) => (
+                      <SelectItem key={event._id} value={event._id}>
+                        {event.name?.[i18n.language] || event.name?.en}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.event && (
+                  <p className="text-red-500 text-sm mt-1">{errors.event}</p>
+                )}
               </div>
               <div>
                 <Label className="text-sm font-semibold text-gray-700">No. of Days</Label>
@@ -278,16 +373,16 @@ const [formData, setFormData] = useState({
                 <Label className="text-sm font-semibold text-gray-700">Extra Facilities</Label>
                 <div className="flex flex-wrap gap-3 mt-2">
                   {facilityOptions.map((facility, idx) => (
-                    <label key={idx} className="flex items-center gap-2 text-sm font-medium bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="facilities"
-                        value={facility}
-                        checked={formData.facilities.includes(facility)}
-                        onChange={handleChange}
-                        className="accent-blue-600"
-                      />
-                      {facility}
+                    <label key={facility._id} className="flex items-center gap-2 text-sm font-medium bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg cursor-pointer">
+                     <input
+  type="checkbox"
+  name="facilities"
+  value={facility._id}
+  checked={formData.facilities.includes(facility._id)}
+  onChange={handleChange}
+/>
+
+                      {facility.name?.[i18n.language] || facility.name?.en}
                     </label>
                   ))}
                 </div>
@@ -296,9 +391,10 @@ const [formData, setFormData] = useState({
             <div className="mt-8">
               <Button
                 type="submit"
+                disabled={isLoading}
                 className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all text-base md:text-lg"
               >
-                Add Booking
+                {isLoading ? "Adding Booking..." : "Add Booking"}
               </Button>
             </div>
           </form>

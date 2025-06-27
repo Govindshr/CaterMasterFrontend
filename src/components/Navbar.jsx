@@ -6,9 +6,9 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import { toast } from 'react-toastify';
 import { protectedGetApi } from "@/services/nodeapi";
 import { config } from "@/services/nodeconfig";
-
 export default function Navbar({ toggleSidebar }) {
   const { t } = useTranslation();
+   const { i18n } = useTranslation();
   const [darkMode, setDarkMode] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -36,7 +36,7 @@ export default function Navbar({ toggleSidebar }) {
   // Fetch user profile on component mount
   useEffect(() => {
     fetchUserProfile();
-  }, []);
+  }, [i18n.language]);
 
   const fetchUserProfile = async () => {
     const token = localStorage.getItem("token");
@@ -90,8 +90,8 @@ const handleLogout = () => {
 
   // Get user initials for avatar fallback
   const getUserInitials = () => {
-    if (!userProfile?.fullName) return "U";
-    return userProfile.fullName
+    if (!userProfile?.fullName?.[i18n.language]) return "U";
+    return userProfile.fullName?.[i18n.language]
       .split(" ")
       .map(name => name.charAt(0))
       .join("")
@@ -184,7 +184,7 @@ const handleLogout = () => {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-900 dark:text-gray-200 truncate">
-                      {userProfile?.fullName || "User"}
+                      {userProfile?.fullName?.[i18n.language] || "User"}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                       {userProfile?.userType || "User"}

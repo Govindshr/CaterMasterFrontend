@@ -33,10 +33,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { config } from "@/services/nodeconfig";
-import { postApi, getApi } from "@/services/nodeapi";
+ import { protectedPostApi, protectedGetApi, protectedDeleteApi } from "@/services/nodeapi";
 import { useTranslation } from "react-i18next";
-
+import Swal from "sweetalert2";
 export default function Facilities() {
+  const currentUserId = JSON.parse(localStorage.getItem("user"))?.id;
+
   const { i18n } = useTranslation();
   const [facilities, setFacilities] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,7 +51,7 @@ const [isPaid, setIsPaid] = useState(false);
 
 
 
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
   const totalPages = Math.ceil(facilities.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const selectedFacilities = facilities.slice(startIndex, startIndex + itemsPerPage);
@@ -60,8 +62,10 @@ const [isPaid, setIsPaid] = useState(false);
 
   const fetchFacilities = async () => {
     try {
-      const res = await getApi(config.GetFacilities);
-      setFacilities(res);
+     const token = localStorage.getItem("token");
+ const res = await protectedGetApi(config.GetFacilities, token);
+    setFacilities(res?.data || []);
+
     } catch (error) {
       console.error("Error fetching facilities:", error);
     }
@@ -70,14 +74,17 @@ const [isPaid, setIsPaid] = useState(false);
   const addFacility = async () => {
     if (!nameEn.trim() || !nameHi.trim()) return;
     try {
-    await postApi(config.AddFacility, {
-  name: {
-    en: nameEn,
-    hi: nameHi,
-  },
-  type,
-  price: isPaid ? parseFloat(price) : 0,
-});
+   const token = localStorage.getItem("token");
+await protectedPostApi(config.AddFacility, {
+    name: {
+      en: nameEn,
+      hi: nameHi,
+    },
+    scope:type,
+    isPaid:isPaid,
+    cost: isPaid ? parseFloat(price) : 0,
+}, token);
+
 
 
       setIsModalOpen(false);
@@ -88,6 +95,32 @@ const [isPaid, setIsPaid] = useState(false);
       console.error("Error adding facility:", error);
     }
   };
+
+const deleteFacility = async (id) => {
+  const result = await Swal.fire({
+    title: "Are you sure?",
+    text: "You won't be able to undo this!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, delete it!",
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    const token = localStorage.getItem("token");
+    await protectedDeleteApi(config.DeleteFacility(id), token);
+    await fetchFacilities();
+
+    Swal.fire("Deleted!", "The facility has been removed.", "success");
+  } catch (error) {
+    console.error("Delete failed", error);
+    Swal.fire("Error!", "Failed to delete the facility.", "error");
+  }
+};
+
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -130,8 +163,8 @@ const [isPaid, setIsPaid] = useState(false);
   onChange={(e) => setType(e.target.value)}
   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
 >
-  <option value="Occasion">Occasion</option>
-  <option value="Booking">Booking</option>
+  <option value="occasion">Occasion</option>
+  <option value="booking">Booking</option>
 </select>
 
 <Label className="text-gray-700 mt-3">Is Paid</Label>
@@ -198,13 +231,20 @@ const [isPaid, setIsPaid] = useState(false);
                   <TableRow key={index} className="hover:bg-gray-100 dark:hover:bg-gray-800">
                     {/* <TableCell>{facility._id || `F${index + 1}`}</TableCell> */}
                     <TableCell>{facility.name?.[i18n.language] || facility.name?.en}</TableCell>
-                    <TableCell>{facility.type}</TableCell>
-<TableCell>{facility.price}</TableCell>
+                    <TableCell>{facility.scope}</TableCell>
+<TableCell>{facility.cost} Rs</TableCell>
 
                     <TableCell className="flex justify-center space-x-3">
-                      <button className="text-red-500 hover:text-red-700">
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+                      {facility.createdBy === currentUserId ? (
+  <button
+    onClick={() => deleteFacility(facility._id)}
+    className="text-red-500 hover:text-red-700"
+    title="Delete Facility"
+  >
+    <Trash2 className="w-5 h-5" />
+  </button>
+):"N/A"}
+
                     </TableCell>
                   </TableRow>
                 ))}

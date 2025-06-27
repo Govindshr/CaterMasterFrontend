@@ -5,8 +5,10 @@ import { config } from '@/services/nodeconfig';
 
 export default function UserRegistration() {
   const [formData, setFormData] = useState({
-    fullName: '',
+    fullNameEn: '',
+    fullNameHi: '',
     mobile: '',
+    email: '',
     password: '',
     confirmPassword: '',
     userType: 'user',
@@ -16,6 +18,8 @@ export default function UserRegistration() {
   const [passwordError, setPasswordError] = useState('');
   const [matchError, setMatchError] = useState('');
   const [mobileError, setMobileError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [nameError, setNameError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,6 +28,16 @@ export default function UserRegistration() {
     if (name === 'password') validatePasswordStrength(value);
     if (name === 'confirmPassword') validatePasswordMatch(formData.password, value);
     if (name === 'mobile') validateMobile(value);
+    if (name === 'email') validateEmail(value);
+    if (name === 'fullNameEn' || name === 'fullNameHi') validateName();
+  };
+
+  const validateName = () => {
+    if (!formData.fullNameEn.trim()) {
+      setNameError('English name is required.');
+    } else {
+      setNameError('');
+    }
   };
 
   const validatePasswordStrength = (password) => {
@@ -44,13 +58,28 @@ export default function UserRegistration() {
     setMobileError(mobileRegex.test(mobile) ? '' : 'Enter valid 10-digit mobile number.');
   };
 
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      setEmailError('Email is required.');
+    } else if (!emailRegex.test(email)) {
+      setEmailError('Please enter a valid email address.');
+    } else {
+      setEmailError('');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (passwordError || matchError || mobileError) return;
+    if (passwordError || matchError || mobileError || emailError || nameError) return;
 
     const payload = {
-      fullName: formData.fullName,
+      fullName: {
+        en: formData.fullNameEn.trim(),
+        hi: formData.fullNameHi.trim() || formData.fullNameEn.trim() // Use English as fallback if Hindi is empty
+      },
       mobile: formData.mobile,
+      email: formData.email,
       password: formData.password,
       userType: formData.userType,
       status: 'active',
@@ -61,8 +90,10 @@ export default function UserRegistration() {
       alert('Registration successful!');
       console.log(res.data);
       setFormData({
-        fullName: '',
+        fullNameEn: '',
+        fullNameHi: '',
         mobile: '',
+        email: '',
         password: '',
         confirmPassword: '',
         userType: 'user',
@@ -81,16 +112,31 @@ export default function UserRegistration() {
       >
         <h2 className="text-xl font-semibold text-center text-gray-800">User Registration</h2>
 
-        <input
-          type="text"
-          name="fullName"
-          value={formData.fullName}
-          onChange={handleChange}
-          placeholder="Full Name"
-          className="input-style"
-           autoComplete="off"
-          required
-        />
+        <div>
+          <input
+            type="text"
+            name="fullNameEn"
+            value={formData.fullNameEn}
+            onChange={handleChange}
+            placeholder="Full Name (English)"
+            className="input-style"
+            autoComplete="off"
+            required
+          />
+          {nameError && <p className="error-text">{nameError}</p>}
+        </div>
+
+        <div>
+          <input
+            type="text"
+            name="fullNameHi"
+            value={formData.fullNameHi}
+            onChange={handleChange}
+            placeholder="Full Name (Hindi) - Optional"
+            className="input-style"
+            autoComplete="off"
+          />
+        </div>
 
         <div>
           <input
@@ -104,6 +150,20 @@ export default function UserRegistration() {
             required
           />
           {mobileError && <p className="error-text">{mobileError}</p>}
+        </div>
+
+        <div>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="Email Address"
+            autoComplete="off"
+            className="input-style"
+            required
+          />
+          {emailError && <p className="error-text">{emailError}</p>}
         </div>
 
         <div className="relative">
@@ -152,7 +212,7 @@ export default function UserRegistration() {
 
         <button
           type="submit"
-          disabled={!!passwordError || !!matchError || !!mobileError}
+          disabled={!!passwordError || !!matchError || !!mobileError || !!emailError || !!nameError}
           className="w-full bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-700 transition disabled:bg-gray-400"
         >
           Sign Up

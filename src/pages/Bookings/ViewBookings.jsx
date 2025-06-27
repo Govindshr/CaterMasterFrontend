@@ -1,27 +1,37 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate ,useParams} from "react-router-dom";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { protectedGetApi } from "@/services/nodeapi";
+import { config } from "@/services/nodeconfig";
+import { useTranslation } from "react-i18next";
 
-// Dummy booking details with new fields
-const bookingData = {
-  id: "B001",
-  customerName: "John Doe",
-  mobile: "9876543210",
-  event: "Wedding",
-  noOfDays: "2",
-  date: "",
-  startDate: "2025-06-10",
-  endDate: "2025-06-11",
-  venueAddress: "123 Main Street, City, Country",
-  venueLocation: "https://maps.google.com/?q=123+Main+Street",
-  userAddress: "456 User Lane, City, Country",
-  amount: "5000",
-  facilities: ["Dairy", "Vegetables"],
-};
+
 
 export default function ViewBooking() {
   const navigate = useNavigate();
+   const { i18n } = useTranslation();
+const { id } = useParams();
+const [bookingData, setBookingData] = useState(null);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState("");
+
+useEffect(() => {
+  const fetchBooking = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await protectedGetApi(`${config.AddBooking}/${id}`, token);
+      setBookingData(response.data);
+    } catch (err) {
+      console.error("Failed to fetch booking:", err);
+      setError(err.response?.data?.message || "Error loading booking");
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchBooking();
+}, [id]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-2 sm:px-4 py-6">
@@ -45,64 +55,65 @@ export default function ViewBooking() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <span className="font-semibold text-gray-700 dark:text-gray-300">Customer Name:</span>
-                <div className="text-gray-900 dark:text-gray-100">{bookingData.customerName}</div>
+                <div className="text-gray-900 dark:text-gray-100">{bookingData?.customerName?.en}</div>
               </div>
               <div>
                 <span className="font-semibold text-gray-700 dark:text-gray-300">Mobile:</span>
-                <div className="text-gray-900 dark:text-gray-100">{bookingData.mobile}</div>
+                <div className="text-gray-900 dark:text-gray-100">{bookingData?.mobileNumber}</div>
               </div>
               <div>
                 <span className="font-semibold text-gray-700 dark:text-gray-300">Event:</span>
-                <div className="text-gray-900 dark:text-gray-100">{bookingData.event}</div>
+                <div className="text-gray-900 dark:text-gray-100">{bookingData?.eventTypeId.name?.[i18n.language] || bookingData?.eventTypeId.name?.en}</div>
               </div>
               <div>
                 <span className="font-semibold text-gray-700 dark:text-gray-300">No. of Days:</span>
-                <div className="text-gray-900 dark:text-gray-100">{bookingData.noOfDays}</div>
+                <div className="text-gray-900 dark:text-gray-100">{bookingData?.noOfDays}</div>
               </div>
-              {bookingData.noOfDays === "1" ? (
+              {bookingData?.noOfDays === "1" ? (
                 <div>
                   <span className="font-semibold text-gray-700 dark:text-gray-300">Date:</span>
-                  <div className="text-gray-900 dark:text-gray-100">{bookingData.date}</div>
+                  <div className="text-gray-900 dark:text-gray-100">{bookingData?.startDate}</div>
                 </div>
               ) : (
                 <>
                   <div>
                     <span className="font-semibold text-gray-700 dark:text-gray-300">Start Date:</span>
-                    <div className="text-gray-900 dark:text-gray-100">{bookingData.startDate}</div>
+                    <div className="text-gray-900 dark:text-gray-100">{bookingData?.startDate}</div>
                   </div>
                   <div>
                     <span className="font-semibold text-gray-700 dark:text-gray-300">End Date:</span>
-                    <div className="text-gray-900 dark:text-gray-100">{bookingData.endDate}</div>
+                    <div className="text-gray-900 dark:text-gray-100">{bookingData?.endDate}</div>
                   </div>
                 </>
               )}
               <div className="sm:col-span-2">
                 <span className="font-semibold text-gray-700 dark:text-gray-300">Venue Address:</span>
-                <div className="text-gray-900 dark:text-gray-100">{bookingData.venueAddress || <span className="italic text-gray-400">N/A</span>}</div>
+                <div className="text-gray-900 dark:text-gray-100">{bookingData?.venueAddress || <span className="italic text-gray-400">N/A</span>}</div>
               </div>
               <div className="sm:col-span-2">
                 <span className="font-semibold text-gray-700 dark:text-gray-300">Venue Location:</span>
                 <div className="text-gray-900 dark:text-gray-100">
-                  {bookingData.venueLocation ? (
-                    <a href={bookingData.venueLocation} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">View on Google Maps</a>
+                  {bookingData?.googleVenueLocation ? (
+                    <a href={bookingData?.googleVenueLocation} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">View on Google Maps</a>
                   ) : <span className="italic text-gray-400">N/A</span>}
                 </div>
               </div>
               <div className="sm:col-span-2">
                 <span className="font-semibold text-gray-700 dark:text-gray-300">User Address:</span>
-                <div className="text-gray-900 dark:text-gray-100">{bookingData.userAddress}</div>
+                <div className="text-gray-900 dark:text-gray-100">{bookingData?.customerAddress}</div>
               </div>
               <div>
                 <span className="font-semibold text-gray-700 dark:text-gray-300">Advance/Booking Amount:</span>
-                <div className="text-gray-900 dark:text-gray-100">{bookingData.amount || <span className="italic text-gray-400">N/A</span>}</div>
+                <div className="text-gray-900 dark:text-gray-100">{bookingData?.advanceAmount || <span className="italic text-gray-400">N/A</span>}</div>
               </div>
               <div className="sm:col-span-2">
                 <span className="font-semibold text-gray-700 dark:text-gray-300">Extra Facilities:</span>
                 <div className="text-gray-900 dark:text-gray-100">
-                  {bookingData.facilities && bookingData.facilities.length > 0 ? (
+                  {bookingData?.facilities && bookingData?.facilities.length > 0 ? (
                     <ul className="list-disc ml-5">
-                      {bookingData.facilities.map((f, i) => (
-                        <li key={i}>{f}</li>
+                      {bookingData?.facilities.map((f, i) => (
+                        <li key={i}>{f.facilityId.name?.[i18n.language] || f.facilityId.name?.en}</li>
+                        
                       ))}
                     </ul>
                   ) : <span className="italic text-gray-400">N/A</span>}
