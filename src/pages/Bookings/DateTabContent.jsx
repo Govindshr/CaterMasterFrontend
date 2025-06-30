@@ -43,7 +43,7 @@ export function DateTabContent({
     <div>
       <div className="flex justify-end mb-4 px-1 sm:px-0">
           <Button onClick={handleAddOccasion} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white">
-              <Plus className="mr-2 h-4 w-4" /> Add Occasion
+              <Plus className="mr-2 h-4 w-4" /> Add Event
           </Button>
       </div>
 

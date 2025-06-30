@@ -198,7 +198,7 @@ const [selectedDate, setSelectedDate] = useState("");
   const fetchOccasionsOfBooking = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await protectedGetApi(`${config.AddBooking}/${id}/occasions/list`, token);
+      const response = await protectedGetApi(`${config.AddBooking}/${id}/occasions`, token);
       const occasionList = response.data || [];
 
       const grouped = {};
