@@ -12,19 +12,23 @@ import EditBooking from "./pages/Bookings/EditBookings";
 import Events from "./pages/Master/Events/Events";
 import Facilities from "./pages/Master/Facility/Facility";
 import AddMenu from "./pages/Bookings/Addmenu";
-import ItemCategory from "./pages/Master/Item-Category/ItemCategory";
-import Ingredients from "./pages/Master/Ingredients/Ingredients";
-import AddNewItem from "./pages/Master/Item-Category/AddNewItem";
+import AddNewItem from "./pages/Master/Dish-Management/AddNewItem";
 import AddFacilities from "./pages/Bookings/AddFacilities";
 import MenuSummary from "./pages/List/GenerateList";
 import FinalIngredientList from "./pages/List/FinalIngredientList";
-import ItemSubCategory from "./pages/Master/Item-Category/itemSubcategory";
-import ItemList from "./pages/Master/Item-Category/ItemsList";
+import ItemList from "./pages/Master/Dish-Management/DishList";
 import UserRegistration from "./pages/User-Management/userRegistration";
 import UserLogin from "./pages/User-Management/userLogin";
 import UserManagement from "./pages/User-Management/UserManagement";
 import OccasionTypes from "./pages/Master/OccasionTypes/OccasionType";
 import ServingTypes from "./pages/Master/ServingTypes/ServingTypes";
+import BookingTypes from "./pages/Master/BookingsTypes/BookingTypes";
+import DishCategory from "./pages/Master/Dish-Management/DishCategory";
+import DishSubCategory from "./pages/Master/Dish-Management/DishSubcategory";
+import IngredientTypes from "./pages/Master/Ingredients/IngredientsTypes";
+import UnitTypes from "./pages/Master/UnitTypes/UnitTypes";
+import AddIngredient from "./pages/Master/Ingredients/AddIngredients";
+import IngredientList from "./pages/Master/Ingredients/IngredientsList";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -158,19 +162,40 @@ function AppWrapper() {
                 <Facilities />
               </ProtectedRoute>
             } />
-            <Route path="/item-categories" element={
+             <Route path="/booking-types" element={
               <ProtectedRoute>
-                <ItemCategory />
+                <BookingTypes />
               </ProtectedRoute>
             } />
-            <Route path="/item-subcategories" element={
+            
+            <Route path="/dish-categories" element={
               <ProtectedRoute>
-                <ItemSubCategory />
+                <DishCategory />
               </ProtectedRoute>
             } />
-            <Route path="/ingredients" element={
+            <Route path="/dish-subcategories" element={
               <ProtectedRoute>
-                <Ingredients />
+                <DishSubCategory />
+              </ProtectedRoute>
+            } />
+            <Route path="/ingredient-types" element={
+              <ProtectedRoute>
+                <IngredientTypes />
+              </ProtectedRoute>
+            } />
+            <Route path="/add-ingredient" element={
+              <ProtectedRoute>
+                <AddIngredient />
+              </ProtectedRoute>
+            } />
+             <Route path="/all-ingredients" element={
+              <ProtectedRoute>
+                <IngredientList />
+              </ProtectedRoute>
+            } />
+             <Route path="/unit-types" element={
+              <ProtectedRoute>
+                <UnitTypes />
               </ProtectedRoute>
             } />
             <Route path="/items-list" element={

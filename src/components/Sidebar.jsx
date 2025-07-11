@@ -125,15 +125,19 @@ export default function Sidebar({ isOpen, onClose }) {
               </button>
 
               {/* Dropdown Submenu */}
-              <div className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${isMasterOpen ? "max-h-80" : "max-h-0"}`}>
+              <div className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${isMasterOpen ? "max-h-100" : "max-h-0"}`}>
                 <ul className={`pl-2 space-y-2 transition-all duration-300 ${!isOpen && "hidden"}`}>
                   <li><Link to="/events" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Events</Link></li>
                   <li><Link to="/occasion-types" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Occasion-Types</Link></li>
                   <li><Link to="/serving-types" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Serving-Types</Link></li>
                   <li><Link to="/facilities" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Facilities</Link></li>
-                  <li><Link to="/ingredients" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Ingredients</Link></li>
-                  <li><Link to="/item-categories" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Item-Categories</Link></li>
-                  <li><Link to="/item-subcategories" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Item-Sub-Categories</Link></li>
+                  <li><Link to="/booking-types" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Bookings Types</Link></li>
+                  <li><Link to="/dish-categories" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Dish-Categories</Link></li>
+                  <li><Link to="/dish-subcategories" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Dish-Sub-Categories</Link></li>
+                  <li><Link to="/ingredient-types" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Ingredient Types</Link></li>
+                  <li><Link to="/unit-types" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Unit Types</Link></li>
+                  <li><Link to="/add-ingredient" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Add Ingredient </Link></li>
+                  <li><Link to="/all-ingredients" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">All Ingredient </Link></li>
                   <li><Link to="/items-list" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Items-List</Link></li>
                   <li><Link to="/add-item" className="block p-3 rounded-md transition hover:bg-blue-400/50 dark:hover:bg-gray-600">Add-Items</Link></li>
                 </ul>
