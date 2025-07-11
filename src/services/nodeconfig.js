@@ -42,5 +42,6 @@ export const config = {
    GetIngredients: `${Base_URI}/ingredients`,
    AddIngredients: `${Base_URI}/ingredients`,
    AddDish: `${Base_URI}/dishes`,
+   GetDishes: `${Base_URI}/dishes`,
 
 };

@@ -12,7 +12,7 @@ import EditBooking from "./pages/Bookings/EditBookings";
 import Events from "./pages/Master/Events/Events";
 import Facilities from "./pages/Master/Facility/Facility";
 import AddMenu from "./pages/Bookings/Addmenu";
-import AddNewItem from "./pages/Master/Dish-Management/AddNewItem";
+import AddNewItem from "./pages/Master/Dish-Management/AddNewDish";
 import AddFacilities from "./pages/Bookings/AddFacilities";
 import MenuSummary from "./pages/List/GenerateList";
 import FinalIngredientList from "./pages/List/FinalIngredientList";

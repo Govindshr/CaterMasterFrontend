@@ -1,10 +1,14 @@
-import { useState } from "react";
+// List dishes with filters and pagination from API
+
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { protectedGetApi } from "@/services/nodeapi";
+import { config } from "@/services/nodeconfig";
 
 export default function ItemList() {
   const [nameFilter, setNameFilter] = useState("");
@@ -12,33 +16,35 @@ export default function ItemList() {
   const [subcategoryFilter, setSubcategoryFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const itemsPerPage = 5;
+  const [dishes, setDishes] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const categories = ["Sweet", "Main Course", "Beverage"];
-  const subcategories = {
-    Sweet: ["Rasmalai", "Gulab Jamun"],
-    "Main Course": ["Paneer", "Dal"],
-    Beverage: ["Tea", "Coffee"]
+  useEffect(() => {
+    fetchDishes();
+  }, [currentPage, nameFilter, categoryFilter, subcategoryFilter]);
+
+  const fetchDishes = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: 5,
+        name: nameFilter,
+        category: categoryFilter,
+        subcategory: subcategoryFilter,
+      });
+      const res = await protectedGetApi(`${config.GetDishes}?${params}`, token);
+      const data = res?.data || {};
+      setDishes(data?.dishes || []);
+      setCategories(data?.categories || []);
+      setSubcategories(data?.subcategories || []);
+      setTotalPages(data?.pagination?.totalPages || 1);
+    } catch (err) {
+      console.error("Failed to fetch dishes", err);
+    }
   };
-
-  const items = [
-    { id: 1, name: "Rasmalai", category: "Sweet", subcategory: "Rasmalai" },
-    { id: 2, name: "Gulab Jamun", category: "Sweet", subcategory: "Gulab Jamun" },
-    { id: 3, name: "Paneer Butter Masala", category: "Main Course", subcategory: "Paneer" },
-    { id: 4, name: "Masoor Dal", category: "Main Course", subcategory: "Dal" },
-    { id: 5, name: "Tea Special", category: "Beverage", subcategory: "Tea" },
-    { id: 6, name: "Cold Coffee", category: "Beverage", subcategory: "Coffee" },
-  ];
-
-  const filteredItems = items.filter(item =>
-    item.name.toLowerCase().includes(nameFilter.toLowerCase()) &&
-    (categoryFilter ? item.category === categoryFilter : true) &&
-    (subcategoryFilter ? item.subcategory === subcategoryFilter : true)
-  );
-
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const selectedItems = filteredItems.slice(startIndex, startIndex + itemsPerPage);
 
   const resetPageOnFilterChange = () => setCurrentPage(1);
 
@@ -46,7 +52,7 @@ export default function ItemList() {
     <div className="max-w-6xl mx-auto">
       <Card className="shadow-lg rounded-lg p-6">
         <CardHeader>
-          <h2 className="text-2xl font-bold">Item List</h2>
+          <h2 className="text-2xl font-bold">Dish List</h2>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
@@ -65,8 +71,8 @@ export default function ItemList() {
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((cat, idx) => (
-                    <SelectItem key={idx} value={cat}>{cat}</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat._id} value={cat._id}>{cat.name?.en}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -78,33 +84,35 @@ export default function ItemList() {
                   <SelectValue placeholder="Select Subcategory" />
                 </SelectTrigger>
                 <SelectContent>
-                  {(subcategories[categoryFilter] || []).map((sub, idx) => (
-                    <SelectItem key={idx} value={sub}>{sub}</SelectItem>
+                  {subcategories.filter((s) => s.categoryId === categoryFilter).map((sub) => (
+                    <SelectItem key={sub._id} value={sub._id}>{sub.name?.en}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
+
           <div className="overflow-x-auto">
             <Table>
               <TableHeader className="bg-gray-100">
                 <TableRow>
-                  <TableHead>Item Name</TableHead>
+                  <TableHead>Name</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Subcategory</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {selectedItems.map((item) => (
-                  <TableRow key={item.id} className="hover:bg-gray-50">
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell>{item.category}</TableCell>
-                    <TableCell>{item.subcategory}</TableCell>
+                {dishes.map((item) => (
+                  <TableRow key={item._id} className="hover:bg-gray-50">
+                    <TableCell>{item.name?.en}</TableCell>
+                    <TableCell>{item.categoryId?.name?.en}</TableCell>
+                    <TableCell>{item.subCategoryId?.name?.en}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </div>
+
           <div className="flex justify-end mt-4">
             <Pagination>
               <PaginationContent className="flex items-center space-x-2">
