@@ -20,14 +20,14 @@ export default function AddBooking() {
    const { i18n } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
-const [eventOptions,setEventOptions] =useState([])
+const [bookingTypeOptions, setBookingTypeOptions] = useState([]);
 const [facilityOptions,setFacilityOptions] = useState([])
   const [formData, setFormData] = useState({
     customerName: "",
     mobile: "",
     alternateName: "",           // ✅ New
     alternateMobile: "",         // ✅ New
-    event: "",
+    bookingTypeId: "",
     noOfDays: "1",
     date: "",
     startDate: "",
@@ -42,25 +42,23 @@ const [facilityOptions,setFacilityOptions] = useState([])
   const [errors, setErrors] = useState({});
   const [showLocationInput, setShowLocationInput] = useState(false);
 
-    useEffect(() => {
-    // Comment out the API call for now
-    fetchEvents();
-    fetchFacilities()
-  }, [i18n.language]);
-
-    const fetchEvents = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await protectedGetApi(config.GetEvents, token);
-      if (res.success === true) {
-        setEventOptions(res.data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching events:", error);
-      // Fallback to dummy data if API fails
-      setEventOptions([]);
+   
+useEffect(() => {
+  fetchBookingTypes();
+  fetchFacilities();
+}, [i18n.language]);
+   const fetchBookingTypes = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await protectedGetApi(config.GetBookingType, token);
+    if (res.success === true) {
+      setBookingTypeOptions(res.data || []);
     }
-  };
+  } catch (error) {
+    console.error("Error fetching booking types:", error);
+    setBookingTypeOptions([]);
+  }
+};
 
     const fetchFacilities = async () => {
   try {
@@ -95,7 +93,7 @@ const [facilityOptions,setFacilityOptions] = useState([])
     let validationErrors = {};
     if (!formData.customerName.trim()) validationErrors.customerName = "Required";
     if (!formData.mobile.match(/^\d{10}$/)) validationErrors.mobile = "10-digit number";
-    if (!formData.event) validationErrors.event = "Select an event";
+  if (!formData.bookingTypeId) validationErrors.bookingTypeId = "Select a booking type";
     if (!formData.noOfDays.match(/^\d+$/) || Number(formData.noOfDays) < 1) validationErrors.noOfDays = "Enter valid number";
     if (formData.noOfDays === "1") {
       if (!formData.date) validationErrors.date = "Required";
@@ -125,7 +123,7 @@ const formatDataForAPI = () => {
       hi: formData.customerName,
     },
     mobileNumber: formData.mobile,
-    eventTypeId: formData.event,
+    bookingTypeId: formData.bookingTypeId,
     noOfDays: parseInt(formData.noOfDays),
     startDate: formData.noOfDays === "1" ? formData.date : formData.startDate,
     venueAddress: formData.venueAddress || "",
@@ -252,26 +250,25 @@ const handleSubmit = async (e) => {
               </div>
               <div>
                 <Label className="text-sm font-semibold text-gray-700">Booking for </Label>
-                <Select
-                  value={formData.event}
-                  onValueChange={(value) =>
-                    setFormData((prev) => ({ ...prev, event: value }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select event" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {eventOptions.map((event) => (
-                      <SelectItem key={event._id} value={event._id}>
-                        {event.name?.[i18n.language] || event.name?.en}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.event && (
-                  <p className="text-red-500 text-sm mt-1">{errors.event}</p>
-                )}
+               <Select
+  value={formData.bookingTypeId}
+  onValueChange={(value) =>
+    setFormData((prev) => ({ ...prev, bookingTypeId: value }))
+  }
+>
+  <SelectTrigger>
+    <SelectValue placeholder="Select booking type" />
+  </SelectTrigger>
+  <SelectContent>
+    {bookingTypeOptions.map((type) => (
+      <SelectItem key={type._id} value={type._id}>
+        {type.name?.[i18n.language] || type.name?.en}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+
+               {errors.bookingTypeId && <p>{errors.bookingTypeId}</p>}
               </div>
               <div>
                 <Label className="text-sm font-semibold text-gray-700">No. of Days</Label>

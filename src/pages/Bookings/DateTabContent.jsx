@@ -42,6 +42,7 @@ export function DateTabContent({
   };
 
   const handleSaveOccasion = async (idx, occasion) => {
+    console.log(occasion)
     try {
       const token = localStorage.getItem("token");
       const res = await protectedPostApi(

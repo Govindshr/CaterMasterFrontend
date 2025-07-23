@@ -14,34 +14,14 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Clock, Trash } from "lucide-react";
+import { useEffect, useState } from "react";
+import { protectedGetApi } from "@/services/nodeapi";
+import { config } from "@/services/nodeconfig";
+import { useTranslation } from "react-i18next"; // for i18n support
 
-// Assuming these are passed as props from the main component
-const occasionNames = [
-  "Normal Breakfast",
-  "Mehendi",
-  "Haldi",
-  "Sagai",
-  "Main Event",
-  "Reception",
-  "Lunch",
-  "Dinner",
-];
-const mealTypes = [
-  "Breakfast",
-  "Lunch",
-  "High Tea",
-  "Dinner",
-  "Packing",
-  "Full Day Servings",
-];
-const servingTypes = ["Buffet", "Table Chair", "Plated", "Family Style"];
-const facilities = [
-  "LED Counter",
-  "Pan Counter",
-  "Live Chaat",
-  "DJ",
-  "Flower Decor",
-];
+
+
+
 const categories = [
   { id: "1", name: "Sweets" },
   { id: "2", name: "Namkeen" },
@@ -82,12 +62,81 @@ export function OccasionCard({
     (sc) => sc.categoryId === menuFilter.category
   );
 
-  const filteredDishes = dishes.filter(
-    (dish) =>
-      (!menuFilter.category || dish.categoryId === menuFilter.category) &&
-      (!menuFilter.subcategory || dish.subcategoryId === menuFilter.subcategory) &&
-      dish.name.toLowerCase().includes(menuFilter.search.toLowerCase())
-  );
+   const { i18n } = useTranslation();
+  const [eventOptions, setEventOptions] = useState([]);
+  const [servingOptions, setServingOptions] = useState([]);
+  const [occasionFacilities, setOccasionFacilities] = useState([]);
+  const [dishes, setDishes] = useState([]);
+
+const filteredDishes = dishes;
+
+
+   useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await protectedGetApi(config.GetEvents, token);
+        if (res.success) {
+          setEventOptions(res.data || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch events", err);
+      }
+    };
+
+    fetchEvents();
+  }, [i18n.language]);
+
+  useEffect(() => {
+  const fetchServingTypes = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await protectedGetApi(config.ServingTypes, token);
+      if (res.success) setServingOptions(res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch serving types", err);
+    }
+  };
+
+  fetchServingTypes();
+}, [i18n.language]);
+
+
+useEffect(() => {
+  const fetchFacilities = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await protectedGetApi(config.GetFacilities, token);
+
+      const filtered = (res?.data || []).filter(
+        (facility) => facility.scope === "occasion"
+      );
+
+      setOccasionFacilities(filtered);
+    } catch (error) {
+      console.error("Error fetching occasion facilities:", error);
+    }
+  };
+
+  fetchFacilities();
+}, [i18n.language]);
+
+
+useEffect(() => {
+  const fetchDishes = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await protectedGetApi(`${config.GetDishes}?limit=500`, token);
+      if (res.success) {
+        setDishes(res.data?.dishes || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch dishes", err);
+    }
+  };
+
+  fetchDishes();
+}, [i18n.language]);
 
   const inputStyle = "bg-slate-50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500/50";
   const selectItemStyle = "focus:bg-green-100/50 focus:text-green-900";
@@ -97,45 +146,27 @@ export function OccasionCard({
       <CardContent className="pt-0 pl-2 sm:pl-4 md:pl-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4 mb-6">
           <div className="space-y-1 mt-3">
-            <Label htmlFor={`occasionName-${date}-${idx}`}>Occasion Name</Label>
-            <Select
-              onValueChange={(value) =>
-                handleOccasionChange(date, idx, "occasionName", value)
-              }
-              value={occasion.occasionName}
-            >
-              <SelectTrigger id={`occasionName-${date}-${idx}`} className={inputStyle}>
-                <SelectValue placeholder="Select Occasion" />
-              </SelectTrigger>
-              <SelectContent>
-                {occasionNames.map((name) => (
-                  <SelectItem key={name} value={name} className={selectItemStyle}>
-                    {name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1 mt-3">
-            <Label htmlFor={`mealType-${date}-${idx}`}>Meal Type</Label>
-            <Select
-              onValueChange={(value) =>
-                handleOccasionChange(date, idx, "mealType", value)
-              }
-              value={occasion.mealType}
-            >
-              <SelectTrigger id={`mealType-${date}-${idx}`} className={inputStyle}>
-                <SelectValue placeholder="Select Meal Type" />
-              </SelectTrigger>
-              <SelectContent>
-                {mealTypes.map((type) => (
-                  <SelectItem key={type} value={type} className={selectItemStyle}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+  <Label htmlFor={`occasionName-${date}-${idx}`}>Event Name</Label>
+  <Select
+    onValueChange={(value) =>
+      handleOccasionChange(date, idx, "occasionName", value)
+    }
+    value={occasion.occasionName}
+  >
+    <SelectTrigger id={`occasionName-${date}-${idx}`} className={inputStyle}>
+      <SelectValue placeholder="Select Event" />
+    </SelectTrigger>
+    <SelectContent>
+      {eventOptions.map((event) => (
+        <SelectItem key={event._id} value={event._id} className={selectItemStyle}>
+          {event.name?.[i18n.language] || event.name?.en}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
+
+         
           <div className="space-y-1">
             <Label htmlFor={`startTime-${date}-${idx}`}>Start Time</Label>
             <div className="relative">
@@ -180,23 +211,24 @@ export function OccasionCard({
           </div>
           <div className="space-y-1">
             <Label htmlFor={`servingType-${date}-${idx}`}>Serving Type</Label>
-            <Select
-              onValueChange={(value) =>
-                handleOccasionChange(date, idx, "servingType", value)
-              }
-              value={occasion.servingType}
-            >
-              <SelectTrigger id={`servingType-${date}-${idx}`} className={inputStyle}>
-                <SelectValue placeholder="Select Serving Type" />
-              </SelectTrigger>
-              <SelectContent>
-                {servingTypes.map((type) => (
-                  <SelectItem key={type} value={type} className={selectItemStyle}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+           <Select
+  onValueChange={(value) =>
+    handleOccasionChange(date, idx, "servingType", value)
+  }
+  value={occasion.servingType}
+>
+  <SelectTrigger id={`servingType-${date}-${idx}`} className={inputStyle}>
+    <SelectValue placeholder="Select Serving Type" />
+  </SelectTrigger>
+  <SelectContent>
+    {servingOptions.map((type) => (
+      <SelectItem key={type._id} value={type._id} className={selectItemStyle}>
+        {type.name?.[i18n.language] || type.name?.en}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+
           </div>
           <div className="lg:col-span-2 space-y-1">
             <Label htmlFor={`exactVenue-${date}-${idx}`}>Exact Venue</Label>
@@ -212,28 +244,32 @@ export function OccasionCard({
         </div>
 
         {/* Facilities */}
-        <div className="mb-6">
-          <Label className="font-semibold text-base">Facilities</Label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mt-2">
-            {facilities.map((facility) => (
-              <div key={facility} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`${date}-${idx}-${facility}`}
-                  checked={occasion.facilities.includes(facility)}
-                  onCheckedChange={() =>
-                    handleFacilitiesChange(date, idx, facility)
-                  }
-                />
-                <Label
-                  htmlFor={`${date}-${idx}-${facility}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {facility}
-                </Label>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="space-y-1 mt-4">
+  <Label>Extra Facilities</Label>
+  <div className="flex flex-wrap gap-3 mt-2">
+    {occasionFacilities.map((facility) => (
+      <label
+        key={facility._id}
+        className="flex items-center gap-2 text-sm font-medium bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg cursor-pointer"
+      >
+        <input
+          type="checkbox"
+          name={`facilities-${idx}`}
+          value={facility._id}
+          checked={occasion.facilities?.includes(facility._id)}
+          onChange={(e) => {
+            const checked = e.target.checked;
+            handleOccasionChange(date, idx, "facilities", checked
+              ? [...(occasion.facilities || []), facility._id]
+              : (occasion.facilities || []).filter((id) => id !== facility._id));
+          }}
+        />
+        {facility.name?.[i18n.language] || facility.name?.en}
+      </label>
+    ))}
+  </div>
+</div>
+
 
         {/* Menu (Dishes) */}
         <div>
@@ -295,7 +331,8 @@ export function OccasionCard({
                     htmlFor={`${date}-${idx}-${dish.id}`}
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
-                    {dish.name}
+                {dish.name?.[i18n.language] || dish.name?.en}
+
                   </Label>
                 </div>
               ))}
