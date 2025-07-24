@@ -108,11 +108,11 @@ useEffect(() => {
       const token = localStorage.getItem("token");
       const res = await protectedGetApi(config.GetFacilities, token);
 
-      const filtered = (res?.data || []).filter(
-        (facility) => facility.scope === "occasion"
-      );
+    const filtered = (res?.data || []).filter(
+  (facility) => facility.scope === "event" || facility.scope === "both"
+);
+setOccasionFacilities(filtered);
 
-      setOccasionFacilities(filtered);
     } catch (error) {
       console.error("Error fetching occasion facilities:", error);
     }
@@ -286,7 +286,7 @@ useEffect(() => {
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
+                    <SelectItem key={cat._id} value={cat._id}>
                       {cat.name}
                     </SelectItem>
                   ))}
@@ -318,22 +318,20 @@ useEffect(() => {
               />
             </div>
             <div className="max-h-48 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pr-2">
+            {  console.log("fileterDeishes",filteredDishes)}
               {filteredDishes.map((dish) => (
                 <div key={dish.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`${date}-${idx}-${dish.id}`}
-                    checked={occasion.menu.includes(dish.name)}
-                    onCheckedChange={() =>
-                      handleMenuChange(date, idx, dish.name)
-                    }
-                  />
-                  <Label
-                    htmlFor={`${date}-${idx}-${dish.id}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                {dish.name?.[i18n.language] || dish.name?.en}
+                 <Checkbox
+  id={`${date}-${idx}-${dish._id}`}
+  checked={occasion.menu.includes(dish._id)}
+  onCheckedChange={() =>
+    handleMenuChange(date, idx, dish._id)
+  }
+/>
+<Label htmlFor={`${date}-${idx}-${dish._id}`}>
+  {dish.name?.[i18n.language] || dish.name?.en}
+</Label>
 
-                  </Label>
                 </div>
               ))}
               {filteredDishes.length === 0 && (

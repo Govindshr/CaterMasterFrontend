@@ -24,6 +24,8 @@ export const config = {
   ServingTypes: `${Base_URI}/dropdowns/serving-types`,
   DeleteServingTypes: (id) => `${Base_URI}/dropdowns/serving-types/${id}`,
     CreateEvent: (occasionId) => `${Base_URI}/occasions/${occasionId}/events`,
+    GetOccasionsEvent: (occasionId) => `${Base_URI}/occasions/${occasionId}/events`,
+     DeleteEventFromOccasion: (id) => `${Base_URI}/events/${id}`,
     GetBookingType: `${Base_URI}/dropdowns/booking-types`,
   AddBookingType: `${Base_URI}/dropdowns/booking-types`,
   DeleteBookingType: (id) => `${Base_URI}/dropdowns/booking-types/${id}`,
