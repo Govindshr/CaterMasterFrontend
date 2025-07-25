@@ -1,7 +1,7 @@
 import { useState ,useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { OccasionCard } from "./OccasionCard";
-import { protectedPostApi ,protectedGetApi ,protectedDeleteApi} from "@/services/nodeapi";
+import { protectedPostApi ,protectedGetApi ,protectedDeleteApi ,protectedUpdateApi} from "@/services/nodeapi";
 import { config } from "@/services/nodeconfig";
 import Swal from 'sweetalert2';
 import { Plus, Trash, Utensils } from "lucide-react";
@@ -201,6 +201,48 @@ const updateOccasionFacilities = (index, facilityId) => {
   isMerged ? setMergedOccasions(updated) : setUnsavedOccasions(updated);
 };
 
+const handleUpdateOccasion = async (idx, occasion) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const payload = {
+      eventTypeId: occasion.occasionName,
+      startTime: occasion.startTime,
+      endTime: occasion.endTime,
+      noOfGuests: Number(occasion.guests),
+      servingTypeId: occasion.servingType,
+      exactVenue: occasion.exactVenue,
+      menu: occasion.menu.map((dishId) => ({
+        dishId,
+        customGuestCount: Number(occasion.guests),
+        notes: occasion.notes || "",
+      })),
+      facilities: occasion.facilities.map((facilityId) => ({
+        facilityId,
+        quantity: 2,
+        customCost: 3000.0,
+      })),
+      notes: occasion.notes || "Updated via UI",
+    };
+
+    const res = await protectedUpdateApi(
+      `${config.DeleteEventFromOccasion(occasion.delete_id)}`,
+      payload,
+      token
+    );
+
+    if (res.success) {
+      alert("Event updated successfully");
+    } else {
+      alert("Failed to update event");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Error while updating event");
+  }
+};
+
+
 const handleDeleteOccasion = async (idx) => {
   const confirm = await Swal.fire({
     title: 'Are you sure?',
@@ -311,15 +353,25 @@ onClick={handleAddOccasion}
                 categories={categories}
                 subcategories={subcategories}
                 dishes={dishes}
+                 isSavedEvent={!!occasion.delete_id}
               />
-              <div className="flex justify-end mt-4">
-                <Button
-                  onClick={() => handleSaveOccasion(idx, occasion)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Save Event
-                </Button>
-              </div>
+             <div className="flex justify-end mt-4">
+  <Button
+    onClick={() =>
+      occasion.delete_id
+        ? handleUpdateOccasion(idx, occasion)
+        : handleSaveOccasion(idx, occasion)
+    }
+    className={`${
+      occasion.delete_id
+        ? 'bg-yellow-600 hover:bg-yellow-700'
+        : 'bg-blue-600 hover:bg-blue-700'
+    } text-white`}
+  >
+    {occasion.delete_id ? "Update Event" : "Save Event"}
+  </Button>
+</div>
+
             </AccordionContent>
           </AccordionItem>
         ))}

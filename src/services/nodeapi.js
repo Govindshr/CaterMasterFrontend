@@ -266,3 +266,18 @@ export const protectedUpdateApiWithFile = async (endpoint, id, data = {}, files 
         throw error;
     }
 };
+
+
+export const protectedUpdateApi = async (endpoint, data = {}, token) => {
+  try {
+    const response = await api.put(endpoint, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Protected PUT request to ${endpoint} failed:`, error);
+    throw error;
+  }
+};

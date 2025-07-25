@@ -45,7 +45,7 @@ export default function Facilities() {
   const [nameEn, setNameEn] = useState("");
   const [nameHi, setNameHi] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [type, setType] = useState("Occasion");
+  const [type, setType] = useState("event");
 const [price, setPrice] = useState("");
 const [isPaid, setIsPaid] = useState(false);
 
@@ -163,7 +163,7 @@ const deleteFacility = async (id) => {
   onChange={(e) => setType(e.target.value)}
   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
 >
-  <option value="occasion">Occasion</option>
+  <option value="event">Event</option>
   <option value="booking">Booking</option>
 </select>
 
