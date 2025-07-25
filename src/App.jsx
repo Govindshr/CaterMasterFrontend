@@ -132,7 +132,7 @@ function AppWrapper() {
                 <AddFacilities />
               </ProtectedRoute>
             } />
-            <Route path="/generate-list" element={
+            <Route path="/generate-list/:id" element={
               <ProtectedRoute>
                 <MenuSummary />
               </ProtectedRoute>

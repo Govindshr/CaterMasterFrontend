@@ -267,7 +267,7 @@ export default function Bookings() {
                                 className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
                                 onClick={() => {
                                   setDropdownIdx(null);
-                                  navigate("/generate-list");
+                                  navigate(`/generate-list/${booking._id}`);
                                 }}
                               >
                                 Generate List
@@ -360,7 +360,7 @@ export default function Bookings() {
                           className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
                           onClick={() => {
                             setDropdownMobileIdx(null);
-                            navigate("/generate-list");
+                            navigate(`/generate-list/${booking._id}`);
                           }}
                         >
                           Generate List
