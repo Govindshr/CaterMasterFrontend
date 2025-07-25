@@ -48,6 +48,8 @@ export default function Bookings() {
   const [error, setError] = useState("");
   const [totalPages, setTotalPages] = useState(1);
   const [totalBookings, setTotalBookings] = useState(0);
+const [showGenerateModal, setShowGenerateModal] = useState(false);
+const [selectedBookingIdForGenerate, setSelectedBookingIdForGenerate] = useState(null);
 
   const navigate = useNavigate();
 
@@ -159,7 +161,7 @@ export default function Bookings() {
     return customerName || "N/A";
   };
 
-  return (
+  return (<>
     <div className="max-w-8xl mx-auto  w-full">
       <Card className="shadow-lg rounded-lg mb-5">
         {/* Card Header with Title & Button */}
@@ -263,15 +265,17 @@ export default function Bookings() {
                               >
                                 Add Menu
                               </button>
-                              <button
-                                className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
-                                onClick={() => {
-                                  setDropdownIdx(null);
-                                  navigate(`/generate-list/${booking._id}`);
-                                }}
-                              >
-                                Generate List
-                              </button>
+                             <button
+  className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
+  onClick={() => {
+    setDropdownIdx(null);
+    setSelectedBookingIdForGenerate(booking._id);
+    setShowGenerateModal(true);
+  }}
+>
+  Generate List
+</button>
+
                               <button
                                 className="px-4 py-2 hover:bg-red-100 text-red-600 text-sm text-left"
                                 onClick={() => {
@@ -558,5 +562,47 @@ export default function Bookings() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+ 
+{/* //  -------------------------Modal ----------------------------------- */}
+<Dialog open={showGenerateModal} onOpenChange={setShowGenerateModal}>
+  <DialogContent className="max-w-md bg-white p-6 rounded-xl">
+    <DialogHeader>
+      <DialogTitle className="text-xl font-bold text-gray-800">
+        Select List Generation Type
+      </DialogTitle>
+    </DialogHeader>
+    <div className="mt-4 flex flex-col gap-4">
+      <Button
+        className="w-full bg-blue-500 text-white hover:bg-blue-600"
+        onClick={() => {
+          setShowGenerateModal(false);
+          navigate(`/generate-list/${selectedBookingIdForGenerate}?type=manual`);
+        }}
+      >
+        Manual List
+      </Button>
+      <Button
+        className="w-full bg-yellow-500 text-white hover:bg-yellow-600"
+        onClick={() => {
+          setShowGenerateModal(false);
+          navigate(`/generate-list/${selectedBookingIdForGenerate}?type=semi`);
+        }}
+      >
+        Semi Auto List
+      </Button>
+      <Button
+        className="w-full bg-green-600 text-white hover:bg-green-700"
+        onClick={() => {
+          setShowGenerateModal(false);
+          navigate(`/generate-list/${selectedBookingIdForGenerate}?type=auto`);
+        }}
+      >
+        Fully Auto List
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
+</>
+
+);
 }

@@ -4,19 +4,59 @@ import { Button } from "@/components/ui/button";
 import { useNavigate ,useParams } from "react-router-dom";
 import { config } from "@/services/nodeconfig";
 import { protectedGetApi } from "@/services/nodeapi";
+import { useLocation } from "react-router-dom";
 
 
 export default function MenuSummary() {
     const { id } = useParams();
+    const location = useLocation();
+const queryParams = new URLSearchParams(location.search);
+const generationType = queryParams.get("type"); // 'manual' | 'semi' | 'auto'
+
     const navigate = useNavigate();
   const [selectedItem, setSelectedItem] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [userQuantities, setUserQuantities] = useState({});
 const [occasions, setOccasions] = useState([]);
+const [dishStats, setDishStats] = useState({});
+const [loadingStats, setLoadingStats] = useState(false);
+
+
+const handleItemClick = async (dishName,id) => {
+  setSelectedItem(dishName);
+  setShowModal(true);
+  setLoadingStats(true);
+  setDishStats({}); // clear previous
+
+  try {
+    const token = localStorage.getItem("token");
+    const response = await protectedGetApi(`${config.GetDishes}/${id}`, token);
+
+ if (response.success && Array.isArray(response.data.ingredients)) {
+  const ingredients = response.data.ingredients.map((ing) => ({
+    name: ing.ingredientId?.name?.en || "Unknown",
+    quantity: ing.quantity || 0,
+    unit: ing.ingredientId?.unitTypeId?.symbol || "g", // fallback to 'g'
+  }));
+  setDishStats({ [dishName]: ingredients });
+}
+
+else {
+      console.warn("Unexpected response format:", response);
+    }
+  } catch (err) {
+    console.error("Failed to fetch dish stats:", err);
+  } finally {
+    setLoadingStats(false);
+  }
+};
 
 
   
 useEffect(() => {
+
+  console.log("User selected list type:", generationType);
+
   const fetchBookingDetails = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -34,10 +74,6 @@ useEffect(() => {
 
 
 
-  const handleItemClick = (item) => {
-    setSelectedItem(item);
-    setShowModal(true);
-  };
 
   const handleSaveQuantity = (ingredient, qty) => {
     setUserQuantities((prev) => ({
@@ -84,7 +120,7 @@ useEffect(() => {
                 key={index}
                 variant="outline"
                 className="rounded-full border-blue-500 text-blue-700 hover:bg-blue-100"
-                onClick={() => handleItemClick(item.dishId?.name?.en || "Unknown")}
+                onClick={() => handleItemClick(item.dishId?.name?.en || "Unknown",item.dishId?.id)}
               >
                 {item.dishId?.name?.en || "Unknown"}
               </Button>
@@ -112,6 +148,10 @@ useEffect(() => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[500px] max-h-[80vh] overflow-auto shadow-lg">
             <h2 className="text-xl font-bold mb-4">Ingredients for {selectedItem}</h2>
+            {loadingStats && (
+  <div className="text-center text-gray-500 py-4">Loading ingredients...</div>
+)}
+
             <table className="w-full border text-sm text-left">
               <thead>
                 <tr className="bg-gray-100">
@@ -122,35 +162,36 @@ useEffect(() => {
                 </tr>
               </thead>
               <tbody>
-                {(ingredientMap[selectedItem] || []).map((ing, i) => {
-                  const inputId = `${selectedItem}-${ing.name}`;
-                  return (
-                    <tr key={i}>
-                      <td className="p-2 border">{ing.name}</td>
-                      <td className="p-2 border">{ing.quantity}</td>
-                      <td className="p-2 border">
-                        <input
-                          type="number"
-                          id={inputId}
-                          placeholder="Qty"
-                          className="w-full border rounded px-2 py-1"
-                        />
-                      </td>
-                      <td className="p-2 border">
-                        <Button
-                          size="sm"
-                          className="bg-green-500 hover:bg-green-600 text-white"
-                          onClick={() => {
-                            const val = document.getElementById(inputId).value;
-                            handleSaveQuantity(ing.name, val);
-                          }}
-                        >
-                          Save
-                        </Button>
-                      </td>
-                    </tr>
-                  );
-                })}
+              {(dishStats[selectedItem] || []).map((ing, i) => {
+  const inputId = `${selectedItem}-${ing.name}`;
+  return (
+    <tr key={i}>
+      <td className="p-2 border">{ing.name}</td>
+      <td className="p-2 border">{ing.quantity} {ing.unit}</td>
+      <td className="p-2 border">
+        <input
+          type="number"
+          id={inputId}
+          placeholder="Qty"
+          className="w-full border rounded px-2 py-1"
+        />
+      </td>
+      <td className="p-2 border">
+        <Button
+          size="sm"
+          className="bg-green-500 hover:bg-green-600 text-white"
+          onClick={() => {
+            const val = document.getElementById(inputId).value;
+            handleSaveQuantity(ing.name, val);
+          }}
+        >
+          Save
+        </Button>
+      </td>
+    </tr>
+  );
+})}
+
               </tbody>
             </table>
             <Button
