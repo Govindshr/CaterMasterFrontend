@@ -77,7 +77,7 @@ export default function AddIngredient() {
       const token = localStorage.getItem("token");
       await protectedPostApi(config.AddIngredients, payload, token);
       alert("Ingredient Added Successfully!");
-      navigate("/ingredients");
+      navigate("/all-ingredients");
     } catch (error) {
       setApiError(error.message || "Failed to add ingredient");
     } finally {

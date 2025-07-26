@@ -1,4 +1,4 @@
-import React, { useState ,useEffect } from "react";
+import React, { useState ,useEffect ,useRef} from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate ,useParams } from "react-router-dom";
@@ -9,6 +9,9 @@ import { useLocation } from "react-router-dom";
 
 export default function MenuSummary() {
     const { id } = useParams();
+    const inputRefs = useRef({});
+const [baseQuantities, setBaseQuantities] = useState({});
+
     const location = useLocation();
 const queryParams = new URLSearchParams(location.search);
 const generationType = queryParams.get("type"); // 'manual' | 'semi' | 'auto'
@@ -20,6 +23,7 @@ const generationType = queryParams.get("type"); // 'manual' | 'semi' | 'auto'
 const [occasions, setOccasions] = useState([]);
 const [dishStats, setDishStats] = useState({});
 const [loadingStats, setLoadingStats] = useState(false);
+const [baseServingPeople, setBaseServingPeople] = useState(null);
 
 
 const handleItemClick = async (dishName,id) => {
@@ -36,10 +40,24 @@ const handleItemClick = async (dishName,id) => {
   const ingredients = response.data.ingredients.map((ing) => ({
     name: ing.ingredientId?.name?.en || "Unknown",
     quantity: ing.quantity || 0,
-    unit: ing.ingredientId?.unitTypeId?.symbol || "g", // fallback to 'g'
+    unit: ing.ingredientId?.unitTypeId?.symbol || "g",
+    isMainIngredient: ing.isMainIngredient || false,
   }));
-  setDishStats({ [dishName]: ingredients });
+
+ const sortedIngredients = ingredients.sort((a, b) => (b.isMainIngredient === true) - (a.isMainIngredient === true));
+
+const baseQtyMap = {};
+ingredients.forEach((ing) => {
+  baseQtyMap[ing.name] = ing.quantity;
+});
+setBaseQuantities(baseQtyMap);
+
+setDishStats({ [dishName]: sortedIngredients });
+setBaseServingPeople(response.data.baseServingPeople || null);
+
+
 }
+
 
 else {
       console.warn("Unexpected response format:", response);
@@ -115,12 +133,13 @@ useEffect(() => {
           </div>
 
           <div className="flex flex-wrap gap-2">
+         
             {event.menu?.map((item, index) => (
               <Button
                 key={index}
                 variant="outline"
                 className="rounded-full border-blue-500 text-blue-700 hover:bg-blue-100"
-                onClick={() => handleItemClick(item.dishId?.name?.en || "Unknown",item.dishId?.id)}
+                onClick={() => handleItemClick(item.dishId?.name?.en || "Unknown",item.dishId?.id,)}
               >
                 {item.dishId?.name?.en || "Unknown"}
               </Button>
@@ -148,6 +167,12 @@ useEffect(() => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[500px] max-h-[80vh] overflow-auto shadow-lg">
             <h2 className="text-xl font-bold mb-4">Ingredients for {selectedItem}</h2>
+            {baseServingPeople !== null && (
+  <p className="text-sm text-gray-600 mb-4">
+    🍽️ Base Serving: <strong>{baseServingPeople} people</strong>
+  </p>
+)}
+
             {loadingStats && (
   <div className="text-center text-gray-500 py-4">Loading ingredients...</div>
 )}
@@ -166,15 +191,49 @@ useEffect(() => {
   const inputId = `${selectedItem}-${ing.name}`;
   return (
     <tr key={i}>
-      <td className="p-2 border">{ing.name}</td>
+     <td className="p-2 border">
+  {ing.name}
+  {ing.isMainIngredient && (
+    <span className="ml-2 px-2 py-0.5 text-xs bg-yellow-200 text-yellow-800 rounded-full">
+      Main
+    </span>
+  )}
+</td>
+
       <td className="p-2 border">{ing.quantity} {ing.unit}</td>
       <td className="p-2 border">
-        <input
-          type="number"
-          id={inputId}
-          placeholder="Qty"
-          className="w-full border rounded px-2 py-1"
-        />
+       <input
+  type="number"
+  id={inputId}
+  ref={(el) => (inputRefs.current[inputId] = el)}
+  placeholder="Qty"
+  className="w-full border rounded px-2 py-1"
+onChange={(e) => {
+  const entered = parseFloat(e.target.value);
+
+  // 🛑 Exit if not 'semi', or invalid number
+  if (
+    generationType !== "semi" ||
+    isNaN(entered) ||
+    !baseQuantities[ing.name] ||
+    !ing.isMainIngredient // ✅ Only allow autofill from main ingredients
+  )
+    return;
+
+  const ratio = entered / baseQuantities[ing.name];
+
+  Object.entries(baseQuantities).forEach(([otherName, otherBaseQty]) => {
+    const otherId = `${selectedItem}-${otherName}`;
+    const ref = inputRefs.current[otherId];
+    if (ref && otherName !== ing.name) {
+      ref.value = (ratio * otherBaseQty).toFixed(2);
+    }
+  });
+}}
+
+
+/>
+
       </td>
       <td className="p-2 border">
         <Button

@@ -318,6 +318,7 @@ onClick={handleAddOccasion}
               <AccordionTrigger className="flex-1 text-left hover:no-underline bg-transparent shadow-none">
                 <div className="flex items-center min-w-0">
                   <Utensils className="mr-3 h-5 w-5 text-green-600 flex-shrink-0" />
+                  
                   <span className="font-semibold text-base sm:text-lg text-left truncate mr-5">{`Event ${idx + 1}`} {occasion.occasionName && `: ${occasion.occasionName}`}</span>
                 </div>
               </AccordionTrigger>

@@ -35,6 +35,7 @@ export default function AddDish() {
     cookingTimeMinutes: "",
     estimatedCostPerServing: "",
     sellingPricePerServing: "",
+    baseServingPeople: "", // ✅ NEW FIELD
   });
 
   const [ingredientRows, setIngredientRows] = useState([
@@ -102,6 +103,7 @@ export default function AddDish() {
       cookingTimeMinutes: parseInt(dishForm.cookingTimeMinutes, 10),
       estimatedCostPerServing: parseFloat(dishForm.estimatedCostPerServing),
       sellingPricePerServing: parseFloat(dishForm.sellingPricePerServing),
+       baseServingPeople: parseInt(dishForm.baseServingPeople, 10), // ✅ NEW FIELD INCLUDED
       isVegetarian: dishForm.isVegetarian,
       isVegan: dishForm.isVegan,
       spiceLevel: dishForm.spiceLevel,
@@ -115,7 +117,7 @@ export default function AddDish() {
     try {
       const res = await protectedPostApi(config.AddDish, payload, token);
       alert("Dish Created Successfully!");
-      navigate("/dishes");
+      navigate("/items-list");
     } catch (error) {
       setApiError(error.message || "Error while saving dish");
     } finally {
@@ -187,6 +189,16 @@ export default function AddDish() {
                 <Label>Selling Price</Label>
                 <Input name="sellingPricePerServing" type="number" value={dishForm.sellingPricePerServing} onChange={handleDishChange} />
               </div>
+              <div>
+  <Label>Base Serving People</Label>
+  <Input
+    name="baseServingPeople"
+    type="number"
+    value={dishForm.baseServingPeople}
+    onChange={handleDishChange}
+  />
+</div>
+
               <div>
                 <Label>Spice Level</Label>
                 <select name="spiceLevel" value={dishForm.spiceLevel} onChange={handleDishChange} className="w-full">
