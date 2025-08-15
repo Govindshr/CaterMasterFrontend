@@ -66,7 +66,7 @@ setPage(res?.data?.pagination?.currentPage || 1);
         <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-400 text-white py-4 px-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold">Ingredient List</h2>
-            <Button onClick={() => navigate("/ingredients/add")} className="bg-white text-blue-700 hover:bg-blue-100">Add New</Button>
+            <Button onClick={() => navigate("/add-ingredient")} className="bg-white text-blue-700 hover:bg-blue-100">Add New</Button>
           </div>
         </CardHeader>
         <CardContent className="p-6 overflow-x-auto bg-white dark:bg-gray-950">

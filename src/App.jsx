@@ -137,7 +137,12 @@ function AppWrapper() {
                 <MenuSummary />
               </ProtectedRoute>
             } />
-            <Route path="/final-ingredient-list" element={
+            <Route path="/final-ingredient-list/:id" element={
+              <ProtectedRoute>
+                <FinalIngredientList />
+              </ProtectedRoute>
+            } />
+            <Route path="/final-ingredient-list/event/:eventId" element={
               <ProtectedRoute>
                 <FinalIngredientList />
               </ProtectedRoute>

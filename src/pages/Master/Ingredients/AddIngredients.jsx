@@ -91,7 +91,7 @@ export default function AddIngredient() {
         <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-400 text-white py-4 px-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl sm:text-2xl font-bold">Add Ingredient</h2>
-            <Button variant="outline" className="bg-white text-blue-700" onClick={() => navigate("/ingredients")}> <ArrowLeft className="w-5 h-5 mr-1" /> Back</Button>
+            <Button variant="outline" className="bg-white text-blue-700" onClick={() => navigate("/all-ingredients")}> <ArrowLeft className="w-5 h-5 mr-1" /> Back</Button>
           </div>
         </CardHeader>
         <CardContent className="p-6 bg-white dark:bg-gray-950">

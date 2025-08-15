@@ -47,6 +47,8 @@ export const config = {
    GetDishes: `${Base_URI}/dishes`,
    SaveEventDishIngredient: (eventId, dishId) =>
   `${Base_URI}/events/${eventId}/dishes/${dishId}/ingredients`,
+    GenerateList: (id) => `${Base_URI}/reports/booking/${id}/ingredients`,
+    GenerateEventList: (eventId) => `${Base_URI}/reports/event/${eventId}/ingredients`,
 
 
 };
