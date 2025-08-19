@@ -188,14 +188,14 @@ export default function MenuSummary() {
     }
   };
 
-  const handleItemClick = async (dishName, id) => {
+  const handleItemClick = async (dishName, id,guestno) => {
     setSelectedItem(dishName);
     setShowModal(true);
     setLoadingStats(true);
     setDishStats({}); // clear previous
     setSavedQuantities({}); // clear previous saved quantities
     setAddingRows([]);
-
+  setBaseServingPeople(guestno);
     try {
       const token = localStorage.getItem("token");
       const response = await protectedGetApi(
@@ -203,6 +203,7 @@ export default function MenuSummary() {
         token
       );
 
+      
       if (response.success && Array.isArray(response.data.ingredients)) {
        
         const ingredients = response.data.ingredients.map((ing) => ({
@@ -225,7 +226,7 @@ export default function MenuSummary() {
         setBaseQuantities(baseQtyMap);
 
         setDishStats({ [dishName]: sortedIngredients });
-        setBaseServingPeople(response.data.baseServingPeople || null);
+      
 
         // Find the event and dish to fetch saved ingredients
         const event = occasions
@@ -619,6 +620,7 @@ export default function MenuSummary() {
             </CardHeader>
 
             <CardContent className="space-y-6 p-6">
+              {console.log("occasion.events",occasion.events)}
               {occasion.events?.map((event) => (
                 <div
                   key={event._id}
@@ -654,7 +656,8 @@ export default function MenuSummary() {
                           onClick={() =>
                             handleItemClick(
                               item.dishId?.name?.en || "Unknown",
-                              item.dishId?.id
+                              item.dishId?.id,
+                              event.noOfGuests
                             )
                           }
                         >
@@ -689,21 +692,10 @@ export default function MenuSummary() {
                 <div className="flex items-center space-x-4 mt-1">
                   {baseServingPeople !== null && (
                     <p className="text-sm text-gray-600">
-                      Base Serving: <strong>{baseServingPeople} people</strong>
+                      Event Guests: <strong>{baseServingPeople} people</strong>
                     </p>
                   )}
-                  {(() => {
-                    const event = occasions
-                      .flatMap((o) => o.events)
-                      .find((e) =>
-                        e.menu?.some((d) => d.dishId?.name?.en === selectedItem)
-                      );
-                    return event ? (
-                      <p className="text-sm text-blue-600">
-                        Event Guests: <strong>{event.noOfGuests} people</strong>
-                      </p>
-                    ) : null;
-                  })()}
+                 
                 </div>
               </div>
               <button

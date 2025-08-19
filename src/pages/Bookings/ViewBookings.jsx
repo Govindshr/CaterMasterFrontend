@@ -63,7 +63,7 @@ useEffect(() => {
               </div>
               <div>
                 <span className="font-semibold text-gray-700 dark:text-gray-300">Event:</span>
-                <div className="text-gray-900 dark:text-gray-100">{bookingData?.eventTypeId.name?.[i18n.language] || bookingData?.eventTypeId.name?.en}</div>
+                <div className="text-gray-900 dark:text-gray-100">{bookingData?.bookingTypeId.name?.[i18n.language] || bookingData?.bookingTypeId.name?.en}</div>
               </div>
               <div>
                 <span className="font-semibold text-gray-700 dark:text-gray-300">No. of Days:</span>
