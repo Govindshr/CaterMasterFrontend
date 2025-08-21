@@ -21,7 +21,6 @@ export default function MenuSummary() {
   const navigate = useNavigate();
   const [selectedItem, setSelectedItem] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [userQuantities, setUserQuantities] = useState({});
   const [occasions, setOccasions] = useState([]);
   const [dishStats, setDishStats] = useState({});
   const [loadingStats, setLoadingStats] = useState(false);
@@ -506,11 +505,6 @@ export default function MenuSummary() {
 
    const handleSaveQuantity = async (ingredientName, qty, ingredientId) => {
     setSavingIngredient(ingredientId);
-    
-    setUserQuantities((prev) => ({
-      ...prev,
-      [ingredientName]: (prev[ingredientName] || 0) + Number(qty || 0),
-    }));
 
     const dishIngredients = dishStats[selectedItem] || [];
     const selectedIngredient = dishIngredients.find(
@@ -607,13 +601,13 @@ export default function MenuSummary() {
 
   return (
     <>
-      <div className="p-8 max-w-5xl mx-auto space-y-6">
+         <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 space-y-6">
         {occasions.map((occasion) => (
           <Card
             key={occasion._id}
             className="border rounded-2xl shadow-md hover:shadow-xl transition-all"
           >
-            <CardHeader className="bg-blue-50 rounded-t-2xl p-4">
+            <CardHeader className="bg-blue-50 rounded-t-2xl p-3 sm:p-4">
               <h2 className="text-2xl font-bold text-blue-900">
                 🎉 {occasion.occasionName}
               </h2>
@@ -626,25 +620,24 @@ export default function MenuSummary() {
                   key={event._id}
                   className="bg-white border border-blue-200 rounded-xl p-4 shadow-sm"
                 >
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-semibold text-gray-800">
-                      🍽️ {event.eventTypeId?.name?.en || "Unnamed Event"}
-                    </h3>
-                    <div className="flex items-center space-x-4">
-                      <span className="text-sm text-gray-600">
-                        No. of People: <strong>{event.noOfGuests}</strong>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        🍽️ {event.eventTypeId?.name?.en || "Unnamed Event"}
+                      </h3>
+                      <span className="text-sm text-gray-600 sm:hidden">
+                        People: <strong>{event.noOfGuests}</strong>
                       </span>
-                      <Button
-                        size="sm"
-                        className="bg-purple-600 hover:bg-purple-700 text-white"
-                        onClick={() => navigate(`/final-ingredient-list/event/${event._id}`)}
-                      >
-                        Generate Event List
-                      </Button>
+                    </div>
+                    <div className="flex items-center justify-between sm:justify-end gap-3">
+                      <span className="hidden sm:inline text-sm text-gray-600">
+                        People: <strong>{event.noOfGuests}</strong>
+                      </span>
+                     
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                     {event.menu?.map((item, index) => {
                       const key = `${event._id}:${item.dishId?._id}`;
                       const isComplete = !!dishCompletion[key];
@@ -652,7 +645,7 @@ export default function MenuSummary() {
                         <Button
                           key={index}
                           variant="outline"
-                          className={`${isComplete ? 'bg-green-50 border-green-600 text-green-700 hover:bg-green-100' : 'border-blue-500 text-blue-700 hover:bg-blue-100'} rounded-full`}
+                          className={`${isComplete ? 'bg-green-50 border-green-600 text-green-700 hover:bg-green-100' : 'border-blue-500 text-blue-700 hover:bg-blue-100'} rounded-full w-full justify-center`}
                           onClick={() =>
                             handleItemClick(
                               item.dishId?.name?.en || "Unknown",
@@ -661,12 +654,20 @@ export default function MenuSummary() {
                             )
                           }
                         >
-                          {isComplete && <span className="mr-1">✔</span>}
-                          {item.dishId?.name?.en || "Unknown"}
+                          <span className="truncate">{item.dishId?.name?.en || "Unknown"}</span>
                         </Button>
                       );
                     })}
                   </div>
+                  <span className="flex justify-end">
+                   <Button
+                        size="sm"
+                        className="bg-purple-600 hover:bg-purple-700 text-white w-full sm:w-auto mt-5 align-middle"
+                        onClick={() => navigate(`/final-ingredient-list/event/${event._id}`)}
+                      >
+                        Generate Event List
+                      </Button>
+                      </span>
                 </div>
               ))}
             </CardContent>
@@ -683,7 +684,7 @@ export default function MenuSummary() {
 
       {showModal && selectedItem && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-auto shadow-2xl">
+          <div className="bg-white rounded-lg sm:rounded-xl p-4 sm:p-6 w-[95vw] sm:w-full sm:max-w-4xl max-h-[85vh] overflow-auto shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-800">
@@ -721,7 +722,8 @@ export default function MenuSummary() {
             )}
 
             {!loadingStats && !loadingSavedIngredients && (
-              <div className="overflow-x-auto">
+              <>
+              <div className="overflow-x-auto hidden md:block">
                 <table className="w-full border-collapse text-sm">
                                      <thead>
                      <tr className="bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -968,6 +970,156 @@ export default function MenuSummary() {
                   </Button>
                 </div>
               </div>
+
+              <div className="md:hidden space-y-3">
+                {(dishStats[selectedItem] || []).map((ing, i) => {
+                  const inputId = `${selectedItem}-${ing.name}`;
+                  const savedQty = savedQuantities[ing.id] || 0;
+                  const savedDetails = savedIngredientDetails[ing.id];
+                  const displayUnit = savedDetails?.unit || ing.unit;
+                  const hasCustomQuantity = savedDetails?.customQuantity !== null && savedDetails?.customQuantity !== undefined;
+                  const isSaving = savingIngredient === ing.id;
+                  return (
+                    <div key={i} className="rounded-lg border border-gray-200 p-4 shadow-sm bg-white">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-gray-900 truncate">{ing.name}</p>
+                          <div className="mt-1 flex items-center gap-2">
+                            {ing.isMainIngredient && (
+                              <span className="px-2 py-0.5 text-xs bg-yellow-100 text-yellow-800 rounded-full">Main</span>
+                            )}
+                            {hasCustomQuantity && (
+                              <span className="px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full">Custom</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="text-xs text-gray-500">Base</p>
+                          <p className="text-sm font-medium text-gray-800">{savedDetails?.baseQuantity || ing.quantity} {savedDetails?.unit || ing.unit}</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex items-center gap-2">
+                        <input
+                          type="number"
+                          id={inputId}
+                          ref={(el) => (inputRefs.current[inputId] = el)}
+                          placeholder="Enter quantity"
+                          className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          value={savedQty}
+                          onChange={(e) => {
+                            const entered = parseFloat(e.target.value) || 0;
+                            setSavedQuantities(prev => ({
+                              ...prev,
+                              [ing.id]: entered
+                            }));
+                            if (
+                              generationType !== "semi" ||
+                              isNaN(entered) ||
+                              !baseQuantities[ing.name] ||
+                              !ing.isMainIngredient
+                            ) return;
+                            const ratio = entered / baseQuantities[ing.name];
+                            Object.entries(baseQuantities).forEach(([otherName, otherBaseQty]) => {
+                              const otherId = `${selectedItem}-${otherName}`;
+                              const ref = inputRefs.current[otherId];
+                              if (ref && otherName !== ing.name) {
+                                const calculatedValue = (ratio * otherBaseQty).toFixed(2);
+                                ref.value = calculatedValue;
+                                const otherIngredient = dishStats[selectedItem]?.find(ing => ing.name === otherName);
+                                if (otherIngredient) {
+                                  setSavedQuantities(prev => ({
+                                    ...prev,
+                                    [otherIngredient.id]: parseFloat(calculatedValue)
+                                  }));
+                                }
+                              }
+                            });
+                          }}
+                        />
+                        <span className="text-xs text-gray-500 font-medium">{displayUnit}</span>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <Button
+                          size="sm"
+                          disabled={isSaving}
+                          className={`${isSaving ? 'bg-gray-400 cursor-not-allowed' : hasCustomQuantity ? 'bg-blue-500 hover:bg-blue-600' : 'bg-green-500 hover:bg-green-600'} text-white`}
+                          onClick={() => {
+                            const val = savedQuantities[ing.id] || 0;
+                            handleSaveQuantity(ing.name, val, ing.id);
+                          }}
+                        >
+                          {isSaving ? 'Saving...' : (hasCustomQuantity ? 'Update' : 'Save')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={isSaving}
+                          className={`${isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'} text-white`}
+                          onClick={() => handleDeleteIngredient(ing.name, ing.id)}
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {addingRows.map((row) => (
+                  <div key={row.tempId} className="rounded-lg border border-gray-200 p-4 shadow-sm bg-yellow-50">
+                    <div className="space-y-3">
+                      <select
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        value={row.ingredientId}
+                        onChange={(e) => updateAddingRow(row.tempId, 'ingredientId', e.target.value)}
+                      >
+                        <option value="">Select ingredient</option>
+                        {allIngredients.map((ing) => (
+                          <option key={ing._id} value={ing._id || ing.id}>
+                            {ing.name?.en || ing.name}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="number"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Qty"
+                        value={row.quantity}
+                        onChange={(e) => updateAddingRow(row.tempId, 'quantity', e.target.value)}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button
+                          size="sm"
+                          disabled={row.isSaving}
+                          className={`${row.isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'} text-white`}
+                          onClick={() => handleSaveCustomRow(row)}
+                        >
+                          {row.isSaving ? 'Saving...' : 'Add'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={row.isSaving}
+                          className={`${row.isSaving ? 'bg-gray-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'} text-white`}
+                          onClick={() => {
+                            setAddingRows((prev) => prev.filter((r) => r.tempId !== row.tempId));
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <div className="mt-4">
+                  <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" onClick={addNewIngredientRow}>
+                    + Add Ingredient
+                  </Button>
+                </div>
+              </div>
+              </>
             )}
           </div>
         </div>

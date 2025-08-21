@@ -206,7 +206,7 @@ export default function DishSubCategory() {
           </CardHeader>
 
           <CardContent className="p-6">
-            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700 hidden md:block">
               <Table>
                 <TableHeader className="bg-gray-50 dark:bg-gray-800/50">
                   <TableRow>
@@ -249,6 +249,50 @@ export default function DishSubCategory() {
                   )}
                 </TableBody>
               </Table>
+            </div>
+
+            {/* Mobile: card list */}
+            <div className="md:hidden space-y-3">
+              {subCategories.length > 0 ? (
+                subCategories.map((sub, index) => {
+                  const cat = categories.find((c) => c._id === sub.categoryId);
+                  const categoryName = cat?.name?.[i18n.language] || cat?.name?.en || "-";
+                  return (
+                    <div
+                      key={index}
+                      className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-base font-semibold text-gray-900 truncate dark:text-gray-100">
+                            {sub.name?.[i18n.language] || sub.name?.en}
+                          </p>
+                          <p className="mt-1 text-sm text-gray-600 line-clamp-2 dark:text-gray-300">
+                            {sub.description?.[i18n.language] || sub.description?.en}
+                          </p>
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:ring-blue-700/40">
+                              {categoryName}
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Sort: {sub.sortOrder}</span>
+                          </div>
+                        </div>
+                        <div className="shrink-0">
+                          <button
+                            className="inline-flex items-center rounded-md px-2 py-1 text-sm text-red-600 hover:text-red-700"
+                            onClick={() => deleteSubCategory(sub._id)}
+                            title="Delete Sub-Category"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center text-gray-500 dark:text-gray-400 py-8">No sub-categories found</div>
+              )}
             </div>
           </CardContent>
         </Card>

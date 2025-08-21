@@ -50,12 +50,12 @@ export default function ItemList() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <Card className="shadow-lg rounded-lg p-6">
-        <CardHeader>
+      <Card className="shadow-lg rounded-lg">
+        <CardHeader className="flex-row justify-between border-b p-4">
           <h2 className="text-2xl font-bold">Dish List</h2>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
+        <CardContent className="space-y-4 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label>Name</Label>
               <Input
@@ -92,7 +92,8 @@ export default function ItemList() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Desktop / Tablet table */}
+          <div className="overflow-x-auto hidden md:block">
             <Table>
               <TableHeader className="bg-gray-100">
                 <TableRow>
@@ -113,7 +114,29 @@ export default function ItemList() {
             </Table>
           </div>
 
-          <div className="flex justify-end mt-4">
+          {/* Mobile card list */}
+          <div className="md:hidden space-y-3">
+            {dishes.map((item) => (
+              <div
+                key={item._id}
+                className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+              >
+                <p className="text-base font-semibold text-gray-900 truncate dark:text-gray-100">
+                  {item.name?.en}
+                </p>
+                <div className="mt-2 flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:ring-blue-700/40">
+                    {item.categoryId?.name?.en || "-"}
+                  </span>
+                  <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-200 dark:bg-gray-700/40 dark:text-gray-300 dark:ring-gray-600/40">
+                    {item.subCategoryId?.name?.en || "-"}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-center md:justify-end mt-4">
             <Pagination>
               <PaginationContent className="flex items-center space-x-2">
                 <PaginationItem>

@@ -189,7 +189,7 @@ export default function UnitTypes() {
                     <TableHead>Name</TableHead>
                     <TableHead>Symbol</TableHead>
                     <TableHead>Category</TableHead>
-                    <TableHead>Conversion</TableHead>
+                    {/* <TableHead>Conversion</TableHead> */}
                     <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -200,7 +200,7 @@ export default function UnitTypes() {
                         <TableCell>{unit.name?.[i18n.language] || unit.name?.en}</TableCell>
                         <TableCell>{unit.symbol}</TableCell>
                         <TableCell>{unit.category}</TableCell>
-                        <TableCell>{unit.conversionToBase}</TableCell>
+                        {/* <TableCell>{unit.conversionToBase}</TableCell> */}
                         <TableCell className="text-center">
                           <button
                             className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
