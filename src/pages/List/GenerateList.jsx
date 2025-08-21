@@ -999,45 +999,141 @@ export default function MenuSummary() {
                         </div>
                       </div>
 
-                      <div className="mt-3 flex items-center gap-2">
-                        <input
-                          type="number"
-                          id={inputId}
-                          ref={(el) => (inputRefs.current[inputId] = el)}
-                          placeholder="Enter quantity"
-                          className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          value={savedQty}
-                          onChange={(e) => {
-                            const entered = parseFloat(e.target.value) || 0;
-                            setSavedQuantities(prev => ({
-                              ...prev,
-                              [ing.id]: entered
-                            }));
-                            if (
-                              generationType !== "semi" ||
-                              isNaN(entered) ||
-                              !baseQuantities[ing.name] ||
-                              !ing.isMainIngredient
-                            ) return;
-                            const ratio = entered / baseQuantities[ing.name];
-                            Object.entries(baseQuantities).forEach(([otherName, otherBaseQty]) => {
-                              const otherId = `${selectedItem}-${otherName}`;
-                              const ref = inputRefs.current[otherId];
-                              if (ref && otherName !== ing.name) {
-                                const calculatedValue = (ratio * otherBaseQty).toFixed(2);
-                                ref.value = calculatedValue;
-                                const otherIngredient = dishStats[selectedItem]?.find(ing => ing.name === otherName);
-                                if (otherIngredient) {
-                                  setSavedQuantities(prev => ({
-                                    ...prev,
-                                    [otherIngredient.id]: parseFloat(calculatedValue)
-                                  }));
-                                }
+                      <div className="mt-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            className="h-9 w-9 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+                            onClick={() => {
+                              const next = Math.max(0, (savedQuantities[ing.id] || 0) - 1);
+                              setSavedQuantities(prev => ({ ...prev, [ing.id]: next }));
+                              const ref = inputRefs.current[inputId];
+                              if (ref) ref.value = String(next);
+                              if (generationType === 'semi' && baseQuantities[ing.name] && ing.isMainIngredient) {
+                                const ratio = next / baseQuantities[ing.name];
+                                Object.entries(baseQuantities).forEach(([otherName, otherBaseQty]) => {
+                                  const otherId = `${selectedItem}-${otherName}`;
+                                  const otherRef = inputRefs.current[otherId];
+                                  if (otherRef && otherName !== ing.name) {
+                                    const calculatedValue = (ratio * otherBaseQty).toFixed(2);
+                                    otherRef.value = calculatedValue;
+                                    const otherIngredient = dishStats[selectedItem]?.find(ing => ing.name === otherName);
+                                    if (otherIngredient) {
+                                      setSavedQuantities(prev => ({
+                                        ...prev,
+                                        [otherIngredient.id]: parseFloat(calculatedValue)
+                                      }));
+                                    }
+                                  }
+                                });
                               }
-                            });
-                          }}
-                        />
-                        <span className="text-xs text-gray-500 font-medium">{displayUnit}</span>
+                            }}
+                          >
+                            -
+                          </button>
+                          <div className="relative flex-1">
+                            <input
+                              type="number"
+                              id={inputId}
+                              ref={(el) => (inputRefs.current[inputId] = el)}
+                              placeholder="Enter quantity"
+                              className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              value={savedQty}
+                              onChange={(e) => {
+                                const entered = parseFloat(e.target.value) || 0;
+                                setSavedQuantities(prev => ({
+                                  ...prev,
+                                  [ing.id]: entered
+                                }));
+                                if (
+                                  generationType !== "semi" ||
+                                  isNaN(entered) ||
+                                  !baseQuantities[ing.name] ||
+                                  !ing.isMainIngredient
+                                ) return;
+                                const ratio = entered / baseQuantities[ing.name];
+                                Object.entries(baseQuantities).forEach(([otherName, otherBaseQty]) => {
+                                  const otherId = `${selectedItem}-${otherName}`;
+                                  const ref = inputRefs.current[otherId];
+                                  if (ref && otherName !== ing.name) {
+                                    const calculatedValue = (ratio * otherBaseQty).toFixed(2);
+                                    ref.value = calculatedValue;
+                                    const otherIngredient = dishStats[selectedItem]?.find(ing => ing.name === otherName);
+                                    if (otherIngredient) {
+                                      setSavedQuantities(prev => ({
+                                        ...prev,
+                                        [otherIngredient.id]: parseFloat(calculatedValue)
+                                      }));
+                                    }
+                                  }
+                                });
+                              }}
+                            />
+                            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">{displayUnit}</span>
+                          </div>
+                          <button
+                            type="button"
+                            className="h-9 w-9 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+                            onClick={() => {
+                              const next = (savedQuantities[ing.id] || 0) + 1;
+                              setSavedQuantities(prev => ({ ...prev, [ing.id]: next }));
+                              const ref = inputRefs.current[inputId];
+                              if (ref) ref.value = String(next);
+                              if (generationType === 'semi' && baseQuantities[ing.name] && ing.isMainIngredient) {
+                                const ratio = next / baseQuantities[ing.name];
+                                Object.entries(baseQuantities).forEach(([otherName, otherBaseQty]) => {
+                                  const otherId = `${selectedItem}-${otherName}`;
+                                  const otherRef = inputRefs.current[otherId];
+                                  if (otherRef && otherName !== ing.name) {
+                                    const calculatedValue = (ratio * otherBaseQty).toFixed(2);
+                                    otherRef.value = calculatedValue;
+                                    const otherIngredient = dishStats[selectedItem]?.find(ing => ing.name === otherName);
+                                    if (otherIngredient) {
+                                      setSavedQuantities(prev => ({
+                                        ...prev,
+                                        [otherIngredient.id]: parseFloat(calculatedValue)
+                                      }));
+                                    }
+                                  }
+                                });
+                              }
+                            }}
+                          >
+                            +
+                          </button>
+                        </div>
+                        <div className="mt-2 flex justify-between">
+                          <button
+                            type="button"
+                            className="text-xs text-gray-600 hover:text-gray-800 underline"
+                            onClick={() => {
+                              const base = savedDetails?.baseQuantity || ing.quantity || 0;
+                              setSavedQuantities(prev => ({ ...prev, [ing.id]: base }));
+                              const ref = inputRefs.current[inputId];
+                              if (ref) ref.value = String(base);
+                              if (generationType === 'semi' && baseQuantities[ing.name] && ing.isMainIngredient) {
+                                const ratio = base / baseQuantities[ing.name];
+                                Object.entries(baseQuantities).forEach(([otherName, otherBaseQty]) => {
+                                  const otherId = `${selectedItem}-${otherName}`;
+                                  const otherRef = inputRefs.current[otherId];
+                                  if (otherRef && otherName !== ing.name) {
+                                    const calculatedValue = (ratio * otherBaseQty).toFixed(2);
+                                    otherRef.value = calculatedValue;
+                                    const otherIngredient = dishStats[selectedItem]?.find(ing => ing.name === otherName);
+                                    if (otherIngredient) {
+                                      setSavedQuantities(prev => ({
+                                        ...prev,
+                                        [otherIngredient.id]: parseFloat(calculatedValue)
+                                      }));
+                                    }
+                                  }
+                                });
+                              }
+                            }}
+                          >
+                            Reset to base
+                          </button>
+                        </div>
                       </div>
 
                       <div className="mt-3 grid grid-cols-2 gap-2">

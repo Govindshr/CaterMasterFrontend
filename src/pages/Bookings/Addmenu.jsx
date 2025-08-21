@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { config } from "@/services/nodeconfig";
-import { Plus, Trash, ArrowLeft, Calendar, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Trash, ArrowLeft, Calendar, ChevronDown, ChevronUp, Printer, Save as SaveIcon } from "lucide-react";
 import jsPDF from 'jspdf';
 
 
@@ -400,24 +400,28 @@ const [selectedDate, setSelectedDate] = useState("");
         </div>
 
         {/* Save Button: sticky on mobile, normal on desktop */}
-       <div className="flex flex-col sm:flex-row justify-end gap-2 mt-8">
-  <Button
-    onClick={() => generateMenuPDF({ occasions, bookingDetails: {
-      customerName: 'John Doe',
-      eventName: 'Wedding Reception',
-      venue: 'Lawn B'
-    }})}
-    variant="outline"
-    size="lg"
-    className="text-blue-600 border-blue-600 hover:bg-blue-50"
-  >
-    Print Menu
-  </Button>
+      <div className="mt-8">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
+          <Button
+            onClick={() => generateMenuPDF({ occasions, bookingDetails: {
+              customerName: 'John Doe',
+              eventName: 'Wedding Reception',
+              venue: 'Lawn B'
+            }})}
+            variant="outline"
+            size="lg"
+            className="w-full sm:w-auto rounded-lg border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+          >
+            <Printer className="mr-2 h-5 w-5 text-gray-500" />
+            Print Menu
+          </Button>
 
-  <Button onClick={handleSave} size="lg" className="bg-green-600 hover:bg-green-700 text-white">
-    Save Menu
-  </Button>
-</div>
+          <Button onClick={handleSave} size="lg" className="w-full sm:w-auto rounded-lg bg-green-600 hover:bg-green-700 text-white shadow-sm">
+            <SaveIcon className="mr-2 h-5 w-5" />
+            Save Menu
+          </Button>
+        </div>
+      </div>
 
     </div>
   );
