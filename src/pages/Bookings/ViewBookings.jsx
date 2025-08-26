@@ -35,7 +35,7 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-2 sm:px-4 py-6">
-      <Card className="w-full max-w-4xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800">
+      <Card className="w-full max-w-7xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800">
         {/* Gradient Header */}
         <CardHeader className="w-full bg-gradient-to-r from-blue-600 to-blue-400 p-4 sm:p-6">
           <div className="flex justify-between items-center w-full">

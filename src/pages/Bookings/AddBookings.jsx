@@ -183,7 +183,7 @@ const handleSubmit = async (e) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-2 sm:px-4 py-6 mb-5">
-      <Card className="w-full max-w-6xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800 mb-5">
+      <Card className="w-full max-w-7xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800 mb-5">
         <CardHeader className="w-full bg-gradient-to-r from-blue-600 to-blue-400 p-4 sm:p-6">
           <div className="flex justify-between items-center w-full">
             <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight">Add Booking</h2>

@@ -138,6 +138,7 @@ export function OccasionCard({
                 <SelectValue placeholder="Select Event" />
               </SelectTrigger>
               <SelectContent>
+                {console.log("eventOptions",eventOptions)}
                 {eventOptions.map((event) => (
                   <SelectItem key={event._id} value={event._id} className={selectItemStyle}>
                     {event.name?.[i18n.language] || event.name?.en}
@@ -147,7 +148,7 @@ export function OccasionCard({
             </Select>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-1 mt-3">
             <Label htmlFor={`startTime-${date}-${idx}`}>Start Time</Label>
             <div className="relative">
               <Input

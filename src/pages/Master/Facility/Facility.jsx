@@ -123,7 +123,8 @@ const deleteFacility = async (id) => {
 
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="w-full min-h-screen bg-gray-50 dark:bg-gray-900 py-8 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
       <Card className="shadow-lg rounded-lg">
         <CardHeader className="flex-row justify-between border-b p-4">
           <h2 className="text-2xl font-bold">Facilities</h2>
@@ -336,6 +337,7 @@ const deleteFacility = async (id) => {
           </div>
         </CardContent>
       </Card>
+    </div>
     </div>
   );
 }
