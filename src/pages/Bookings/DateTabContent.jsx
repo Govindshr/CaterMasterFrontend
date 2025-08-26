@@ -345,8 +345,7 @@ export function DateTabContent({
                   </div>
                 </AccordionTrigger>
                 <Button
-                  variant="ghost"
-                  size="icon"
+                    size="icon"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDeleteOccasion(idx);

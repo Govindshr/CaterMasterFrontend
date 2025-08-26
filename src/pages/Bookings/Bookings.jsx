@@ -161,6 +161,13 @@ const [selectedBookingIdForGenerate, setSelectedBookingIdForGenerate] = useState
     return customerName || "N/A";
   };
 
+  const openGenerateModalFor = (bookingId) => {
+setDropdownIdx(null);
+setDropdownMobileIdx(null);
+setSelectedBookingIdForGenerate(bookingId);
+setShowGenerateModal(true);
+};
+
   return (<>
     <div className="max-w-8xl mx-auto  w-full">
       <Card className="shadow-lg rounded-lg mb-5">
@@ -266,14 +273,10 @@ const [selectedBookingIdForGenerate, setSelectedBookingIdForGenerate] = useState
                                 Add Menu
                               </button>
                              <button
-  className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
-  onClick={() => {
-    setDropdownIdx(null);
-    setSelectedBookingIdForGenerate(booking._id);
-    setShowGenerateModal(true);
-  }}
+className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
+onClick={() => openGenerateModalFor(booking._id)}
 >
-  Generate List
+Generate List
 </button>
 
                               <button
@@ -361,14 +364,11 @@ const [selectedBookingIdForGenerate, setSelectedBookingIdForGenerate] = useState
                           Add Menu
                         </button>
                         <button
-                          className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
-                          onClick={() => {
-                            setDropdownMobileIdx(null);
-                            navigate(`/generate-list/${booking._id}`);
-                          }}
-                        >
-                          Generate List
-                        </button>
+className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
+onClick={() => openGenerateModalFor(booking._id)}
+>
+Generate List
+</button>
                         <button
                                 className="px-4 py-2 hover:bg-red-100 text-red-600 text-sm text-left"
                                 onClick={() => {
