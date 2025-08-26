@@ -190,7 +190,7 @@ export default function MenuSummary() {
   const handleItemClick = async (dishName, id,guestno) => {
     setSelectedItem(dishName);
     setShowModal(true);
-    setLoadingStats(true);
+    // setLoadingStats(true);
     setDishStats({}); // clear previous
     setSavedQuantities({}); // clear previous saved quantities
     setAddingRows([]);
@@ -601,7 +601,9 @@ export default function MenuSummary() {
 
   return (
     <>
-         <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 space-y-6">
+
+      <div className="w-full min-h-screen bg-gray-50 dark:bg-gray-900 py-8 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
         {occasions.map((occasion) => (
           <Card
             key={occasion._id}
@@ -680,6 +682,7 @@ export default function MenuSummary() {
         >
           Generate List
         </Button>
+      </div>
       </div>
 
       {showModal && selectedItem && (

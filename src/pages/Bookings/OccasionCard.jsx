@@ -128,9 +128,7 @@ export function OccasionCard({
             <Label htmlFor={`occasionName-${date}-${idx}`}>Event Name</Label>
             <Select
               onValueChange={(value) => {
-                const label = eventOptions.find((e) => e._id === value)?.name?.[i18n.language] || eventOptions.find((e) => e._id === value)?.name?.en || '';
-                handleOccasionChange(date, idx, "occasionName", value);
-                handleOccasionChange(date, idx, "occasionNameLabel", label);
+               handleOccasionChange(date, idx, "occasionName", value)
               }}
               value={occasion.occasionName}
             >
@@ -138,7 +136,6 @@ export function OccasionCard({
                 <SelectValue placeholder="Select Event" />
               </SelectTrigger>
               <SelectContent>
-                {console.log("eventOptions",eventOptions)}
                 {eventOptions.map((event) => (
                   <SelectItem key={event._id} value={event._id} className={selectItemStyle}>
                     {event.name?.[i18n.language] || event.name?.en}
