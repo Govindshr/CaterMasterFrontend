@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect ,useRef } from "react";
 import {
   Table,
   TableBody,
@@ -38,6 +38,9 @@ import { useTranslation } from "react-i18next";
 import Swal from "sweetalert2";
 
 export default function Bookings() {
+  const dropdownRef = useRef(null);
+const mobileDropdownRef = useRef(null);
+
   const { i18n } = useTranslation();
   const [showModal, setShowModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -56,6 +59,28 @@ const [selectedBookingIdForGenerate, setSelectedBookingIdForGenerate] = useState
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+
+  useEffect(() => {
+  function handleClickOutside(event) {
+    if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(event.target)
+    ) {
+      setDropdownIdx(null);
+    }
+    if (
+      mobileDropdownRef.current &&
+      !mobileDropdownRef.current.contains(event.target)
+    ) {
+      setDropdownMobileIdx(null);
+    }
+  }
+
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, []);
 
   const handleDeleteBooking = async (bookingId) => {
     const confirmed = await Swal.fire({
@@ -241,7 +266,8 @@ setShowGenerateModal(true);
                                 booking.endDate
                               )}`}
                         </TableCell>
-                        <TableCell className="flex flex-wrap justify-center space-x-2 relative">
+                     <TableCell className="flex flex-wrap justify-center space-x-2 relative">
+
                           <Button
                             className="text-blue-500 hover:text-blue-700 hover:bg-white bg-transparent p-2"
                             onClick={() => navigate(`/view-booking/${booking._id}`)}
@@ -250,6 +276,7 @@ setShowGenerateModal(true);
                           </Button>
                           <Button
                             className="text-gray-600 hover:text-blue-700 bg-transparent p-2 ml-2"
+                            ref={mobileDropdownRef}
                             onClick={() =>
                               setDropdownIdx(
                                 dropdownIdx === index ? null : index
@@ -261,35 +288,37 @@ setShowGenerateModal(true);
                             <Settings className="w-5 h-5" />
                           </Button>
                           {/* Dropdown menu */}
-                          {dropdownIdx === index && (
-                            <div className="absolute z-20 right-0 mt-10 w-40 bg-white border rounded-lg shadow-lg flex flex-col text-left animate-fade-in">
-                              <button
-                                className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
-                                onClick={() => {
-                                  setDropdownIdx(null);
-                                  navigate(`/add-menu/${booking._id}`);
-                                }}
-                              >
-                                Add Menu
-                              </button>
-                             <button
-className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
-onClick={() => openGenerateModalFor(booking._id)}
->
-Generate List
-</button>
+                       {dropdownIdx === index && (
+                        
+  <div  ref={dropdownRef} className="fixed z-50 mt-2 w-40 bg-white border rounded-lg shadow-lg flex flex-col text-left animate-fade-in"
+       style={{ top: "auto", left: "auto", right: "2rem" }}>
+    <button
+      className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
+      onClick={() => {
+        setDropdownIdx(null);
+        navigate(`/add-menu/${booking._id}`);
+      }}
+    >
+      Add Menu
+    </button>
+    <button
+      className="px-4 py-2 hover:bg-blue-50 text-gray-800 text-sm text-left"
+      onClick={() => openGenerateModalFor(booking._id)}
+    >
+      Generate List
+    </button>
+    <button
+      className="px-4 py-2 hover:bg-red-100 text-red-600 text-sm text-left"
+      onClick={() => {
+        setDropdownIdx(null);
+        handleDeleteBooking(booking._id);
+      }}
+    >
+      Delete Booking
+    </button>
+  </div>
+)}
 
-                              <button
-                                className="px-4 py-2 hover:bg-red-100 text-red-600 text-sm text-left"
-                                onClick={() => {
-                                  setDropdownIdx(null); // or setDropdownMobileIdx(null);
-                                  handleDeleteBooking(booking._id);
-                                }}
-                              >
-                                Delete Booking
-                              </button>
-                            </div>
-                          )}
                         </TableCell>
                       </TableRow>
                     ))}
