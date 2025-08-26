@@ -30,6 +30,8 @@ export default function MenuSummary() {
   const [allIngredients, setAllIngredients] = useState([]);
   const [loadingAllIngredients, setLoadingAllIngredients] = useState(false);
   const [addingRows, setAddingRows] = useState([]); // rows user is adding in modal
+  const [currentEventId, setCurrentEventId] = useState(null);
+  const [currentDishId, setCurrentDishId] = useState(null);
 
   // Sweet Alert function
   const showSweetAlert = (title, message, type = 'success') => {
@@ -187,18 +189,20 @@ export default function MenuSummary() {
     }
   };
 
-  const handleItemClick = async (dishName, id,guestno) => {
+  const handleItemClick = async (dishName, dishId, guestno, eventId) => {
     setSelectedItem(dishName);
+    setCurrentEventId(eventId);
+    setCurrentDishId(dishId);
     setShowModal(true);
     // setLoadingStats(true);
     setDishStats({}); // clear previous
     setSavedQuantities({}); // clear previous saved quantities
     setAddingRows([]);
-  setBaseServingPeople(guestno);
+    setBaseServingPeople(guestno);
     try {
       const token = localStorage.getItem("token");
       const response = await protectedGetApi(
-        `${config.GetDishes}/${id}`,
+        `${config.GetDishes}/${dishId}`,
         token
       );
 
@@ -225,58 +229,37 @@ export default function MenuSummary() {
         setBaseQuantities(baseQtyMap);
 
         setDishStats({ [dishName]: sortedIngredients });
-      
 
-        // Find the event and dish to fetch saved ingredients
-        const event = occasions
-          .flatMap((o) => o.events)
-          .find((e) =>
-            e.menu?.some((d) => d.dishId?.name?.en === dishName)
-          );
+        // Fetch saved ingredients and merge extras using the exact IDs
+        await fetchSavedIngredients(eventId, dishId);
 
-        const dishObj = event?.menu?.find(
-          (d) => d.dishId?.name?.en === dishName
+        const savedResponse = await protectedGetApi(
+          `${config.SaveEventDishIngredient(eventId, dishId)}`,
+          localStorage.getItem("token")
         );
-
-        if (event && dishObj) {
-          await fetchSavedIngredients(event._id, dishObj.dishId._id);
-          
-          // After fetching saved ingredients, merge any additional ingredients
-          const savedResponse = await protectedGetApi(
-            `${config.SaveEventDishIngredient(event._id, dishObj.dishId._id)}`,
-            localStorage.getItem("token")
-          );
-          
-          if (savedResponse.success && savedResponse.data && savedResponse.data.ingredients) {
-            console.log("Saved ingredients response:", savedResponse.data.ingredients);
+        
+        if (savedResponse.success && savedResponse.data && savedResponse.data.ingredients) {
+          setDishStats((prev) => {
+            const currentList = prev[dishName] || [];
+            const existingIds = new Set(currentList.map((x) => x.id));
             
-            setDishStats((prev) => {
-              const currentList = prev[dishName] || [];
-              const existingIds = new Set(currentList.map((x) => x.id));
-              
-              const extras = savedResponse.data.ingredients
-                .filter((it) => it.ingredientId && !existingIds.has(it.ingredientId))
-                .map((it) => {
-                  console.log("Processing extra ingredient:", it);
-                  return {
-                    name: it.name?.en || it.name || "Unknown",
-                    quantity: it.baseQuantity || 0,
-                    id: it.ingredientId,
-                    unit: it.unit?.symbol || "g",
-                    isMainIngredient: !!it.isMainIngredient,
-                  };
-                });
+            const extras = savedResponse.data.ingredients
+              .filter((it) => it.ingredientId && !existingIds.has(it.ingredientId))
+              .map((it) => ({
+                name: it.name?.en || it.name || "Unknown",
+                quantity: it.baseQuantity || 0,
+                id: it.ingredientId,
+                unit: it.unit?.symbol || "g",
+                isMainIngredient: !!it.isMainIngredient,
+              }));
 
-              if (extras.length === 0) return prev;
+            if (extras.length === 0) return prev;
 
-              console.log("Adding extras:", extras);
-              const merged = [...currentList, ...extras];
-              // Keep main ingredients first
-              merged.sort((a, b) => (b.isMainIngredient === true) - (a.isMainIngredient === true));
-              console.log("Final merged list:", merged);
-              return { ...prev, [dishName]: merged };
-            });
-          }
+            const merged = [...currentList, ...extras];
+            // Keep main ingredients first
+            merged.sort((a, b) => (b.isMainIngredient === true) - (a.isMainIngredient === true));
+            return { ...prev, [dishName]: merged };
+          });
         }
       } else {
         console.warn("Unexpected response format:", response);
@@ -325,12 +308,10 @@ export default function MenuSummary() {
       return;
     }
 
-    // Find current event/dish
-    const event = occasions
-      .flatMap((o) => o.events)
-      .find((e) => e.menu?.some((d) => d.dishId?.name?.en === selectedItem));
-    const dishObj = event?.menu?.find((d) => d.dishId?.name?.en === selectedItem);
-    if (!event || !dishObj) {
+    // Use current event/dish ids
+    const eventId = currentEventId;
+    const dishId = currentDishId;
+    if (!eventId || !dishId) {
       showSweetAlert("Error", "Event/Dish not found for save.", "error");
       return;
     }
@@ -353,7 +334,7 @@ export default function MenuSummary() {
     try {
       const token = localStorage.getItem("token");
       const response = await protectedPostApi(
-        config.SaveEventDishIngredient(event._id, dishObj.dishId._id),
+        config.SaveEventDishIngredient(eventId, dishId),
         payload,
         token
       );
@@ -406,7 +387,7 @@ export default function MenuSummary() {
             : savedIngredientDetails[iid];
           return det && det.customQuantity !== null && det.customQuantity !== undefined;
         });
-        setDishCompletionFlag(event._id, dishObj.dishId._id, completed);
+        setDishCompletionFlag(eventId, dishId, completed);
 
         // Remove the temp row and show success
         setAddingRows((prev) => prev.filter((r) => r.tempId !== tempId));
@@ -428,17 +409,9 @@ export default function MenuSummary() {
 
      setSavingIngredient(ingredientId);
 
-     const event = occasions
-       .flatMap((o) => o.events)
-       .find((e) =>
-         e.menu?.some((d) => d.dishId?.name?.en === selectedItem)
-       );
-
-     const dishObj = event?.menu?.find(
-       (d) => d.dishId?.name?.en === selectedItem
-     );
-
-     if (!event || !dishObj) {
+     const eventId = currentEventId;
+     const dishId = currentDishId;
+     if (!eventId || !dishId) {
        console.error("Event/Dish not found for delete.");
        setSavingIngredient(null);
        return;
@@ -454,7 +427,7 @@ export default function MenuSummary() {
      try {
        const token = localStorage.getItem("token");
        const response = await protectedPostApi(
-         config.SaveEventDishIngredient(event._id, dishObj.dishId._id),
+         config.SaveEventDishIngredient(eventId, dishId),
          payload,
          token
        );
@@ -491,7 +464,7 @@ export default function MenuSummary() {
            const det = savedIngredientDetails[iid];
            return det && det.customQuantity !== null && det.customQuantity !== undefined;
          });
-         setDishCompletionFlag(event._id, dishObj.dishId._id, completed);
+         setDishCompletionFlag(eventId, dishId, completed);
          
          showSweetAlert("Deleted!", `${ingredientName} has been removed successfully`, "success");
        }
@@ -517,17 +490,9 @@ export default function MenuSummary() {
       return;
     }
 
-    const event = occasions
-      .flatMap((o) => o.events)
-      .find((e) =>
-        e.menu?.some((d) => d.dishId?.name?.en === selectedItem)
-      );
-
-    const dishObj = event?.menu?.find(
-      (d) => d.dishId?.name?.en === selectedItem
-    );
-
-    if (!event || !dishObj) {
+    const eventId = currentEventId;
+    const dishId = currentDishId;
+    if (!eventId || !dishId) {
       console.error("Event/Dish not found for save.");
       setSavingIngredient(null);
       return;
@@ -543,7 +508,7 @@ export default function MenuSummary() {
     try {
       const token = localStorage.getItem("token");
       const response = await protectedPostApi(
-        config.SaveEventDishIngredient(event._id, dishObj.dishId._id),
+        config.SaveEventDishIngredient(eventId, dishId),
         payload,
         token
       );
@@ -577,7 +542,7 @@ export default function MenuSummary() {
             : savedIngredientDetails[iid];
           return det && det.customQuantity !== null && det.customQuantity !== undefined;
         });
-        setDishCompletionFlag(event._id, dishObj.dishId._id, completed);
+        setDishCompletionFlag(eventId, dishId, completed);
         
         // Check if this is an update or new save
         const isUpdate = savedIngredientDetails[ingredientId]?.customQuantity !== null;
@@ -607,7 +572,7 @@ export default function MenuSummary() {
         {occasions.map((occasion) => (
           <Card
             key={occasion._id}
-            className="border rounded-2xl shadow-md hover:shadow-xl transition-all"
+            className="border rounded-2xl shadow-md hover:shadow-xl transition-all mt-5"
           >
             <CardHeader className="bg-blue-50 rounded-t-2xl p-3 sm:p-4">
               <h2 className="text-2xl font-bold text-blue-900">
@@ -651,8 +616,9 @@ export default function MenuSummary() {
                           onClick={() =>
                             handleItemClick(
                               item.dishId?.name?.en || "Unknown",
-                              item.dishId?.id,
-                              event.noOfGuests
+                              item.dishId?._id,
+                              event.noOfGuests,
+                              event._id
                             )
                           }
                         >
