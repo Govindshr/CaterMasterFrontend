@@ -2,11 +2,14 @@ import { Bell, UserCircle, Moon, Sun, Menu, LogOut, ChevronDown, Mail, Phone } f
 import { useEffect, useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import LanguageSwitcher from "./LanguageSwitcher";
 import { toast } from 'react-toastify';
 import { protectedGetApi } from "@/services/nodeapi";
 import { config } from "@/services/nodeconfig";
 export default function Navbar({ toggleSidebar }) {
+  const navigate = useNavigate();
+
   const { t } = useTranslation();
    const { i18n } = useTranslation();
   const [darkMode, setDarkMode] = useState(false);
@@ -48,19 +51,28 @@ export default function Navbar({ toggleSidebar }) {
       if (response.success) {
         setUserProfile(response.user);
       } else {
-        // Fallback to localStorage data if API fails
-        const localUser = localStorage.getItem("user");
-        if (localUser) {
-          setUserProfile(JSON.parse(localUser));
-        }
+        if (response.message === "Not authorized to access this route") {
+    localStorage.clear();
+    navigate("/login");
+    return;
+  }
+  // fallback to localStorage
+  const localUser = localStorage.getItem("user");
+  if (localUser) {
+    setUserProfile(JSON.parse(localUser));
+  }
       }
     } catch (error) {
-      console.error("Error fetching user profile:", error);
-      // Fallback to localStorage data if API fails
-      const localUser = localStorage.getItem("user");
-      if (localUser) {
-        setUserProfile(JSON.parse(localUser));
-      }
+      if (error?.response?.data?.message === "Not authorized to access this route") {
+    localStorage.clear();
+    navigate("/login");
+    return;
+  }
+  console.error("Error fetching user profile:", error);
+  const localUser = localStorage.getItem("user");
+  if (localUser) {
+    setUserProfile(JSON.parse(localUser));
+  }
     } finally {
       setIsLoadingProfile(false);
     }

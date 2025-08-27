@@ -58,7 +58,9 @@ export default function Events() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [nameEn, setNameEn] = useState("");
-  const [nameHi, setNameHi] = useState("");
+const [nameHi, setNameHi] = useState("");
+const [errorEn, setErrorEn] = useState("");
+const [errorHi, setErrorHi] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   const itemsPerPage = 5;
@@ -84,32 +86,53 @@ export default function Events() {
     }
   };
 
-  const addEvent = async () => {
-    if (!nameEn.trim() || !nameHi.trim()) return;
+const addEvent = async () => {
+let valid = true;
+if (!nameEn.trim()) {
+setErrorEn("English name is required");
+valid = false;
+} else {
+setErrorEn("");
+}
 
-    try {
-      const token = localStorage.getItem("token");
-      const response = await protectedPostApi(
-        config.AddEvents,
-        {
-          name: {
-            en: nameEn,
-            hi: nameHi,
-          },
-        },
-        token
-      );
 
-      if (response?.data) {
-        fetchEvents(); // Refresh from server
-        setIsModalOpen(false);
-        setNameEn("");
-        setNameHi("");
-      }
-    } catch (error) {
-      console.error("Error adding event:", error);
-    }
-  };
+if (!nameHi.trim()) {
+setErrorHi("Hindi name is required");
+valid = false;
+} else {
+setErrorHi("");
+}
+
+
+if (!valid) return;
+
+
+try {
+const token = localStorage.getItem("token");
+const response = await protectedPostApi(
+config.AddEvents,
+{
+name: {
+en: nameEn,
+hi: nameHi,
+},
+},
+token
+);
+
+
+if (response?.data) {
+fetchEvents();
+setIsModalOpen(false);
+setNameEn("");
+setNameHi("");
+setErrorEn("");
+setErrorHi("");
+}
+} catch (error) {
+console.error("Error adding event:", error);
+}
+};
 
   const deleteEvent = async (id) => {
     const confirmed = await Swal.fire({
@@ -171,29 +194,31 @@ export default function Events() {
                   </DialogHeader>
                   <div className="space-y-4 mt-4">
                     <div>
-                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Event Name (English)
-                      </Label>
-                      <Input
-                        type="text"
-                        placeholder="Enter event name in English"
-                        value={nameEn}
-                        onChange={(e) => setNameEn(e.target.value)}
-                        className="mt-1 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Event Name (Hindi)
-                      </Label>
-                      <Input
-                        type="text"
-                        placeholder="Enter event name in Hindi"
-                        value={nameHi}
-                        onChange={(e) => setNameHi(e.target.value)}
-                        className="mt-1 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700"
-                      />
-                    </div>
+<Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+Event Name (English)
+</Label>
+<Input
+type="text"
+placeholder="Enter event name in English"
+value={nameEn}
+onChange={(e) => setNameEn(e.target.value)}
+className="mt-1 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+/>
+{errorEn && <p className="text-red-500 text-xs mt-1">{errorEn}</p>}
+</div>
+<div>
+<Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+Event Name (Hindi)
+</Label>
+<Input
+type="text"
+placeholder="Enter event name in Hindi"
+value={nameHi}
+onChange={(e) => setNameHi(e.target.value)}
+className="mt-1 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+/>
+{errorHi && <p className="text-red-500 text-xs mt-1">{errorHi}</p>}
+</div>
                   </div>
                   <div className="flex justify-end space-x-3 mt-6">
                     <Button

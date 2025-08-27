@@ -127,7 +127,7 @@ const Section = ({ title, icon: Icon, links, open, onToggle }) => {
               <li key={to}>
                 <Link
                   to={to}
-                 className={`block rounded-md p-2 pl-3 text-sm border-l-2 ${isActive(to) ? 'border-white/60 ' + activeClass : 'border-transparent ' + hoverClass}`}
+                 className={`block rounded-md mt-3 p-2 pl-3 text-sm border-l-2 ${isActive(to) ? 'border-white/60 ' + activeClass : 'border-transparent ' + hoverClass}`}
                 >
                   {label}
                 </Link>
@@ -202,9 +202,7 @@ const Section = ({ title, icon: Icon, links, open, onToggle }) => {
               </>
             )}
 
-            {/* Master label retained for context */}
-            <li className={`${!isOpen && "hidden"} px-4 pt-3 text-xs tracking-wide font-semibold uppercase text-white/70`}>Master</li>
-
+           
             {/* Split Master into multiple compact sections */}
             {categories.map(({ key, title, icon, links }) => (
               <Section

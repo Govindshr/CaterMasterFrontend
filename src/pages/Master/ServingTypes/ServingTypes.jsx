@@ -49,6 +49,8 @@ export default function ServingTypes() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [nameEn, setNameEn] = useState("");
   const [nameHi, setNameHi] = useState("");
+  const [errorEn, setErrorEn] = useState("");
+  const [errorHi, setErrorHi] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   const itemsPerPage = 5;
@@ -73,7 +75,23 @@ export default function ServingTypes() {
   };
 
   const addServing = async () => {
-    if (!nameEn.trim() || !nameHi.trim()) return;
+    let valid = true;
+    if (!nameEn.trim()) {
+      setErrorEn("English name is required");
+      valid = false;
+    } else {
+      setErrorEn("");
+    }
+
+    if (!nameHi.trim()) {
+      setErrorHi("Hindi name is required");
+      valid = false;
+    } else {
+      setErrorHi("");
+    }
+
+    if (!valid) return;
+
     try {
       const token = localStorage.getItem("token");
       await protectedPostApi(
@@ -90,6 +108,8 @@ export default function ServingTypes() {
       setIsModalOpen(false);
       setNameEn("");
       setNameHi("");
+      setErrorEn("");
+      setErrorHi("");
     } catch (error) {
       console.error("Error adding serving type:", error);
     }
@@ -163,6 +183,7 @@ export default function ServingTypes() {
                         onChange={(e) => setNameEn(e.target.value)}
                         className="mt-1 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700"
                       />
+                      {errorEn && <p className="text-red-500 text-xs mt-1">{errorEn}</p>}
                     </div>
                     <div>
                       <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -175,6 +196,7 @@ export default function ServingTypes() {
                         onChange={(e) => setNameHi(e.target.value)}
                         className="mt-1 w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700"
                       />
+                      {errorHi && <p className="text-red-500 text-xs mt-1">{errorHi}</p>}
                     </div>
                   </div>
                   <div className="flex justify-end space-x-3 mt-6">
