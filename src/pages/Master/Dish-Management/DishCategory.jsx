@@ -37,6 +37,7 @@ export default function DishCategory() {
   const [descEn, setDescEn] = useState("");
   const [descHi, setDescHi] = useState("");
   const [sortOrder, setSortOrder] = useState("1");
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     fetchCategories();
@@ -54,8 +55,18 @@ export default function DishCategory() {
     }
   };
 
-  const addCategory = async () => {
-    if (!nameEn.trim() || !nameHi.trim() || !descEn.trim() || !descHi.trim()) return;
+ const addCategory = async () => {
+    const newErrors = {};
+    if (!nameEn.trim()) newErrors.nameEn = "English name is required.";
+    if (!nameHi.trim()) newErrors.nameHi = "Hindi name is required.";
+    if (!descEn.trim()) newErrors.descEn = "English description is required.";
+    if (!descHi.trim()) newErrors.descHi = "Hindi description is required.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    setErrors({});
     try {
       const token = localStorage.getItem("token");
       const res = await protectedPostApi(
@@ -125,7 +136,7 @@ export default function DishCategory() {
                     <Plus className="w-5 h-5" /> Add Category
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-white dark:bg-gray-800 shadow-xl rounded-xl p-6 w-[90vw] max-w-md">
+                <DialogContent className="bg-white dark:bg-gray-900 shadow-2xl rounded-2xl p-6 sm:p-8 w-[90vw] max-w-lg transition-all duration-300">
                   <DialogHeader>
                     <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">
                       New Dish Category
@@ -134,21 +145,29 @@ export default function DishCategory() {
                   <div className="space-y-4 mt-4">
                     <div>
                       <Label>Category Name (English)</Label>
-                      <Input value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
+                      {/* <Input value={nameEn} onChange={(e) => setNameEn(e.target.value)} /> */}
+                      <Input value={nameEn} onChange={(e) => setNameEn(e.target.value)} className={errors.nameEn ? "border-red-500 focus:ring-red-500" : ""} />
+                       {errors.nameEn && <p className="text-red-500 text-sm mt-1">{errors.nameEn}</p>}
                     </div>
                     <div>
                       <Label>Category Name (Hindi)</Label>
-                      <Input value={nameHi} onChange={(e) => setNameHi(e.target.value)} />
+                      {/* <Input value={nameHi} onChange={(e) => setNameHi(e.target.value)} /> */}
+                       <Input value={nameHi} onChange={(e) => setNameHi(e.target.value)} className={errors.nameHi ? "border-red-500 focus:ring-red-500" : ""} />
+                       {errors.nameHi && <p className="text-red-500 text-sm mt-1">{errors.nameHi}</p>}
                     </div>
                     <div>
                       <Label>Description (English)</Label>
-                      <Input value={descEn} onChange={(e) => setDescEn(e.target.value)} />
+                      {/* <Input value={descEn} onChange={(e) => setDescEn(e.target.value)} /> */}
+                       <Input value={descEn} onChange={(e) => setDescEn(e.target.value)} className={errors.descEn ? "border-red-500 focus:ring-red-500" : ""} />
+                       {errors.descEn && <p className="text-red-500 text-sm mt-1">{errors.descEn}</p>}
                     </div>
                     <div>
                       <Label>Description (Hindi)</Label>
-                      <Input value={descHi} onChange={(e) => setDescHi(e.target.value)} />
+                      {/* <Input value={descHi} onChange={(e) => setDescHi(e.target.value)} /> */}
+                       <Input value={descHi} onChange={(e) => setDescHi(e.target.value)} className={errors.descHi ? "border-red-500 focus:ring-red-500" : ""} />
+                       {errors.descHi && <p className="text-red-500 text-sm mt-1">{errors.descHi}</p>}
                     </div>
-                    <div>
+                    {/* <div>
                       <Label>Sort Order</Label>
                       <select
                         value={sortOrder}
@@ -158,7 +177,7 @@ export default function DishCategory() {
                         <option value="1">Yes</option>
                         <option value="0">No</option>
                       </select>
-                    </div>
+                    </div> */}
                   </div>
                   <div className="flex justify-end gap-2 mt-6">
                     <Button variant="outline" onClick={() => setIsModalOpen(false)}>

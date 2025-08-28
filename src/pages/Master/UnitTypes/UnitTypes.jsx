@@ -185,12 +185,12 @@ const [errors, setErrors] = useState({});
  </Select>
  {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
                     </div>
-                    <div>
+                    {/* <div>
                       <Label>Conversion To Base</Label>
                      
                        <Input  type="number" step="any" value={conversionToBase} onChange={(e) => setConversionToBase(e.target.value)} className={errors.conversionToBase ? "border-red-500 focus:ring-red-500" : ""}/>
                        {errors.conversionToBase && <p className="text-red-500 text-sm mt-1">{errors.conversionToBase}</p>}
-                    </div>
+                    </div> */}
                   </div>
                   <div className="flex justify-end gap-2 mt-6">
                     <Button variant="outline" onClick={() => setIsModalOpen(false)}>

@@ -8,6 +8,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -39,7 +47,7 @@ export default function DishSubCategory() {
   const [descHi, setDescHi] = useState("");
   const [sortOrder, setSortOrder] = useState("1");
   const [categoryId, setCategoryId] = useState("");
-
+const [errors, setErrors] = useState({});
   useEffect(() => {
     fetchCategories();
     fetchSubCategories();
@@ -70,8 +78,19 @@ export default function DishSubCategory() {
     }
   };
 
-  const addSubCategory = async () => {
-    if (!nameEn.trim() || !nameHi.trim() || !descEn.trim() || !descHi.trim() || !categoryId) return;
+ const addSubCategory = async () => {
+    const newErrors = {};
+    if (!nameEn.trim()) newErrors.nameEn = "English name is required.";
+    if (!nameHi.trim()) newErrors.nameHi = "Hindi name is required.";
+    if (!descEn.trim()) newErrors.descEn = "English description is required.";
+    if (!descHi.trim()) newErrors.descHi = "Hindi description is required.";
+    if (!categoryId) newErrors.categoryId = "Dish category is required.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    setErrors({});
     try {
       const token = localStorage.getItem("token");
       const res = await protectedPostApi(
@@ -143,7 +162,7 @@ export default function DishSubCategory() {
                     <Plus className="w-5 h-5" /> Add Sub-Category
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-white dark:bg-gray-800 shadow-xl rounded-xl p-6 w-[90vw] max-w-md">
+                <DialogContent className="bg-white dark:bg-gray-900 shadow-2xl rounded-2xl p-6 sm:p-8 w-[90vw] max-w-lg transition-all duration-300">
                   <DialogHeader>
                     <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">
                       New Dish Sub-Category
@@ -152,35 +171,45 @@ export default function DishSubCategory() {
                   <div className="space-y-4 mt-4">
                     <div>
                       <Label>Sub-Category Name (English)</Label>
-                      <Input value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
+                      {/* <Input value={nameEn} onChange={(e) => setNameEn(e.target.value)} /> */}
+                       <Input value={nameEn} onChange={(e) => setNameEn(e.target.value)} className={errors.nameEn ? "border-red-500 focus:ring-red-500" : ""} />
+                       {errors.nameEn && <p className="text-red-500 text-sm mt-1">{errors.nameEn}</p>}
                     </div>
                     <div>
                       <Label>Sub-Category Name (Hindi)</Label>
-                      <Input value={nameHi} onChange={(e) => setNameHi(e.target.value)} />
+                      {/* <Input value={nameHi} onChange={(e) => setNameHi(e.target.value)} /> */}
+                       <Input value={nameHi} onChange={(e) => setNameHi(e.target.value)} className={errors.nameHi ? "border-red-500 focus:ring-red-500" : ""} />
+                       {errors.nameHi && <p className="text-red-500 text-sm mt-1">{errors.nameHi}</p>}
                     </div>
                     <div>
                       <Label>Description (English)</Label>
-                      <Input value={descEn} onChange={(e) => setDescEn(e.target.value)} />
+                      {/* <Input value={descEn} onChange={(e) => setDescEn(e.target.value)} /> */}
+                       <Input value={descEn} onChange={(e) => setDescEn(e.target.value)} className={errors.descEn ? "border-red-500 focus:ring-red-500" : ""} />
+                       {errors.nameEn && <p className="text-red-500 text-sm mt-1">{errors.descEn}</p>}
                     </div>
                     <div>
                       <Label>Description (Hindi)</Label>
-                      <Input value={descHi} onChange={(e) => setDescHi(e.target.value)} />
+                      {/* <Input value={descHi} onChange={(e) => setDescHi(e.target.value)} /> */}
+                       <Input value={descHi} onChange={(e) => setDescHi(e.target.value)} className={errors.descHi ? "border-red-500 focus:ring-red-500" : ""} />
+                       {errors.descHi && <p className="text-red-500 text-sm mt-1">{errors.descHi}</p>}
                     </div>
                     <div>
                       <Label>Dish Category</Label>
-                      <select
-                        value={categoryId}
-                        onChange={(e) => setCategoryId(e.target.value)}
-                        className="w-full mt-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                      >
-                        {categories.map((cat) => (
-                          <option key={cat._id} value={cat._id}>
-                            {cat.name?.[i18n.language] || cat.name?.en}
-                          </option>
-                        ))}
-                      </select>
+                     <Select value={categoryId} onValueChange={(val) => setCategoryId(val)}>
+   <SelectTrigger className={`w-full rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500 shadow-sm ${errors.categoryId ? "border-red-500" : ""}`}>
+     <SelectValue placeholder="Select Dish Category" />
+   </SelectTrigger>
+   <SelectContent>
+     {categories.map((cat) => (
+       <SelectItem key={cat._id} value={cat._id}>
+         {cat.name?.[i18n.language] || cat.name?.en}
+       </SelectItem>
+     ))}
+   </SelectContent>
+ </Select>
+ {errors.categoryId && <p className="text-red-500 text-sm mt-1">{errors.categoryId}</p>}
                     </div>
-                    <div>
+                    {/* <div>
                       <Label>Sort Order</Label>
                       <select
                         value={sortOrder}
@@ -190,7 +219,7 @@ export default function DishSubCategory() {
                         <option value="1">Yes</option>
                         <option value="0">No</option>
                       </select>
-                    </div>
+                    </div> */}
                   </div>
                   <div className="flex justify-end gap-2 mt-6">
                     <Button variant="outline" onClick={() => setIsModalOpen(false)}>
