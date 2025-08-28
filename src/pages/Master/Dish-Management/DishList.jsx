@@ -22,24 +22,51 @@ export default function ItemList() {
   const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
+    fetchCategories();
+    fetchSubCategories();
+  }, []);
+
+  useEffect(() => {
     fetchDishes();
   }, [currentPage, nameFilter, categoryFilter, subcategoryFilter]);
+
+  const fetchCategories = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await protectedGetApi(config.GetDishCategories, token);
+      if (res.success === true) {
+        setCategories(res.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch categories", err);
+    }
+  };
+
+  const fetchSubCategories = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await protectedGetApi(config.GetDishSubCategories, token);
+      if (res.success === true) {
+        setSubcategories(res.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch sub-categories", err);
+    }
+  };
 
   const fetchDishes = async () => {
     try {
       const token = localStorage.getItem("token");
       const params = new URLSearchParams({
         page: currentPage,
-        limit: 5,
-        name: nameFilter,
-        category: categoryFilter,
-        subcategory: subcategoryFilter,
+        limit: 10,
+       search: nameFilter,        // 🔄 backend uses `search`
+       categoryId: categoryFilter, // 🔄 backend uses `categoryId`
+       subCategoryId: subcategoryFilter, // 🔄 backend uses `subCategoryId`
       });
       const res = await protectedGetApi(`${config.GetDishes}?${params}`, token);
       const data = res?.data || {};
       setDishes(data?.dishes || []);
-      setCategories(data?.categories || []);
-      setSubcategories(data?.subcategories || []);
       setTotalPages(data?.pagination?.totalPages || 1);
     } catch (err) {
       console.error("Failed to fetch dishes", err);
@@ -47,6 +74,13 @@ export default function ItemList() {
   };
 
   const resetPageOnFilterChange = () => setCurrentPage(1);
+
+  const clearFilters = () => {
+    setCategoryFilter("");
+    setSubcategoryFilter("");
+    setNameFilter("");
+    resetPageOnFilterChange();
+  };
 
   return (
     <div className="w-full min-h-screen bg-gray-50 dark:bg-gray-900 py-8 sm:px-6 lg:px-8">
@@ -85,7 +119,7 @@ export default function ItemList() {
                   <SelectValue placeholder="Select Subcategory" />
                 </SelectTrigger>
                 <SelectContent>
-                  {subcategories.filter((s) => s.categoryId === categoryFilter).map((sub) => (
+                  {subcategories.filter((s) => !categoryFilter || s.categoryId === categoryFilter).map((sub) => (
                     <SelectItem key={sub._id} value={sub._id}>{sub.name?.en}</SelectItem>
                   ))}
                 </SelectContent>
@@ -93,19 +127,33 @@ export default function ItemList() {
             </div>
           </div>
 
+          {/* Clear filters button */}
+          {(nameFilter || categoryFilter || subcategoryFilter) && (
+            <div className="flex justify-end">
+              <button
+                onClick={clearFilters}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Clear Filters
+              </button>
+            </div>
+          )}
+
           {/* Desktop / Tablet table */}
           <div className="overflow-x-auto hidden md:block">
             <Table>
               <TableHeader className="bg-gray-100">
                 <TableRow>
+                  <TableHead>#</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Subcategory</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {dishes.map((item) => (
+                {dishes.map((item,index) => (
                   <TableRow key={item._id} className="hover:bg-gray-50">
+                     <TableCell>{index+1}</TableCell>
                     <TableCell>{item.name?.en}</TableCell>
                     <TableCell>{item.categoryId?.name?.en}</TableCell>
                     <TableCell>{item.subCategoryId?.name?.en}</TableCell>
