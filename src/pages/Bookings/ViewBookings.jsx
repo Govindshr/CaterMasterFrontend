@@ -33,96 +33,139 @@ useEffect(() => {
   fetchBooking();
 }, [id]);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-2 sm:px-4 py-6">
-      <Card className="w-full max-w-7xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800">
-        {/* Gradient Header */}
-        <CardHeader className="w-full bg-gradient-to-r from-blue-600 to-blue-400 p-4 sm:p-6">
-          <div className="flex justify-between items-center w-full">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight text-center w-full">Booking Details</h2>
-            <Button
-              variant="outline"
-              className="flex items-center bg-white text-blue-700 font-semibold hover:bg-blue-50 shadow-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-all absolute right-4 top-4 sm:static sm:right-auto sm:top-auto"
-              onClick={() => navigate("/bookings")}
-            >
-              <ArrowLeft className="w-5 h-5 mr-2" /> <span className="hidden sm:inline">Back to Bookings</span>
-            </Button>
+const formatDate = (date) => {
+  if (!date) return "N/A";
+  return new Date(date).toLocaleDateString("en-US", {
+    weekday: "short",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
+return (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-2 sm:px-4 py-6">
+    <Card className="w-full max-w-7xl shadow-lg border border-gray-200 dark:border-gray-700 rounded-xl">
+      {/* Header */}
+      <div className="flex justify-between items-center border-b p-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100">
+          Booking Details
+        </h2>
+        <Button
+          variant="outline"
+          className="flex items-center text-sm sm:text-base"
+          onClick={() => navigate("/bookings")}
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Bookings
+        </Button>
+      </div>
+
+      {/* Booking Info */}
+      <CardContent className="p-6 bg-white dark:bg-gray-950 space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <span className="block text-sm font-medium text-gray-500">Customer Name</span>
+            <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+              {bookingData?.customerName?.[i18n.language] || bookingData?.customerName?.en}
+            </p>
           </div>
-        </CardHeader>
-        <CardContent className="p-4 sm:p-6 bg-white dark:bg-gray-950">
-          {/* Responsive Details Layout */}
-          <div className="space-y-4 mt-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <span className="font-semibold text-gray-700 dark:text-gray-300">Customer Name:</span>
-                <div className="text-gray-900 dark:text-gray-100">{bookingData?.customerName?.en}</div>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700 dark:text-gray-300">Mobile:</span>
-                <div className="text-gray-900 dark:text-gray-100">{bookingData?.mobileNumber}</div>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700 dark:text-gray-300">Event:</span>
-                <div className="text-gray-900 dark:text-gray-100">{bookingData?.bookingTypeId.name?.[i18n.language] || bookingData?.bookingTypeId.name?.en}</div>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700 dark:text-gray-300">No. of Days:</span>
-                <div className="text-gray-900 dark:text-gray-100">{bookingData?.noOfDays}</div>
-              </div>
-              {bookingData?.noOfDays === "1" ? (
-                <div>
-                  <span className="font-semibold text-gray-700 dark:text-gray-300">Date:</span>
-                  <div className="text-gray-900 dark:text-gray-100">{bookingData?.startDate}</div>
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <span className="font-semibold text-gray-700 dark:text-gray-300">Start Date:</span>
-                    <div className="text-gray-900 dark:text-gray-100">{bookingData?.startDate}</div>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-gray-700 dark:text-gray-300">End Date:</span>
-                    <div className="text-gray-900 dark:text-gray-100">{bookingData?.endDate}</div>
-                  </div>
-                </>
-              )}
-              <div className="sm:col-span-2">
-                <span className="font-semibold text-gray-700 dark:text-gray-300">Venue Address:</span>
-                <div className="text-gray-900 dark:text-gray-100">{bookingData?.venueAddress || <span className="italic text-gray-400">N/A</span>}</div>
-              </div>
-              <div className="sm:col-span-2">
-                <span className="font-semibold text-gray-700 dark:text-gray-300">Venue Location:</span>
-                <div className="text-gray-900 dark:text-gray-100">
-                  {bookingData?.googleVenueLocation ? (
-                    <a href={bookingData?.googleVenueLocation} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">View on Google Maps</a>
-                  ) : <span className="italic text-gray-400">N/A</span>}
-                </div>
-              </div>
-              <div className="sm:col-span-2">
-                <span className="font-semibold text-gray-700 dark:text-gray-300">User Address:</span>
-                <div className="text-gray-900 dark:text-gray-100">{bookingData?.customerAddress}</div>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-700 dark:text-gray-300">Advance/Booking Amount:</span>
-                <div className="text-gray-900 dark:text-gray-100">{bookingData?.advanceAmount || <span className="italic text-gray-400">N/A</span>}</div>
-              </div>
-              <div className="sm:col-span-2">
-                <span className="font-semibold text-gray-700 dark:text-gray-300">Extra Facilities:</span>
-                <div className="text-gray-900 dark:text-gray-100">
-                  {bookingData?.facilities && bookingData?.facilities.length > 0 ? (
-                    <ul className="list-disc ml-5">
-                      {bookingData?.facilities.map((f, i) => (
-                        <li key={i}>{f.facilityId.name?.[i18n.language] || f.facilityId.name?.en}</li>
-                        
-                      ))}
-                    </ul>
-                  ) : <span className="italic text-gray-400">N/A</span>}
-                </div>
-              </div>
-            </div>
+          <div>
+            <span className="block text-sm font-medium text-gray-500">Mobile</span>
+            <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+              {bookingData?.mobileNumber}
+            </p>
           </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+          <div>
+            <span className="block text-sm font-medium text-gray-500">Event</span>
+            <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+              {bookingData?.bookingTypeId?.name?.[i18n.language] || bookingData?.bookingTypeId?.name?.en}
+            </p>
+          </div>
+          <div>
+            <span className="block text-sm font-medium text-gray-500">No. of Days</span>
+            <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+              {bookingData?.noOfDays}
+            </p>
+          </div>
+          <div>
+            <span className="block text-sm font-medium text-gray-500">Start Date</span>
+            <p className="text-lg text-gray-800 dark:text-gray-200">
+              {formatDate(bookingData?.startDate)}
+            </p>
+          </div>
+          <div>
+            <span className="block text-sm font-medium text-gray-500">End Date</span>
+            <p className="text-lg text-gray-800 dark:text-gray-200">
+              {formatDate(bookingData?.endDate)}
+            </p>
+          </div>
+        </div>
+
+        {/* Venue Info */}
+        <div className="border-t pt-4">
+          <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2">Venue Information</h3>
+          <p><span className="font-medium">Address:</span> {bookingData?.venueAddress || "N/A"}</p>
+          <p>
+            <span className="font-medium">Location:</span>{" "}
+            {bookingData?.googleVenueLocation ? (
+              <a href={bookingData.googleVenueLocation} target="_blank" rel="noreferrer" className="text-blue-600 underline">
+                View on Google Maps
+              </a>
+            ) : "N/A"}
+          </p>
+        </div>
+
+        {/* User Info */}
+        <div className="border-t pt-4">
+          <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2">User Information</h3>
+          <p><span className="font-medium">User Address:</span> {bookingData?.customerAddress}</p>
+          <p><span className="font-medium">Advance Amount:</span> ₹{bookingData?.advanceAmount}</p>
+          {bookingData?.alternateContact && (
+            <p><span className="font-medium">Alternate Contact:</span> {bookingData.alternateContact.name} ({bookingData.alternateContact.number})</p>
+          )}
+        </div>
+
+        {/* Facilities */}
+        <div className="border-t pt-4">
+          <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2">Extra Facilities</h3>
+          {bookingData?.facilities?.length > 0 ? (
+            <ul className="list-disc ml-6 space-y-1">
+              {bookingData.facilities.map((f, i) => (
+                <li key={i} className="text-gray-800 dark:text-gray-200">
+                  {f.facilityId.name?.[i18n.language] || f.facilityId.name?.en} – ₹{f.facilityId.cost}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="italic text-gray-400">N/A</p>
+          )}
+        </div>
+
+        {/* Occasions */}
+<div className="border-t pt-4">
+  <h3 className="text-lg font-bold text-gray-700 dark:text-gray-300 mb-2">Occasions</h3>
+  {bookingData?.occasions?.length > 0 ? (
+    <ul className="space-y-2">
+      {bookingData.occasions.map((occ, i) => (
+        <li
+          key={i}
+          className="flex justify-between items-center bg-gray-50 dark:bg-gray-800 p-3 rounded-lg shadow-sm"
+        >
+          <span className="font-medium text-gray-800 dark:text-gray-200">{occ.occasionName}</span>
+          <span className="text-gray-600 dark:text-gray-400">
+            {formatDate(occ.date)}
+          </span>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p className="italic text-gray-400">No occasions added</p>
+  )}
+</div>
+
+      </CardContent>
+    </Card>
+  </div>
+);
+
 }
