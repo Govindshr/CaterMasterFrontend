@@ -27,7 +27,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const hoverClass = "hover:bg-white/10";
   const activeClass = "bg-white/15";
   const linkText = (active) => `${!isOpen ? "hidden" : "inline"} transition-all duration-300 ${active ? 'text-white font-semibold' : 'text-white/90'}`;
-  const iconClass = (active) => `w-5 h-5 text-white ${isOpen ? "mr-3" : "mx-auto"}`;
+  const iconClass = (active) => `w-5 h-5 text-white ${isOpen ? "mr-3" : " "}`;
 
   // --- Master split into multiple compact sections ---
   const categories = [
