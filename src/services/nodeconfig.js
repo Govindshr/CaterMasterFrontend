@@ -1,11 +1,11 @@
 // src/services/config.js
 
-export const Base_URI = "http://localhost:8000/api";
-// export const Base_URI = "https://Backend.priyansh.site/api";
+// export const Base_URI = "http://localhost:8000/api";
+export const Base_URI = "https://Backend.priyansh.site/api";
 
 export const config = {
-    imageurl:'http://localhost:8000',
-    // imageurl:'https://Backend.priyansh.site/api',
+    // imageurl:'http://localhost:8000',
+    imageurl:'https://Backend.priyansh.site/api',
     RegisterUser: `${Base_URI}/users/register`,
     Login: `${Base_URI}/users/login`,
     GetUserProfile: `${Base_URI}/users/profile`,

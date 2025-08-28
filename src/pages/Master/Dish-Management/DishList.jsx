@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { protectedGetApi } from "@/services/nodeapi";
 import { config } from "@/services/nodeconfig";
 import { Button } from "@/components/ui/button";
-import { Filter, X } from "lucide-react";
+import { Filter, X ,Plus} from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 
 export default function ItemList() {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ export default function ItemList() {
   const [categories, setCategories] = useState([]);
   const [subcategories, setSubcategories] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
 
   useEffect(() => {
     fetchCategories();
@@ -94,24 +95,70 @@ export default function ItemList() {
         <CardHeader className="flex-row justify-between items-center border-b p-4 gap-3">
           <h2 className="text-2xl font-bold">Dish List</h2>
           <div className="ml-auto">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => navigate("/add-item")}>Add Dish</Button>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => navigate("/add-item")}><Plus className="w-5 h-5 " />Add Dish</Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4 p-6">
-          {/* Mobile: Filters toggle */}
+          {/* Mobile: Filters Sheet trigger */}
           <div className="md:hidden">
-            <Button
-              variant="outline"
-              className="w-full justify-between"
-              onClick={() => setShowMobileFilters((s) => !s)}
-            >
-              <span className="flex items-center gap-2"><Filter className="h-4 w-4" /> Filters</span>
-              <span className="text-xs text-gray-500">{showMobileFilters ? "Hide" : "Show"}</span>
-            </Button>
+            <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="w-full justify-center gap-2">
+                  <Filter className="h-4 w-4" /> Filters
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="rounded-t-2xl p-4">
+                <SheetHeader>
+                  <SheetTitle>Filters</SheetTitle>
+                </SheetHeader>
+                <div className="mt-4 space-y-3">
+                  <div>
+                    <Label>Name</Label>
+                    <Input
+                      placeholder="Search by name"
+                      value={nameFilter}
+                      onChange={(e) => { setNameFilter(e.target.value); resetPageOnFilterChange(); }}
+                    />
+                  </div>
+                  <div>
+                    <Label>Category</Label>
+                    <Select value={categoryFilter} onValueChange={(val) => { setCategoryFilter(val); setSubcategoryFilter(""); resetPageOnFilterChange(); }}>
+                      <SelectTrigger className="w-full rounded-lg border-gray-300 bg-white">
+                        <SelectValue placeholder="Select Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((cat) => (
+                          <SelectItem key={cat._id} value={cat._id}>{cat.name?.en}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Subcategory</Label>
+                    <Select value={subcategoryFilter} onValueChange={(val) => { setSubcategoryFilter(val); resetPageOnFilterChange(); }}>
+                      <SelectTrigger className="w-full rounded-lg border-gray-300 bg-white">
+                        <SelectValue placeholder="Select Subcategory" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subcategories.filter((s) => !categoryFilter || s.categoryId === categoryFilter).map((sub) => (
+                          <SelectItem key={sub._id} value={sub._id}>{sub.name?.en}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="mt-5 flex items-center justify-between gap-2">
+                  <Button variant="ghost" onClick={() => { clearFilters(); }} className="text-gray-700">Clear</Button>
+                  <SheetClose asChild>
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white">Apply</Button>
+                  </SheetClose>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
 
-          {/* Filters */}
-          <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 ${showMobileFilters ? "block" : "hidden md:grid"}`}>
+          {/* Desktop/Tablet Filters */}
+          <div className="hidden md:grid md:grid-cols-3 gap-4">
             <div>
               <Label>Name</Label>
               <Input
