@@ -8,6 +8,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 import { Button } from "@/components/ui/button";
 import {
   Trash2,
@@ -171,7 +179,7 @@ export default function Facilities() {
                   <Plus className="w-5 h-5 mr-2" /> Add Facility
                 </Button>
               </DialogTrigger>
-                <DialogContent className="bg-white shadow-lg rounded-lg p-6 w-[400px] max-h-[80vh] overflow-y-auto">
+                <DialogContent className="bg-white dark:bg-gray-900 shadow-2xl rounded-2xl p-6 sm:p-8 w-[90vw] max-w-lg max-h-[85vh] overflow-y-auto transition-all duration-300">
 
                 <DialogHeader>
                   <DialogTitle className="text-xl font-bold text-gray-900">
@@ -201,15 +209,15 @@ export default function Facilities() {
                 </div>
 
                 <Label className="text-gray-700">Facility Type</Label>
-                <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900"
-                >
-                  <option value="">-- Select Type --</option>
-                  <option value="event">Event</option>
-                  <option value="booking">Booking</option>
-                </select>
+<Select value={type} onValueChange={(val) => setType(val)}>
+   <SelectTrigger className="w-full rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500 shadow-sm">
+     <SelectValue placeholder="-- Select Type --" />
+   </SelectTrigger>
+   <SelectContent>
+     <SelectItem value="event">Event</SelectItem>
+     <SelectItem value="booking">Booking</SelectItem>
+   </SelectContent>
+ </Select>
                 {errorType && <p className="text-red-500 text-xs">{errorType}</p>}
 
                 <Label className="text-gray-700 mt-3">Is Paid</Label>

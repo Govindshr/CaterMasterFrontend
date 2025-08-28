@@ -7,6 +7,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import {
@@ -37,7 +45,7 @@ export default function UnitTypes() {
   const [symbol, setSymbol] = useState("");
   const [category, setCategory] = useState("weight");
   const [conversionToBase, setConversionToBase] = useState("1");
-
+const [errors, setErrors] = useState({});
   useEffect(() => {
     fetchUnits();
   }, [i18n.language]);
@@ -55,7 +63,20 @@ export default function UnitTypes() {
   };
 
   const addUnit = async () => {
-    if (!nameEn.trim() || !nameHi.trim() || !symbol.trim() || !category.trim() || !conversionToBase) return;
+     const newErrors = {};
+   if (!nameEn.trim()) newErrors.nameEn = "English name is required.";
+   if (!nameHi.trim()) newErrors.nameHi = "Hindi name is required.";
+   if (!symbol.trim()) newErrors.symbol = "Symbol is required.";
+   if (!category.trim()) newErrors.category = "Category is required.";
+   if (!conversionToBase || parseFloat(conversionToBase) <= 0) {
+     newErrors.conversionToBase = "Conversion must be greater than 0.";
+   }
+
+   if (Object.keys(newErrors).length > 0) {
+     setErrors(newErrors);
+     return;
+   }
+   setErrors({});
     try {
       const token = localStorage.getItem("token");
       const res = await protectedPostApi(
@@ -126,7 +147,7 @@ export default function UnitTypes() {
                     <Plus className="w-5 h-5" /> Add Unit Type
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-white dark:bg-gray-800 shadow-xl rounded-xl p-6 w-[90vw] max-w-md">
+                <DialogContent className="bg-white dark:bg-gray-900 shadow-2xl rounded-2xl p-6 sm:p-8 w-[90vw] max-w-lg transition-all duration-300">
                   <DialogHeader>
                     <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">
                       New Unit Type
@@ -135,37 +156,40 @@ export default function UnitTypes() {
                   <div className="space-y-4 mt-4">
                     <div>
                       <Label>Name (English)</Label>
-                      <Input value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
+                     
+                      <Input value={nameEn} onChange={(e) => setNameEn(e.target.value)} className={errors.nameEn ? "border-red-500 focus:ring-red-500" : ""}/>
+                       {errors.nameEn && <p className="text-red-500 text-sm mt-1">{errors.nameEn}</p>}
                     </div>
                     <div>
                       <Label>Name (Hindi)</Label>
-                      <Input value={nameHi} onChange={(e) => setNameHi(e.target.value)} />
+                      <Input value={nameHi} onChange={(e) => setNameHi(e.target.value)} className={errors.nameHi ? "border-red-500 focus:ring-red-500" : ""}/>
+                       {errors.nameHi && <p className="text-red-500 text-sm mt-1">{errors.nameHi}</p>}
                     </div>
                     <div>
                       <Label>Symbol</Label>
-                      <Input value={symbol} onChange={(e) => setSymbol(e.target.value)} />
+                       <Input value={symbol} onChange={(e) => setSymbol(e.target.value)} className={errors.symbol ? "border-red-500 focus:ring-red-500" : ""}/>
+                       {errors.symbol && <p className="text-red-500 text-sm mt-1">{errors.symbol}</p>}
                     </div>
                     <div>
                       <Label>Category</Label>
-                      <select
-                        value={category}
-                        onChange={(e) => setCategory(e.target.value)}
-                        className="w-full mt-1 rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                      >
-                        <option value="weight">Weight</option>
-                        <option value="volume">Volume</option>
-                        <option value="length">Length</option>
-                        <option value="quantity">Quantity</option>
-                      </select>
+                     <Select value={category} onValueChange={(val) => setCategory(val)}>
+   <SelectTrigger className={`w-full rounded-xl border-gray-300 focus:ring-2 focus:ring-blue-500 shadow-sm ${errors.category ? "border-red-500" : ""}`}>
+     <SelectValue placeholder="Select Category" />
+   </SelectTrigger>
+   <SelectContent>
+     <SelectItem value="weight">Weight</SelectItem>
+     <SelectItem value="volume">Volume</SelectItem>
+     <SelectItem value="length">Length</SelectItem>
+     <SelectItem value="quantity">Quantity</SelectItem>
+   </SelectContent>
+ </Select>
+ {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
                     </div>
                     <div>
                       <Label>Conversion To Base</Label>
-                      <Input
-                        type="number"
-                        step="any"
-                        value={conversionToBase}
-                        onChange={(e) => setConversionToBase(e.target.value)}
-                      />
+                     
+                       <Input  type="number" step="any" value={conversionToBase} onChange={(e) => setConversionToBase(e.target.value)} className={errors.conversionToBase ? "border-red-500 focus:ring-red-500" : ""}/>
+                       {errors.conversionToBase && <p className="text-red-500 text-sm mt-1">{errors.conversionToBase}</p>}
                     </div>
                   </div>
                   <div className="flex justify-end gap-2 mt-6">

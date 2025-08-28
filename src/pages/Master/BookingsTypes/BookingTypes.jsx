@@ -36,6 +36,7 @@ export default function BookingTypes() {
   const [nameHi, setNameHi] = useState("");
   const [descEn, setDescEn] = useState("");
   const [descHi, setDescHi] = useState("");
+const [errors, setErrors] = useState({});
 
   useEffect(() => {
     fetchTypes();
@@ -54,7 +55,18 @@ export default function BookingTypes() {
   };
 
   const addType = async () => {
-    if (!nameEn.trim() || !nameHi.trim() || !descEn.trim() || !descHi.trim()) return;
+    const newErrors = {};
+    if (!nameEn.trim()) newErrors.nameEn = "English name is required.";
+    if (!nameHi.trim()) newErrors.nameHi = "Hindi name is required.";
+    if (!nameEn.trim()) newErrors.descEn = "English Description is required.";
+    if (!nameHi.trim()) newErrors.descHi = "Hindi Description is required.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setErrors({});
     try {
       const token = localStorage.getItem("token");
       const res = await protectedPostApi(
@@ -122,7 +134,7 @@ export default function BookingTypes() {
                     <Plus className="w-5 h-5" /> Add Booking Type
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-white dark:bg-gray-800 shadow-xl rounded-xl p-6 w-[90vw] max-w-md">
+                <DialogContent className="bg-white shadow-lg rounded-lg p-6 w-[400px] max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">
                       New Booking Type
@@ -130,20 +142,32 @@ export default function BookingTypes() {
                   </DialogHeader>
                   <div className="space-y-4 mt-4">
                     <div>
-                      <Label>Booking Name (English)</Label>
-                      <Input value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
-                    </div>
-                    <div>
-                      <Label>Booking Name (Hindi)</Label>
-                      <Input value={nameHi} onChange={(e) => setNameHi(e.target.value)} />
-                    </div>
+  <Label>Booking Name (English)</Label>
+  <Input value={nameEn} onChange={(e) => setNameEn(e.target.value)} />
+  {errors.nameEn && (
+    <p className="text-red-500 text-sm mt-1">{errors.nameEn}</p>
+  )}
+</div>
+                   <div>
+  <Label>Booking Name (Hindi)</Label>
+  <Input value={nameHi} onChange={(e) => setNameHi(e.target.value)} />
+  {errors.nameHi && (
+    <p className="text-red-500 text-sm mt-1">{errors.nameHi}</p>
+  )}
+</div>
                     <div>
                       <Label>Description (English)</Label>
                       <Input value={descEn} onChange={(e) => setDescEn(e.target.value)} />
+                        {errors.descEn && (
+    <p className="text-red-500 text-sm mt-1">{errors.descEn}</p>
+  )}
                     </div>
                     <div>
                       <Label>Description (Hindi)</Label>
                       <Input value={descHi} onChange={(e) => setDescHi(e.target.value)} />
+                      {errors.descHi && (
+    <p className="text-red-500 text-sm mt-1">{errors.descHi}</p>
+  )}
                     </div>
                   </div>
                   <div className="flex justify-end gap-2 mt-6">
