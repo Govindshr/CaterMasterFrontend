@@ -8,6 +8,8 @@ export default function Sidebar({ isOpen, onClose }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [userProfile, setUserProfile] = useState(null);
   const location = useLocation();
+const activeDirectLink = "bg-white/20 border-l-4 border-yellow-400 text-white font-semibold";
+const activeAccordion = "bg-white/10 border-l-4 border-blue-300 text-white";
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -27,6 +29,7 @@ export default function Sidebar({ isOpen, onClose }) {
   const hoverClass = "hover:bg-white/10";
   const activeClass = "bg-white/15";
   const linkText = (active) => `${!isOpen ? "hidden" : "inline"} transition-all duration-300 ${active ? 'text-white font-semibold' : 'text-white/90'}`;
+
   const iconClass = (active) => `w-5 h-5 text-white ${isOpen ? "mr-3" : " "}`;
 
   // --- Master split into multiple compact sections ---
@@ -86,8 +89,14 @@ export default function Sidebar({ isOpen, onClose }) {
   }, [location.pathname]);
 
 const toggleSection = (key) =>
-  setOpenSections((s) => ({ ...s, [key]: !s[key] }));
-
+  setOpenSections((s) => {
+    // if the clicked one is already open → close all
+    if (s[key]) {
+      return {};
+    }
+    // otherwise close all others and open only this one
+    return { [key]: true };
+  });
 
 // inside your file, keep everything else the same
 // REPLACE the whole Section component with this version
@@ -100,7 +109,10 @@ const Section = ({ title, icon: Icon, links, open, onToggle }) => {
         type="button"
         aria-expanded={open}
         onClick={onToggle}
-        className={`group relative flex items-center w-full p-3 pr-9 rounded-md transition-colors ${hoverClass} ${open ? 'bg-white/10 ring-1 ring-white/10' : ''}`}
+        className={`group relative flex items-center w-full p-3 pr-9 rounded-md transition-colors ${
+  open ? activeAccordion : hoverClass
+}`}
+
       >
         <Icon className={iconClass(false)} />
         <span className={linkText(false)}>{title}</span>
@@ -114,28 +126,31 @@ const Section = ({ title, icon: Icon, links, open, onToggle }) => {
       </button>
 
       {/* Smooth, measurement-free animation using CSS grid trick */}
-      <div
-        className="grid transition-all duration-300 ease-in-out"
-        style={{ gridTemplateRows: open ? '1fr' : '0fr' }}
-      >
-        <div className="overflow-hidden">
-          <ul
-            ref={contentRef}
-            className={`pl-6 space-y-1 py-1 ${!isOpen ? 'hidden' : ''}`}
-          >
-            {links.map(({ to, label }) => (
-              <li key={to}>
-                <Link
-                  to={to}
-                 className={`block rounded-md mt-3 p-2 pl-3 text-sm border-l-2 ${isActive(to) ? 'border-white/60 ' + activeClass : 'border-transparent ' + hoverClass}`}
-                >
-                  {label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+     <div
+  className={`overflow-hidden transition-all duration-300 ease-in-out ${
+    open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+  }`}
+>
+  <ul
+    ref={contentRef}
+    className={`pl-6 space-y-1 py-2`}
+  >
+    {links.map(({ to, label }) => (
+      <li key={to}>
+      <Link
+  to={to}
+  className={`block rounded-md mt-1 p-2 pl-3 text-sm border-l-2 ${
+    isActive(to) ? activeDirectLink : 'border-transparent ' + hoverClass
+  }`}
+>
+  {label}
+</Link>
+
+      </li>
+    ))}
+  </ul>
+</div>
+
     </li>
   );
 };
@@ -151,10 +166,11 @@ const Section = ({ title, icon: Icon, links, open, onToggle }) => {
       )}
 
       <div 
-        className={`fixed lg:relative h-screen shadow-md transition-all duration-300 z-50
-          ${isOpen ? "w-60 translate-x-0" : "-translate-x-full lg:translate-x-0 lg:w-18"}
-          bg-gradient-to-b from-blue-700 via-blue-800 to-blue-900 text-white`}
-      >
+  className={`fixed lg:relative h-screen shadow-md transition-all duration-300 z-50
+    ${isOpen ? "w-60 translate-x-0" : "-translate-x-full lg:translate-x-0 lg:w-20"}
+    bg-gradient-to-b from-blue-700 via-blue-800 to-blue-900 text-white`}
+>
+
         <div className="flex items-center justify-between p-4 border-b border-white/10">
           <h1 className="text-lg font-bold transition-all duration-300">
             {isOpen ? "Cater Master" : "CM"}
@@ -169,7 +185,8 @@ const Section = ({ title, icon: Icon, links, open, onToggle }) => {
         <nav className="mt-2 overflow-y-auto h-[calc(100vh-60px)] custom-scrollbar">
           <ul className="space-y-1 px-2 mb-5">
             <li>
-              <div className={`${navItemBase} ${isActive('/') ? activeClass : hoverClass}`}>
+             <div className={`${navItemBase} ${isActive('/') ? activeDirectLink : hoverClass}`}>
+
                 <Link to="/" className="flex items-center rounded-md w-full">
                   <LayoutDashboard className={iconClass(isActive('/'))} />
                   <span className={linkText(isActive('/'))}>Dashboard</span>
