@@ -34,7 +34,7 @@ export default function AddIngredient() {
     shelfLifeDays: "",
     supplier: "",
   });
-
+const [errors, setErrors] = useState({});
   useEffect(() => {
     fetchDropdowns();
   }, [i18n.language]);
@@ -62,6 +62,27 @@ export default function AddIngredient() {
     setIsLoading(true);
     setApiError("");
 
+  const newErrors = {};
+  if (!formData.nameEn.trim()) newErrors.nameEn = "English name is required.";
+  if (!formData.nameHi.trim()) newErrors.nameHi = "Hindi name is required.";
+  if (!formData.descriptionEn.trim()) newErrors.descriptionEn = "English description is required.";
+  if (!formData.descriptionHi.trim()) newErrors.descriptionHi = "Hindi description is required.";
+  if (!formData.ingredientTypeId) newErrors.ingredientTypeId = "Ingredient type is required.";
+  if (!formData.unitTypeId) newErrors.unitTypeId = "Unit type is required.";
+  if (!formData.pricePerUnit || parseFloat(formData.pricePerUnit) <= 0) {
+    newErrors.pricePerUnit = "Price per unit must be greater than 0.";
+  }
+  if (!formData.shelfLifeDays || parseInt(formData.shelfLifeDays, 10) <= 0) {
+    newErrors.shelfLifeDays = "Shelf life (days) is required.";
+  }
+  if (!formData.supplier.trim()) newErrors.supplier = "Supplier is required.";
+
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    setIsLoading(false);
+    return;
+  }
+  setErrors({});
     const payload = {
       name: { en: formData.nameEn, hi: formData.nameHi },
       description: { en: formData.descriptionEn, hi: formData.descriptionHi },
@@ -86,12 +107,12 @@ export default function AddIngredient() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-50 dark:bg-gray-900 px-3 py-6">
-      <Card className="w-full max-w-4xl shadow-xl border border-blue-200 dark:border-blue-800">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-blue-400 text-white py-4 px-6">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-3 py-6">
+      <Card className="w-full max-w-7xl shadow-xl border border-gray-200 dark:border-gray-800">
+        <CardHeader className="py-4 px-6 border-b bg-white dark:bg-gray-950">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl sm:text-2xl font-bold">Add Ingredient</h2>
-            <Button variant="outline" className="bg-white text-blue-700" onClick={() => navigate("/all-ingredients")}> <ArrowLeft className="w-5 h-5 mr-1" /> Back</Button>
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100">Add Ingredient</h2>
+            <Button variant="outline" onClick={() => navigate("/all-ingredients")}> <ArrowLeft className="w-5 h-5 mr-1" /> Back</Button>
           </div>
         </CardHeader>
         <CardContent className="p-6 bg-white dark:bg-gray-950">
@@ -99,30 +120,47 @@ export default function AddIngredient() {
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Name (English)</Label>
-              <Input name="nameEn" value={formData.nameEn} onChange={handleChange} required />
+              {/* <Input name="nameEn" value={formData.nameEn} onChange={handleChange} required /> */}
+              <Input  name="nameEn" value={formData.nameEn} onChange={handleChange} className={errors.nameEn ? "border-red-500 focus:ring-red-500" : ""}/>
+               {errors.nameEn && <p className="text-red-500 text-sm mt-1">{errors.nameEn}</p>}
             </div>
             <div>
               <Label>Name (Hindi)</Label>
-              <Input name="nameHi" value={formData.nameHi} onChange={handleChange} />
+              {/* <Input name="nameHi" value={formData.nameHi} onChange={handleChange} /> */}
+              <Input  name="nameHi" value={formData.nameHi} onChange={handleChange} className={errors.nameHi ? "border-red-500 focus:ring-red-500" : ""}/>
+               {errors.nameHi && <p className="text-red-500 text-sm mt-1">{errors.nameHi}</p>}
             </div>
             <div>
               <Label>Description (EN)</Label>
-              <Textarea name="descriptionEn" value={formData.descriptionEn} onChange={handleChange} />
+              {/* <Textarea name="descriptionEn" value={formData.descriptionEn} onChange={handleChange} /> */}
+              <Textarea  name="descriptionEn" value={formData.descriptionEn} onChange={handleChange} className={errors.descriptionEn ? "border-red-500 focus:ring-red-500" : ""}/>
+               {errors.descriptionEn && <p className="text-red-500 text-sm mt-1">{errors.descriptionEn}</p>}
             </div>
             <div>
               <Label>Description (HI)</Label>
-              <Textarea name="descriptionHi" value={formData.descriptionHi} onChange={handleChange} />
+              {/* <Textarea name="descriptionHi" value={formData.descriptionHi} onChange={handleChange} /> */}
+              <Textarea  name="descriptionHi" value={formData.descriptionHi} onChange={handleChange} className={errors.descriptionHi ? "border-red-500 focus:ring-red-500" : ""}/>
+               {errors.descriptionHi && <p className="text-red-500 text-sm mt-1">{errors.descriptionHi}</p>}
             </div>
             <div>
               <Label>Ingredient Type</Label>
-              <Select value={formData.ingredientTypeId} onValueChange={(val) => setFormData((prev) => ({ ...prev, ingredientTypeId: val }))}>
-                <SelectTrigger><SelectValue placeholder="Select Ingredient Type" /></SelectTrigger>
-                <SelectContent>
-                  {ingredientTypes.map((type) => (
-                    <SelectItem key={type._id} value={type._id}>{type.name?.[i18n.language] || type.name?.en}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+             <Select
+  value={formData.ingredientTypeId}
+  onValueChange={(val) => setFormData((prev) => ({ ...prev, ingredientTypeId: val }))}
+>
+  <SelectTrigger className={errors.ingredientTypeId ? "border-red-500 focus:ring-red-500" : ""}>
+    <SelectValue placeholder="Select Ingredient Type" />
+  </SelectTrigger>
+  <SelectContent>
+    {ingredientTypes.map((type) => (
+      <SelectItem key={type._id} value={type._id}>
+        {type.name?.[i18n.language] || type.name?.en}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+{errors.ingredientTypeId && <p className="text-red-500 text-sm mt-1">{errors.ingredientTypeId}</p>}
+
             </div>
             <div>
               <Label>Unit Type</Label>
@@ -134,18 +172,25 @@ export default function AddIngredient() {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.unitTypeId && <p className="text-red-500 text-sm mt-1">{errors.unitTypeId}</p>}
             </div>
             <div>
               <Label>Price Per Unit</Label>
-              <Input name="pricePerUnit" type="number" value={formData.pricePerUnit} onChange={handleChange} required />
+              {/* <Input name="pricePerUnit" type="number" value={formData.pricePerUnit} onChange={handleChange} required /> */}
+              <Input  name="pricePerUnit" type="number"  value={formData.pricePerUnit} onChange={handleChange} className={errors.pricePerUnit ? "border-red-500 focus:ring-red-500" : ""}/>
+               {errors.pricePerUnit && <p className="text-red-500 text-sm mt-1">{errors.pricePerUnit}</p>}
             </div>
             <div>
               <Label>Shelf Life (Days)</Label>
-              <Input name="shelfLifeDays" type="number" value={formData.shelfLifeDays} onChange={handleChange} />
+              {/* <Input name="shelfLifeDays" type="number" value={formData.shelfLifeDays} onChange={handleChange} /> */}
+               <Input  name="shelfLifeDays" type="number"  value={formData.shelfLifeDays} onChange={handleChange} className={errors.shelfLifeDays ? "border-red-500 focus:ring-red-500" : ""}/>
+               {errors.shelfLifeDays && <p className="text-red-500 text-sm mt-1">{errors.shelfLifeDays}</p>}
             </div>
             <div>
               <Label>Supplier</Label>
-              <Input name="supplier" value={formData.supplier} onChange={handleChange} />
+              {/* <Input name="supplier" value={formData.supplier} onChange={handleChange} /> */}
+               <Input  name="supplier" value={formData.supplier} onChange={handleChange} className={errors.supplier ? "border-red-500 focus:ring-red-500" : ""}/>
+               {errors.supplier && <p className="text-red-500 text-sm mt-1">{errors.supplier}</p>}
             </div>
             <div className="flex items-center gap-2 mt-6">
               <input type="checkbox" name="isPerishable" checked={formData.isPerishable} onChange={handleChange} />

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { protectedGetApi, protectedDeleteApi } from "@/services/nodeapi";
 import { config } from "@/services/nodeconfig";
 import Swal from "sweetalert2";
@@ -65,7 +66,7 @@ setPage(res?.data?.pagination?.currentPage || 1);
      <div className="w-full min-h-screen bg-gray-50 dark:bg-gray-900 py-8 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
       <Card className="shadow-lg rounded-lg">
-        <CardHeader className="flex-row justify-between border-b p-4">
+        <CardHeader className="flex-row justify-between items-center border-b p-4">
           <h2 className="text-2xl font-bold">Ingredients</h2>
           <Button onClick={() => navigate("/add-ingredient")} className="flex items-center bg-blue-600 hover:bg-blue-700">
             <Plus className="w-5 h-5 mr-2" /> Add Ingredient
@@ -86,28 +87,32 @@ setPage(res?.data?.pagination?.currentPage || 1);
                       <th className="p-2">Type</th>
                       <th className="p-2">Unit</th>
                       <th className="p-2">Price</th>
-                      <th className="p-2">Actions</th>
+                      <th className="p-2 text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {ingredients.map((ing, idx) => (
+                    {ingredients.length > 0 ? ingredients.map((ing, idx) => (
                       <tr key={ing._id} className="border-t">
                         <td className="p-2">{(page - 1) * 10 + idx + 1}</td>
                         <td className="p-2">{ing.name?.[i18n.language] || ing.name?.en}</td>
                         <td className="p-2">{ing.ingredientTypeId?.name?.[i18n.language] || ing.ingredientTypeId?.name?.en}</td>
                         <td className="p-2">{ing.unitTypeId?.symbol}</td>
                         <td className="p-2">₹{ing.pricePerUnit}</td>
-                        <td className="p-2">
+                        <td className="p-2 text-center">
                           <button
                             onClick={() => handleDelete(ing._id)}
-                            className="text-red-500 hover:text-red-700"
+                            className="inline-flex items-center rounded-md px-2 py-1 text-sm text-red-600 hover:text-red-700"
                             title="Delete Ingredient"
                           >
                             <Trash2 className="w-5 h-5" />
                           </button>
                         </td>
                       </tr>
-                    ))}
+                    )) : (
+                      <tr>
+                        <td colSpan="6" className="p-6 text-center text-gray-500">No ingredients found</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -154,16 +159,27 @@ setPage(res?.data?.pagination?.currentPage || 1);
             </div>
           )}
 
-          <div className="flex items-center justify-center md:justify-between mt-6 gap-3">
-            <Button disabled={page <= 1} onClick={() => setPage(page - 1)} className="w-28 md:w-auto">
-              Previous
-            </Button>
-            <span>
-              Page {page} of {totalPages}
-            </span>
-            <Button disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="w-28 md:w-auto">
-              Next
-            </Button>
+          <div className="flex justify-center md:justify-end mt-6">
+            <Pagination>
+              <PaginationContent className="flex items-center space-x-2">
+                <PaginationItem>
+                  <PaginationPrevious onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} />
+                </PaginationItem>
+                {[...Array(totalPages)].map((_, index) => (
+                  <PaginationItem key={index}>
+                    <button
+                      className={`px-3 py-1 rounded-lg ${page === index + 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"}`}
+                      onClick={() => setPage(index + 1)}
+                    >
+                      {index + 1}
+                    </button>
+                  </PaginationItem>
+                ))}
+                <PaginationItem>
+                  <PaginationNext onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
         </CardContent>
       </Card>
