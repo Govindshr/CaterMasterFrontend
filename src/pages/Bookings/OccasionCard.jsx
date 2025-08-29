@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 import { protectedGetApi } from "@/services/nodeapi";
 import { config } from "@/services/nodeconfig";
 import { useTranslation } from "react-i18next"; // for i18n support
-
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 const categories = [
   { id: "1", name: "Sweets" },
   { id: "2", name: "Namkeen" },
@@ -54,6 +54,7 @@ export function OccasionCard({
   const [subcategories, setSubcategories] = useState([]);
   const filteredSubcategories = subcategories.filter((sc) => sc.categoryId === menuFilter.category);
   const filteredDishes = dishes;
+const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -256,41 +257,32 @@ export function OccasionCard({
           </div>
         </div>
 
-        {/* Facilities */}
-        <div className="space-y-1 mt-4">
-          <Label>Extra Facilities</Label>
-          <div className="flex flex-wrap gap-3 mt-2">
-            {occasionFacilities.map((facility) => (
-              <label
-                key={facility._id}
-                className="flex items-center gap-2 text-sm font-medium bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-lg cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  name={`facilities-${idx}`}
-                  value={facility._id}
-                  checked={occasion.facilities?.includes(facility._id)}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    handleOccasionChange(date, idx, "facilities", checked
-                      ? [...(occasion.facilities || []), facility._id]
-                      : (occasion.facilities || []).filter((id) => id !== facility._id));
-                  }}
-                />
-                {facility.name?.[i18n.language] || facility.name?.en}
-              </label>
-            ))}
-          </div>
-        </div>
+       
 
         {/* Menu (Dishes) */}
-        <div>
-          <Label className="font-semibold text-base">Menu (Dishes)</Label>
-          <div className="mt-2 p-4 border rounded-lg bg-slate-50/70">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-4">
+        <div className="mt-4">
+  <Label className="font-semibold text-base">Menu (Dishes)</Label>
+  <div className="mt-2 p-4 border rounded-lg bg-slate-50/70">
+
+    {/* Mobile: Filters in bottom sheet */}
+    <div className="md:hidden mb-3">
+      <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+        <SheetTrigger asChild>
+          <Button variant="outline" className="w-full justify-center gap-2">
+            Filters
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="bottom" className="rounded-t-2xl p-4">
+          <SheetHeader>
+            <SheetTitle>Filters</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 space-y-3">
+            <div>
+              <Label>Category</Label>
               <Select
-                onValueChange={(value) =>
-                  setMenuFilter({ ...menuFilter, category: value, subcategory: '' })
+                value={menuFilter.category}
+                onValueChange={(val) =>
+                  setMenuFilter({ ...menuFilter, category: val, subcategory: "" })
                 }
               >
                 <SelectTrigger>
@@ -298,15 +290,19 @@ export function OccasionCard({
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
-     <SelectItem key={cat._id} value={cat._id}>
-       {cat.name?.[i18n.language] || cat.name?.en}
-     </SelectItem>
-   ))}
+                    <SelectItem key={cat._id} value={cat._id}>
+                      {cat.name?.[i18n.language] || cat.name?.en}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label>Subcategory</Label>
               <Select
-                onValueChange={(value) =>
-                  setMenuFilter({ ...menuFilter, subcategory: value })
+                value={menuFilter.subcategory}
+                onValueChange={(val) =>
+                  setMenuFilter({ ...menuFilter, subcategory: val })
                 }
                 disabled={!menuFilter.category}
               >
@@ -315,14 +311,19 @@ export function OccasionCard({
                 </SelectTrigger>
                 <SelectContent>
                   {subcategories
-     .filter((sc) => !menuFilter.category || sc.categoryId === menuFilter.category)
-     .map((sub) => (
-       <SelectItem key={sub._id} value={sub._id}>
-         {sub.name?.[i18n.language] || sub.name?.en}
-       </SelectItem>
-     ))}
+                    .filter(
+                      (s) => !menuFilter.category || s.categoryId === menuFilter.category
+                    )
+                    .map((sub) => (
+                      <SelectItem key={sub._id} value={sub._id}>
+                        {sub.name?.[i18n.language] || sub.name?.en}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label>Search</Label>
               <Input
                 placeholder="Search dish..."
                 value={menuFilter.search}
@@ -331,79 +332,180 @@ export function OccasionCard({
                 }
               />
             </div>
-            {/* Active filters chips */}
-{(menuFilter.search || menuFilter.category || menuFilter.subcategory) && (
-  <div className="flex flex-wrap items-center gap-2 justify-between mt-2">
-    <div className="flex flex-wrap gap-2">
-      {menuFilter.search && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700 ring-1 ring-gray-200">
-          Name: {menuFilter.search}
-          <button
-            aria-label="clear name"
-            onClick={() => setMenuFilter({ ...menuFilter, search: "" })}
-          >
-            <Delete className=" h-3 w-4 text-gray-400 " />
-          </button>
-        </span>
-      )}
-      {menuFilter.category && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs text-blue-700 ring-1 ring-blue-200">
-          {categories.find((c) => c._id === menuFilter.category)?.name?.[i18n.language] || "Category"}
-          <button
-            aria-label="clear category"
-            onClick={() => setMenuFilter({ ...menuFilter, category: "", subcategory: "" })}
-          >
-             <Delete className=" h-3 w-4 text-gray-400 " />
-          </button>
-        </span>
-      )}
-      {menuFilter.subcategory && (
-        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700 ring-1 ring-gray-200">
-          {subcategories.find((s) => s._id === menuFilter.subcategory)?.name?.[i18n.language] || "Subcategory"}
-          <button
-            aria-label="clear subcategory"
-            onClick={() => setMenuFilter({ ...menuFilter, subcategory: "" })}
-          >
-             <Delete className=" h-3 w-4 text-gray-400 " />
-          </button>
-        </span>
+          </div>
+          <div className="mt-5 flex items-center justify-between gap-2">
+            <Button variant="ghost" onClick={clearFilters}>
+              Clear
+            </Button>
+            <SheetClose asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                Apply
+              </Button>
+            </SheetClose>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
+
+    {/* Desktop filters inline */}
+    <div className="hidden md:grid md:grid-cols-3 gap-2 mb-4">
+      <Select
+        value={menuFilter.category}
+        onValueChange={(val) =>
+          setMenuFilter({ ...menuFilter, category: val, subcategory: "" })
+        }
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="All Categories" />
+        </SelectTrigger>
+        <SelectContent>
+          {categories.map((cat) => (
+            <SelectItem key={cat._id} value={cat._id}>
+              {cat.name?.[i18n.language] || cat.name?.en}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={menuFilter.subcategory}
+        onValueChange={(val) =>
+          setMenuFilter({ ...menuFilter, subcategory: val })
+        }
+        disabled={!menuFilter.category}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="All Subcategories" />
+        </SelectTrigger>
+        <SelectContent>
+          {subcategories
+            .filter(
+              (s) => !menuFilter.category || s.categoryId === menuFilter.category
+            )
+            .map((sub) => (
+              <SelectItem key={sub._id} value={sub._id}>
+                {sub.name?.[i18n.language] || sub.name?.en}
+              </SelectItem>
+            ))}
+        </SelectContent>
+      </Select>
+      <Input
+        placeholder="Search dish..."
+        value={menuFilter.search}
+        onChange={(e) =>
+          setMenuFilter({ ...menuFilter, search: e.target.value })
+        }
+      />
+    </div>
+
+    {/* Active filters chips */}
+    {(menuFilter.search || menuFilter.category || menuFilter.subcategory) && (
+      <div className="flex flex-wrap items-center gap-2 justify-between mt-2">
+        <div className="flex flex-wrap gap-2">
+          {menuFilter.search && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700 ring-1 ring-gray-200">
+              Name: {menuFilter.search}
+              <button
+                aria-label="clear search"
+                onClick={() => setMenuFilter({ ...menuFilter, search: "" })}
+              >
+                ✕
+              </button>
+            </span>
+          )}
+          {menuFilter.category && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs text-blue-700 ring-1 ring-blue-200">
+              {categories.find((c) => c._id === menuFilter.category)?.name?.[
+                i18n.language
+              ] || "Category"}
+              <button
+                aria-label="clear category"
+                onClick={() =>
+                  setMenuFilter({ ...menuFilter, category: "", subcategory: "" })
+                }
+              >
+                ✕
+              </button>
+            </span>
+          )}
+          {menuFilter.subcategory && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700 ring-1 ring-gray-200">
+              {subcategories.find((s) => s._id === menuFilter.subcategory)?.name?.[
+                i18n.language
+              ] || "Subcategory"}
+              <button
+                aria-label="clear subcategory"
+                onClick={() =>
+                  setMenuFilter({ ...menuFilter, subcategory: "" })
+                }
+              >
+                ✕
+              </button>
+            </span>
+          )}
+        </div>
+        <Button size="sm" variant="ghost" onClick={clearFilters}>
+          Clear all
+        </Button>
+      </div>
+    )}
+
+    {/* Dish List */}
+    <div className="mt-4 max-h-48 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
+ gap-4 pr-2">
+      {filteredDishes.map((dish) => (
+        <div key={dish._id} className="flex items-center space-x-2">
+          <Checkbox
+            id={`${date}-${idx}-${dish._id}`}
+            checked={occasion.menu.includes(dish._id)}
+            onCheckedChange={() => handleMenuChange(date, idx, dish._id)}
+          />
+          <Label htmlFor={`${date}-${idx}-${dish._id}`}>
+            {dish.name?.[i18n.language] || dish.name?.en}
+          </Label>
+        </div>
+      ))}
+      {filteredDishes.length === 0 && (
+        <p className="text-sm text-gray-500 sm:col-span-3 lg:col-span-4 text-center">
+          No dishes found.
+        </p>
       )}
     </div>
-    <Button
-      
-      size="sm"
-      onClick={clearFilters}
-      className="bg-red-600 hover:bg-red-700 text-white-600 hover:text-white-800"
-    >
-      Clear all
-       <Delete className=" h-3 w-4 text-black-400 " />
-    </Button>
   </div>
-)}
+</div>
 
-            <div className="mt-4 max-h-48 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pr-2">
-              {filteredDishes.map((dish) => (
-                <div key={dish.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`${date}-${idx}-${dish._id}`}
-                    checked={occasion.menu.includes(dish._id)}
-                    onCheckedChange={() =>
-                      handleMenuChange(date, idx, dish._id)
-                    }
-                  />
-                  <Label htmlFor={`${date}-${idx}-${dish._id}`}>
-                    {dish.name?.[i18n.language] || dish.name?.en}
-                  </Label>
-                </div>
-              ))}
-              {filteredDishes.length === 0 && (
-                <p className="text-sm text-gray-500 sm:col-span-3 lg:col-span-4 text-center">
-                  No dishes found.
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
+
+         {/* Facilities */}
+      <div className="space-y-1 mt-4">
+  <Label>Extra Facilities</Label>
+  <div className="flex flex-col gap-2 mt-3 sm:flex-row sm:flex-wrap sm:gap-3">
+    {occasionFacilities.map((facility) => (
+      <label
+        key={facility._id}
+        className="flex items-center gap-2 text-sm font-medium bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg cursor-pointer"
+      >
+        <input
+          type="checkbox"
+          name={`facilities-${idx}`}
+          value={facility._id}
+          checked={occasion.facilities?.includes(facility._id)}
+          onChange={(e) => {
+            const checked = e.target.checked;
+            handleOccasionChange(
+              date,
+              idx,
+              "facilities",
+              checked
+                ? [...(occasion.facilities || []), facility._id]
+                : (occasion.facilities || []).filter((id) => id !== facility._id)
+            );
+          }}
+        />
+        {facility.name?.[i18n.language] || facility.name?.en}
+      </label>
+    ))}
+  </div>
+</div>
+
       </CardContent>
     </Card>
   );

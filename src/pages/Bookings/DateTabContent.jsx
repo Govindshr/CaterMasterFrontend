@@ -115,7 +115,9 @@ export function DateTabContent({
       const occasionId = matchedOccasion?._id;
 
       if (!occasionId) {
-        alert("Cannot save event: missing occasionId");
+        // alert("Cannot save event: missing occasionId");
+        Swal.fire("Error", "Cannot save event: missing occasionId", "error");
+
         return;
       }
 
@@ -125,20 +127,21 @@ export function DateTabContent({
         token
       );
 
-      if (res.success) {
-        // remove the just-saved unsaved occasion
-   setUnsavedOccasions(prev =>
-     prev.filter((_, i) => i !== (idx - mergedOccasions.length))
-   );
-   setSavedOccasionIndex(idx);
-  setActiveOccasion(`item-${idx}`); // ✅ open the saved event
- alert("Event saved successfully");
-      } else {
-        alert("Failed to save event");
-      }
+   if (res.success) {
+  setUnsavedOccasions(prev =>
+    prev.filter((_, i) => i !== (idx - mergedOccasions.length))
+  );
+  setSavedOccasionIndex(idx);
+  setActiveOccasion(`item-${idx}`);
+  Swal.fire("Success", "Event saved successfully!", "success");
+} else {
+  Swal.fire("Error", "Failed to save event", "error");
+}
+
     } catch (err) {
       console.error(err);
-      alert("Error while saving event");
+     Swal.fire("Error", "Something went wrong while saving the event", "error");
+
     }
   };
 
@@ -286,14 +289,16 @@ if (!activeOccasion) setActiveOccasion("item-0"); // ✅ only first time
         token
       );
 
-      if (res.success) {
-        alert("Event updated successfully");
-      } else {
-        alert("Failed to update event");
-      }
+    if (res.success) {
+  Swal.fire("Updated!", "Event updated successfully!", "success");
+} else {
+  Swal.fire("Error", "Failed to update event", "error");
+}
+
     } catch (err) {
       console.error(err);
-      alert("Error while updating event");
+    Swal.fire("Error", "Something went wrong while updating the event", "error");
+
     }
   };
 
