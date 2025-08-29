@@ -16,6 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings,
+  ListChecks,
+  Zap 
 } from "lucide-react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import {
@@ -589,50 +591,63 @@ export default function Bookings() {
       </div>
 
       {/* //  -------------------------Modal ----------------------------------- */}
-      <Dialog open={showGenerateModal} onOpenChange={setShowGenerateModal}>
-        <DialogContent className="max-w-md bg-white p-6 rounded-xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-800">
-              Select List Generation Type
-            </DialogTitle>
-          </DialogHeader>
-          <div className="mt-4 flex flex-col gap-4">
-            <Button
-              className="w-full bg-blue-500 text-white hover:bg-blue-600"
-              onClick={() => {
-                setShowGenerateModal(false);
-                navigate(
-                  `/generate-list/${selectedBookingIdForGenerate}?type=manual`
-                );
-              }}
-            >
-              Manual List
-            </Button>
-            <Button
-              className="w-full bg-yellow-500 text-white hover:bg-yellow-600"
-              onClick={() => {
-                setShowGenerateModal(false);
-                navigate(
-                  `/generate-list/${selectedBookingIdForGenerate}?type=semi`
-                );
-              }}
-            >
-              Semi Auto List
-            </Button>
-            <Button
-              className="w-full bg-green-600 text-white hover:bg-green-700"
-              onClick={() => {
-                setShowGenerateModal(false);
-                navigate(
-                  `/generate-list/${selectedBookingIdForGenerate}?type=auto`
-                );
-              }}
-            >
-              Fully Auto List
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+     <Dialog open={showGenerateModal} onOpenChange={setShowGenerateModal}>
+  <DialogContent className="w-[90vw] max-w-md sm:max-w-lg bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-xl">
+    <DialogHeader>
+      <DialogTitle className="text-lg sm:text-xl font-bold text-center text-gray-900 dark:text-gray-100">
+        Select List Generation Type
+      </DialogTitle>
+    </DialogHeader>
+
+    <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+      {/* Manual */}
+      <button
+        onClick={() => {
+          setShowGenerateModal(false);
+          navigate(`/generate-list/${selectedBookingIdForGenerate}?type=manual`);
+        }}
+        className="flex flex-col items-center justify-center gap-2 sm:gap-3 p-4 sm:p-6 rounded-lg sm:rounded-xl border bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-800 shadow-sm transition-all"
+      >
+        <ListChecks className="h-6 w-6 sm:h-8 sm:w-8" />
+        <span className="font-medium sm:font-semibold text-sm sm:text-base">Manual</span>
+        <p className="text-[11px] sm:text-xs text-blue-600 text-center">
+          Customize everything
+        </p>
+      </button>
+
+      {/* Semi Auto */}
+      <button
+        onClick={() => {
+          setShowGenerateModal(false);
+          navigate(`/generate-list/${selectedBookingIdForGenerate}?type=semi`);
+        }}
+        className="flex flex-col items-center justify-center gap-2 sm:gap-3 p-4 sm:p-6 rounded-lg sm:rounded-xl border bg-yellow-50 hover:bg-yellow-100 text-yellow-700 hover:text-yellow-800 shadow-sm transition-all"
+      >
+        <Settings className="h-6 w-6 sm:h-8 sm:w-8" />
+        <span className="font-medium sm:font-semibold text-sm sm:text-base">Semi Auto</span>
+        <p className="text-[11px] sm:text-xs text-yellow-600 text-center">
+          Guided smart setup
+        </p>
+      </button>
+
+      {/* Fully Auto */}
+      <button
+        onClick={() => {
+          setShowGenerateModal(false);
+          navigate(`/generate-list/${selectedBookingIdForGenerate}?type=auto`);
+        }}
+        className="flex flex-col items-center justify-center gap-2 sm:gap-3 p-4 sm:p-6 rounded-lg sm:rounded-xl border bg-green-50 hover:bg-green-100 text-green-700 hover:text-green-800 shadow-sm transition-all"
+      >
+        <Zap className="h-6 w-6 sm:h-8 sm:w-8" />
+        <span className="font-medium sm:font-semibold text-sm sm:text-base">Fully Auto</span>
+        <p className="text-[11px] sm:text-xs text-green-600 text-center">
+          System generated
+        </p>
+      </button>
+    </div>
+  </DialogContent>
+</Dialog>
+
     </>
   );
 }
