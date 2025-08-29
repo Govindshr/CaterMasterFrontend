@@ -64,24 +64,26 @@ export function DateTabContent({
 
 
   const handleAddOccasion = () => {
-    setUnsavedOccasions((prev) => [
-      ...prev,
-      {
-        occasionName: "",
-        occasionNameLabel: "",
-        date,
-        mealType: "",
-        startTime: "",
-        endTime: "",
-        guests: "",
-        menu: [],
-        servingType: "",
-        exactVenue: "",
-        facilities: [],
-      },
-    ]);
-    setSavedOccasionIndex(null);
-    setActiveOccasion(`item-${mergedOccasions.length + unsavedOccasions.length}`);
+   setUnsavedOccasions((prev) => {
+       const newOccasion = {
+      occasionName: "",
+      occasionNameLabel: "",
+      date,
+      mealType: "",
+      startTime: "",
+      endTime: "",
+      guests: "",
+      menu: [],
+      servingType: "",
+      exactVenue: "",
+      facilities: [],
+    };
+    const updated = [...prev, newOccasion];
+    const newIndex = mergedOccasions.length + updated.length - 1;
+    setActiveOccasion(`item-${newIndex}`); // ✅ open the newly added accordion
+    return updated;
+  });
+  setSavedOccasionIndex(null);
   };
 
   const handleSaveOccasion = async (idx, occasion) => {
@@ -124,8 +126,13 @@ export function DateTabContent({
       );
 
       if (res.success) {
-        setSavedOccasionIndex(idx);
-        alert("Event saved successfully");
+        // remove the just-saved unsaved occasion
+   setUnsavedOccasions(prev =>
+     prev.filter((_, i) => i !== (idx - mergedOccasions.length))
+   );
+   setSavedOccasionIndex(idx);
+  setActiveOccasion(`item-${idx}`); // ✅ open the saved event
+ alert("Event saved successfully");
       } else {
         alert("Failed to save event");
       }
@@ -135,50 +142,74 @@ export function DateTabContent({
     }
   };
 
-  useEffect(() => {
-    const fetchSavedEvents = async () => {
-      try {
-        const token = localStorage.getItem("token");
+useEffect(() => {
+  const fetchSavedEvents = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-        let mergedOccasions = [];
+      let merged = [];
 
-        for (const occasion of occasionsForDate) {
-          if (!occasion._id) continue;
+      for (const occasion of occasionsForDate) {
+        if (!occasion._id) continue;
 
-          const res = await protectedGetApi(
-            `${config.GetOccasionsEvent(occasion._id)}`,
-            token
-          );
+        const res = await protectedGetApi(
+          `${config.GetOccasionsEvent(occasion._id)}`,
+          token
+        );
 
-          if (res.success && Array.isArray(res.data)) {
-            const transformed = res.data.map((event) => ({
-              _id: event.occasionId, // same as occasion._id
-              occasionName: event.eventTypeId?._id,
-              occasionNameLabel: event.eventTypeId?.name?.[i18n.language] || event.eventTypeId?.name?.en || "",
-              startTime: event.startTime,
-              endTime: event.endTime,
-              guests: event.noOfGuests,
-              servingType: event.servingTypeId?._id,
-              exactVenue: event.exactVenue,
-              menu: event.menu?.map((m) => m.dishId?._id) || [],
-              facilities: event.facilities?.map((f) => f.facilityId?._id) || [],
-              notes: event.notes,
-              delete_id: event._id
-            }));
+        if (res.success && Array.isArray(res.data)) {
+          const transformed = res.data.map((event) => ({
+            _id: event.occasionId,
+            occasionName: event.eventTypeId?._id,
+            occasionNameLabel: event.eventTypeId?.name?.[i18n.language] || event.eventTypeId?.name?.en || "",
+            startTime: event.startTime,
+            endTime: event.endTime,
+            guests: event.noOfGuests,
+            servingType: event.servingTypeId?._id,
+            exactVenue: event.exactVenue,
+            menu: event.menu?.map((m) => m.dishId?._id) || [],
+            facilities: event.facilities?.map((f) => f.facilityId?._id) || [],
+            notes: event.notes,
+            delete_id: event._id
+          }));
 
-            mergedOccasions = [...mergedOccasions, ...transformed];
-          }
+          merged = [...merged, ...transformed];
         }
-
-        setMergedOccasions(mergedOccasions); // new state, see below
-        setSavedOccasionIndex(mergedOccasions.length - 1);
-      } catch (err) {
-        console.error("Error fetching saved events:", err);
       }
-    };
 
-    fetchSavedEvents();
-  }, [date, savedOccasionIndex, i18n.language]);
+     if (merged.length === 0) {
+  // No events in backend → ensure at least one empty unsaved
+  setUnsavedOccasions(prev =>
+    prev.length > 0 ? prev : [{
+      occasionName: "",
+      occasionNameLabel: "",
+      date,
+      mealType: "",
+      startTime: "",
+      endTime: "",
+      guests: "",
+      menu: [],
+      servingType: "",
+      exactVenue: "",
+      facilities: [],
+    }]
+  );
+  setMergedOccasions([]);
+  if (!activeOccasion) setActiveOccasion("item-0"); // ✅ only first time
+} else {
+  setMergedOccasions(merged);
+setUnsavedOccasions(prev => prev);  // ✅ preserve any newly added unsaved
+  setSavedOccasionIndex(merged.length - 1);
+if (!activeOccasion) setActiveOccasion("item-0"); // ✅ only first time
+}
+
+    } catch (err) {
+      console.error("Error fetching saved events:", err);
+    }
+  };
+
+  fetchSavedEvents();
+}, [date, savedOccasionIndex, i18n.language]);
 
   const setMenuFilterForOccasion = (index, filter) => {
     setMenuFilters((prev) => ({ ...prev, [index]: filter }));
@@ -344,18 +375,22 @@ export function DateTabContent({
                     </div>
                   </div>
                 </AccordionTrigger>
-                <Button
-                    size="icon"
-                  onClick={(e) => {
+                
+                
+              <Button
+                type="submit"
+                size='icon'
+               onClick={(e) => {
                     e.stopPropagation();
                     handleDeleteOccasion(idx);
                   }}
-                  className="hover:bg-red-100 rounded-full flex-shrink-0"
-                >
-                  <Trash className="h-4 w-4 text-red-500" />
-                </Button>
+                className=" bg-red-600 hover:bg-red-700 text-white font-normal py-3 px-6 rounded-lg shadow-md transition-all "
+              >
+             <Trash className="h-4 w-4 " /> 
+              </Button>
+           
               </div>
-              <AccordionContent className="p-2 sm:p-4 bg-white rounded-b-md">
+             <AccordionContent className="p-2 sm:p-4 bg-white rounded-b-md transition-all duration-300 ease-in-out">
                 <OccasionCard
                   occasion={occasion}
                   idx={idx}

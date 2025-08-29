@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Clock, Trash } from "lucide-react";
+import { Clock, Trash ,Delete } from "lucide-react";
 import { useEffect, useState } from "react";
 import { protectedGetApi } from "@/services/nodeapi";
 import { config } from "@/services/nodeconfig";
@@ -50,7 +50,8 @@ export function OccasionCard({
   const [servingOptions, setServingOptions] = useState([]);
   const [occasionFacilities, setOccasionFacilities] = useState([]);
   const [dishes, setDishes] = useState([]);
-
+  const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
   const filteredSubcategories = subcategories.filter((sc) => sc.categoryId === menuFilter.category);
   const filteredDishes = dishes;
 
@@ -69,6 +70,32 @@ export function OccasionCard({
 
     fetchEvents();
   }, [i18n.language]);
+
+  useEffect(() => {
+  const fetchCategories = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await protectedGetApi(config.GetDishCategories, token);
+      if (res.success) setCategories(res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch categories", err);
+    }
+  };
+
+  const fetchSubCategories = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await protectedGetApi(config.GetDishSubCategories, token);
+      if (res.success) setSubcategories(res.data || []);
+    } catch (err) {
+      console.error("Failed to fetch subcategories", err);
+    }
+  };
+
+  fetchCategories();
+  fetchSubCategories();
+}, [i18n.language]);
+
 
   useEffect(() => {
     const fetchServingTypes = async () => {
@@ -101,21 +128,30 @@ export function OccasionCard({
     fetchFacilities();
   }, [i18n.language]);
 
-  useEffect(() => {
-    const fetchDishes = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const res = await protectedGetApi(`${config.GetDishes}?limit=500`, token);
-        if (res.success) {
-          setDishes(res.data?.dishes || []);
-        }
-      } catch (err) {
-        console.error("Failed to fetch dishes", err);
-      }
-    };
+  const clearFilters = () => {
+  setMenuFilter({ category: "", subcategory: "", search: "" });
+};
 
-    fetchDishes();
-  }, [i18n.language]);
+  useEffect(() => {
+   const fetchDishes = async () => {
+     try {
+       const token = localStorage.getItem("token");
+       const params = new URLSearchParams({
+         limit: 500, // or smaller if you want
+         search: menuFilter.search || "",
+         categoryId: menuFilter.category || "",
+         subCategoryId: menuFilter.subcategory || "",
+       });
+       const res = await protectedGetApi(`${config.GetDishes}?${params}`, token);
+       if (res.success) {
+         setDishes(res.data?.dishes || []);
+       }
+     } catch (err) {
+       console.error("Failed to fetch dishes", err);
+     }
+   };
+   fetchDishes();
+ }, [i18n.language, menuFilter]);
 
   const inputStyle = "bg-slate-50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500/50";
   const selectItemStyle = "focus:bg-green-100/50 focus:text-green-900";
@@ -262,10 +298,10 @@ export function OccasionCard({
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
-                    <SelectItem key={cat._id} value={cat._id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
+     <SelectItem key={cat._id} value={cat._id}>
+       {cat.name?.[i18n.language] || cat.name?.en}
+     </SelectItem>
+   ))}
                 </SelectContent>
               </Select>
               <Select
@@ -278,11 +314,13 @@ export function OccasionCard({
                   <SelectValue placeholder="All Subcategories" />
                 </SelectTrigger>
                 <SelectContent>
-                  {filteredSubcategories.map((subcat) => (
-                    <SelectItem key={subcat.id} value={subcat.id}>
-                      {subcat.name}
-                    </SelectItem>
-                  ))}
+                  {subcategories
+     .filter((sc) => !menuFilter.category || sc.categoryId === menuFilter.category)
+     .map((sub) => (
+       <SelectItem key={sub._id} value={sub._id}>
+         {sub.name?.[i18n.language] || sub.name?.en}
+       </SelectItem>
+     ))}
                 </SelectContent>
               </Select>
               <Input
@@ -293,7 +331,57 @@ export function OccasionCard({
                 }
               />
             </div>
-            <div className="max-h-48 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pr-2">
+            {/* Active filters chips */}
+{(menuFilter.search || menuFilter.category || menuFilter.subcategory) && (
+  <div className="flex flex-wrap items-center gap-2 justify-between mt-2">
+    <div className="flex flex-wrap gap-2">
+      {menuFilter.search && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700 ring-1 ring-gray-200">
+          Name: {menuFilter.search}
+          <button
+            aria-label="clear name"
+            onClick={() => setMenuFilter({ ...menuFilter, search: "" })}
+          >
+            <Delete className=" h-3 w-4 text-gray-400 " />
+          </button>
+        </span>
+      )}
+      {menuFilter.category && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1 text-xs text-blue-700 ring-1 ring-blue-200">
+          {categories.find((c) => c._id === menuFilter.category)?.name?.[i18n.language] || "Category"}
+          <button
+            aria-label="clear category"
+            onClick={() => setMenuFilter({ ...menuFilter, category: "", subcategory: "" })}
+          >
+             <Delete className=" h-3 w-4 text-gray-400 " />
+          </button>
+        </span>
+      )}
+      {menuFilter.subcategory && (
+        <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-700 ring-1 ring-gray-200">
+          {subcategories.find((s) => s._id === menuFilter.subcategory)?.name?.[i18n.language] || "Subcategory"}
+          <button
+            aria-label="clear subcategory"
+            onClick={() => setMenuFilter({ ...menuFilter, subcategory: "" })}
+          >
+             <Delete className=" h-3 w-4 text-gray-400 " />
+          </button>
+        </span>
+      )}
+    </div>
+    <Button
+      
+      size="sm"
+      onClick={clearFilters}
+      className="bg-red-600 hover:bg-red-700 text-white-600 hover:text-white-800"
+    >
+      Clear all
+       <Delete className=" h-3 w-4 text-black-400 " />
+    </Button>
+  </div>
+)}
+
+            <div className="mt-4 max-h-48 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pr-2">
               {filteredDishes.map((dish) => (
                 <div key={dish.id} className="flex items-center space-x-2">
                   <Checkbox
