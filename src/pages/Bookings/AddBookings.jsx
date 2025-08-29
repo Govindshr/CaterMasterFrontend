@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft ,Plus } from "lucide-react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { protectedPostApi ,protectedGetApi} from "@/services/nodeapi";
 import { config } from "@/services/nodeconfig";
-
-
+import Swal from "sweetalert2";
+import "react-datepicker/dist/react-datepicker.css";
+import DatePicker from "react-datepicker";
 
 
 
@@ -23,7 +24,8 @@ export default function AddBooking() {
 const [bookingTypeOptions, setBookingTypeOptions] = useState([]);
 const [facilityOptions,setFacilityOptions] = useState([])
   const [formData, setFormData] = useState({
-    customerName: "",
+    customerNameEn: "",
+    customerNameHi: "",
     mobile: "",
     alternateName: "",           // ✅ New
     alternateMobile: "",         // ✅ New
@@ -91,15 +93,40 @@ useEffect(() => {
 
   const validate = () => {
     let validationErrors = {};
-    if (!formData.customerName.trim()) validationErrors.customerName = "Required";
-    if (!formData.mobile.match(/^\d{10}$/)) validationErrors.mobile = "10-digit number";
+   if (!formData.customerNameEn.trim()) validationErrors.customerNameEn = "English name required";
+ if (!formData.customerNameHi.trim()) validationErrors.customerNameHi = "Hindi name required";
+    if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
+   validationErrors.mobile = "Enter valid 10-digit Indian mobile number";
+ }
   if (!formData.bookingTypeId) validationErrors.bookingTypeId = "Select a booking type";
+  if (formData.alternateMobile) {
+   if (!/^[6-9]\d{9}$/.test(formData.alternateMobile)) {
+     validationErrors.alternateMobile = "Enter valid 10-digit Indian mobile number";
+   } else if (formData.alternateMobile === formData.mobile) {
+     validationErrors.alternateMobile = "Alternate number must be different from primary mobile";
+   }
+   if (!formData.alternateName.trim()) {
+     validationErrors.alternateName = "Alternate name is required if number is provided";
+   }
+ }
+
     if (!formData.noOfDays.match(/^\d+$/) || Number(formData.noOfDays) < 1) validationErrors.noOfDays = "Enter valid number";
     if (formData.noOfDays === "1") {
       if (!formData.date) validationErrors.date = "Required";
+      else {
+       const today = new Date().toISOString().split("T")[0];
+       if (formData.date < today) validationErrors.date = "Date cannot be in the past";
+     }
     } else {
       if (!formData.startDate) validationErrors.startDate = "Required";
       if (!formData.endDate) validationErrors.endDate = "Required";
+      const today = new Date().toISOString().split("T")[0];
+     if (formData.startDate && formData.startDate < today) {
+       validationErrors.startDate = "Start date cannot be in the past";
+     }
+     if (formData.startDate && formData.endDate && formData.endDate < formData.startDate) {
+       validationErrors.endDate = "End date cannot be before start date";
+     }
     }
     if (!formData.venueAddress && !formData.venueLocation) {
       validationErrors.venueAddress = "At least one venue field required";
@@ -119,8 +146,8 @@ const formatDataForAPI = () => {
 
   const payload = {
     customerName: {
-      en: formData.customerName,
-      hi: formData.customerName,
+      en: formData.customerNameEn,
+      hi: formData.customerNameHi,
     },
     mobileNumber: formData.mobile,
     bookingTypeId: formData.bookingTypeId,
@@ -167,7 +194,15 @@ const handleSubmit = async (e) => {
         await protectedPostApi(generateUrl, {}, token);
       }
 
-      alert("Booking Added Successfully! ✅");
+    Swal.fire({
+   title: "Booking Confirmed 🎉",
+   text: "Your booking has been successfully added.",
+   icon: "success",
+   confirmButtonText: "OK",
+   confirmButtonColor: "#2563eb", // Tailwind blue-600
+   timer: 3000,
+   timerProgressBar: true,
+ });
       navigate("/bookings");
     } catch (error) {
       console.error("Error adding booking or generating occasions:", error);
@@ -184,18 +219,15 @@ const handleSubmit = async (e) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-2 sm:px-4 py-6 mb-5">
       <Card className="w-full max-w-7xl shadow-xl overflow-hidden border border-gray-100 dark:border-gray-800 mb-5">
-        <CardHeader className="w-full bg-gradient-to-r from-blue-600 to-blue-400 p-4 sm:p-6">
-          <div className="flex justify-between items-center w-full">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white tracking-tight">Add Booking</h2>
-            <Button
-              variant="outline"
-              className="flex items-center bg-white text-blue-700 font-semibold hover:bg-blue-50 shadow-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg transition-all"
-              onClick={() => navigate("/bookings")}
-            >
-              <ArrowLeft className="w-5 h-5 mr-2" /> <span className="hidden sm:inline">Back to Bookings</span>
-            </Button>
-          </div>
-        </CardHeader>
+       
+         <CardHeader className="p-4 sm:p-5 border-b bg-white dark:bg-gray-950">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 dark:text-gray-100">Add Booking</h2>
+                    <Button variant="outline" onClick={() => navigate("/bookings")}>
+                      <ArrowLeft className="w-4 h-4 mr-1" /> Back 
+                    </Button>
+                  </div>
+                </CardHeader>
         <CardContent className="p-4 sm:p-6 bg-white dark:bg-gray-950">
           {apiError && (
             <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
@@ -205,21 +237,39 @@ const handleSubmit = async (e) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <div>
-                <Label className="text-sm font-semibold text-gray-700">Customer Name</Label>
+                <Label className="text-sm font-semibold text-gray-700"> Customer Name (English) <span className="text-red-500">*</span></Label>
                 <Input
                   type="text"
-                  name="customerName"
-                  value={formData.customerName}
+                  name="customerNameEn"
+                  value={formData.customerNameEn}
+                  placeholder="Enter customer name in English"
                   onChange={handleChange}
                   className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
                 />
-                {errors.customerName && <p className="text-red-500 text-sm mt-1">{errors.customerName}</p>}
+                {errors.customerNameEn && <p className="text-red-500 text-sm mt-1">{errors.customerNameEn}</p>}
               </div>
               <div>
-                <Label className="text-sm font-semibold text-gray-700">Mobile Number</Label>
+  <Label className="text-sm font-semibold text-gray-700">
+    Customer Name (Hindi) <span className="text-red-500">*</span>
+  </Label>
+  <Input
+    type="text"
+    name="customerNameHi"
+    value={formData.customerNameHi}
+    placeholder="ग्राहक का नाम दर्ज करें"
+    onChange={handleChange}
+    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+  />
+  {errors.customerNameHi && <p className="text-red-500 text-sm mt-1">{errors.customerNameHi}</p>}
+</div>
+              <div>
+                <Label className="text-sm font-semibold text-gray-700">Mobile Number <span className="text-red-500">*</span></Label>
                 <Input
                   type="text"
                   name="mobile"
+                  maxLength={10}
+                  placeholder="Enter Mobile Number "
+                  pattern="^[6-9]\d{9}$"
                   value={formData.mobile}
                   onChange={handleChange}
                   className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
@@ -233,6 +283,7 @@ const handleSubmit = async (e) => {
                   name="alternateName"
                   value={formData.alternateName}
                   onChange={handleChange}
+                  
                   className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
                   placeholder="Enter alternate contact name"
                 />
@@ -244,12 +295,15 @@ const handleSubmit = async (e) => {
                   name="alternateMobile"
                   value={formData.alternateMobile}
                   onChange={handleChange}
+                  maxLength={10}
+                   pattern="^[6-9]\d{9}$"
                   className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
                   placeholder="Enter 10-digit number"
                 />
+                {errors.alternateMobile && <p className="text-red-500 text-sm mt-1">{errors.alternateMobile}</p>}
               </div>
               <div>
-                <Label className="text-sm font-semibold text-gray-700">Booking for </Label>
+                <Label className="text-sm font-semibold text-gray-700">Booking for <span className="text-red-500">*</span></Label>
                <Select
   value={formData.bookingTypeId}
   onValueChange={(value) =>
@@ -270,6 +324,17 @@ const handleSubmit = async (e) => {
 
                {errors.bookingTypeId && <p>{errors.bookingTypeId}</p>}
               </div>
+              <div >
+                <Label className="text-sm font-semibold text-gray-700">Venue Address <span className="text-red-500">*</span></Label>
+                <Textarea
+                  name="venueAddress"
+                  value={formData.venueAddress}
+                  onChange={handleChange}
+                  className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
+                  placeholder="Enter venue address (optional)"
+                />
+                {errors.venueAddress && <p className="text-red-500 text-sm mt-1">{errors.venueAddress}</p>}
+              </div>
               <div>
                 <Label className="text-sm font-semibold text-gray-700">No. of Days</Label>
                 <Input
@@ -284,56 +349,55 @@ const handleSubmit = async (e) => {
               </div>
               {/* Date fields conditional */}
               {formData.noOfDays === "1" ? (
-                <div>
-                  <Label className="text-sm font-semibold text-gray-700">Date</Label>
-                  <Input
-                    type="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleChange}
-                    className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
-                  />
+                <div >
+                  <Label className="text-sm font-semibold text-gray-700">Date <span className="text-red-500">*</span></Label><br></br>
+                  <DatePicker
+   selected={formData.date ? new Date(formData.date) : null}
+   onChange={(date) =>
+     setFormData((prev) => ({ ...prev, date: date.toISOString().split("T")[0] }))
+   }
+   dateFormat="dd/MM/yyyy"
+   minDate={new Date()} // prevent past dates
+   placeholderText="Select booking date"
+   className="w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm p-2 bg-gray-50 dark:bg-gray-900"
+/>
                   {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
                 </div>
               ) : (
                 <>
                   <div>
-                    <Label className="text-sm font-semibold text-gray-700">Start Date</Label>
-                    <Input
-                      type="date"
-                      name="startDate"
-                      value={formData.startDate}
-                      onChange={handleChange}
-                      className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
-                    />
+                    <Label className="text-sm font-semibold text-gray-700">Start Date <span className="text-red-500">*</span></Label><br></br>
+                    <DatePicker
+   selected={formData.startDate ? new Date(formData.startDate) : null}
+   onChange={(date) =>
+     setFormData((prev) => ({ ...prev, startDate: date.toISOString().split("T")[0] }))
+   }
+   dateFormat="dd/MM/yyyy"
+   minDate={new Date()} // no past start dates
+   placeholderText="Select start date"
+   className="w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm p-2 bg-gray-50 dark:bg-gray-900"
+/>
                     {errors.startDate && <p className="text-red-500 text-sm mt-1">{errors.startDate}</p>}
                   </div>
                   <div>
-                    <Label className="text-sm font-semibold text-gray-700">End Date</Label>
-                    <Input
-                      type="date"
-                      name="endDate"
-                      value={formData.endDate}
-                      onChange={handleChange}
-                      className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
-                    />
+                    <Label className="text-sm font-semibold text-gray-700">End Date <span className="text-red-500">*</span></Label><br></br>
+                     <DatePicker
+   selected={formData.endDate ? new Date(formData.endDate) : null}
+   onChange={(date) =>
+     setFormData((prev) => ({ ...prev, endDate: date.toISOString().split("T")[0] }))
+   }
+   dateFormat="dd/MM/yyyy"
+   minDate={formData.startDate ? new Date(formData.startDate) : new Date()} // cannot be before start
+   placeholderText="Select end date"
+   className="w-full rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm p-2 bg-gray-50 dark:bg-gray-900"
+/>
                     {errors.endDate && <p className="text-red-500 text-sm mt-1">{errors.endDate}</p>}
                   </div>
                 </>
               )}
+              
               <div className="md:col-span-2">
-                <Label className="text-sm font-semibold text-gray-700">Venue Address</Label>
-                <Textarea
-                  name="venueAddress"
-                  value={formData.venueAddress}
-                  onChange={handleChange}
-                  className="rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 shadow-sm w-full bg-gray-50 dark:bg-gray-900"
-                  placeholder="Enter venue address (optional)"
-                />
-                {errors.venueAddress && <p className="text-red-500 text-sm mt-1">{errors.venueAddress}</p>}
-              </div>
-              <div className="md:col-span-2">
-                <Label className="text-sm font-semibold text-gray-700">Venue Location (Google)</Label>
+                <Label className="text-sm font-semibold text-gray-700">Venue Location (Google) <span className="text-red-500">*</span></Label>
                 <Input
                   type="text"
                   name="venueLocation"
@@ -345,7 +409,7 @@ const handleSubmit = async (e) => {
                 {errors.venueLocation && <p className="text-red-500 text-sm mt-1">{errors.venueLocation}</p>}
               </div>
               <div className="md:col-span-2">
-                <Label className="text-sm font-semibold text-gray-700">User Address</Label>
+                <Label className="text-sm font-semibold text-gray-700">Customer Address <span className="text-red-500">*</span></Label>
                 <Textarea
                   name="userAddress"
                   value={formData.userAddress}
@@ -366,7 +430,7 @@ const handleSubmit = async (e) => {
                   placeholder="Enter amount (optional)"
                 />
               </div>
-              <div className="md:col-span-2">
+              {/* <div className="md:col-span-2">
                 <Label className="text-sm font-semibold text-gray-700">Extra Facilities</Label>
                 <div className="flex flex-wrap gap-3 mt-2">
                   {facilityOptions.map((facility, idx) => (
@@ -383,7 +447,7 @@ const handleSubmit = async (e) => {
                     </label>
                   ))}
                 </div>
-              </div>
+              </div> */}
             </div>
             <div className="mt-8">
               <Button
@@ -391,7 +455,7 @@ const handleSubmit = async (e) => {
                 disabled={isLoading}
                 className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition-all text-base md:text-lg"
               >
-                {isLoading ? "Adding Booking..." : "Add Booking"}
+              <Plus className="w-5 h-5" />  {isLoading ? <span className="loader"></span> : "Add Booking"}
               </Button>
             </div>
           </form>

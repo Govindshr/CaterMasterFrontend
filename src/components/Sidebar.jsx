@@ -60,8 +60,8 @@ const activeAccordion = "bg-white/10 border-l-4 border-blue-300 text-white";
       links: [
         { to: '/dish-categories', label: 'Dish-Categories' },
         { to: '/dish-subcategories', label: 'Dish-Sub-Categories' },
-        { to: '/items-list', label: 'Items-List' },
-        { to: '/add-item', label: 'Add-Items' },
+        { to: '/items-list', label: 'Dish-List' },
+        { to: '/add-item', label: 'Add-Dishes' },
       ],
     },
     {
@@ -194,14 +194,18 @@ const Section = ({ title, icon: Icon, links, open, onToggle }) => {
               </div>
             </li>
 
-            <li>
-              <div className={`${navItemBase} ${isActive('/bookings') ? activeClass : hoverClass}`}>
+            
+             <li>
+             <div className={`${navItemBase} ${isActive('/bookings') ? activeDirectLink : hoverClass}`}>
+
                 <Link to="/bookings" className="flex items-center rounded-md w-full">
-                  <Calendar className={iconClass(isActive('/bookings'))} />
+                  <LayoutDashboard className={iconClass(isActive('/bookings'))} />
                   <span className={linkText(isActive('/bookings'))}>Bookings</span>
                 </Link>
               </div>
             </li>
+
+         
 
             {isAdmin && (
               <>

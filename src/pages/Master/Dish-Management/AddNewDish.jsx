@@ -205,7 +205,7 @@ export default function AddDish() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-2 sm:px-4 py-6 mb-5">
+   <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-2 sm:px-4 py-6 mb-5">
       <Card className="w-full max-w-6xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-800 mb-5">
         <CardHeader className="p-4 sm:p-5 border-b bg-white dark:bg-gray-950">
           <div className="flex justify-between items-center">

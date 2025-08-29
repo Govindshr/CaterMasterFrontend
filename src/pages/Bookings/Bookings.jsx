@@ -222,11 +222,13 @@ export default function Bookings() {
 
               {/* Loading State */}
               {isLoading && (
-                <div className="p-8 text-center">
-                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <p className="mt-2 text-gray-600">Loading bookings...</p>
-                </div>
-              )}
+  <div className="p-8 text-center flex flex-col items-center justify-center">
+    <span className="loader"></span>
+    <p className="mt-3 text-gray-600 dark:text-gray-300 text-lg font-medium">
+      Loading bookings...
+    </p>
+  </div>
+)}
 
               {/* Desktop Table */}
               {!isLoading && !error && (
@@ -236,7 +238,7 @@ export default function Bookings() {
                       <TableHeader className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-gray-700 dark:to-gray-800">
                         <TableRow className="border-b border-gray-300">
                           <TableHead className="font-semibold text-gray-700 dark:text-gray-200">
-                            Booking ID
+                            #
                           </TableHead>
                           <TableHead className="font-semibold text-gray-700 dark:text-gray-200">
                             Customer Name
@@ -266,7 +268,7 @@ export default function Bookings() {
              hover:bg-blue-50 dark:hover:bg-gray-700 transition`}
                           >
                             <TableCell>
-                              {booking._id || booking.id || "N/A"}
+                              {index+1}
                             </TableCell>
                             <TableCell>
                               {getCustomerName(
