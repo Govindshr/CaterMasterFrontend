@@ -65,124 +65,6 @@ const mealTypes = [
   "Full Day Servings",
 ];
 const servingTypes = ["Buffet", "Table Chair", "Plated", "Family Style"];
-function drawDetailsTable(doc, y, rows) {
-  const colX = [20, 60, 110, 150];
-  rows.forEach((row, i) => {
-    colX.forEach((x, j) => {
-      doc.setFontSize(9);
-      doc.text(row[j] || '-', x, y);
-    });
-    y += 6;
-  });
-  return y;
-}
-
-function generateMenuPDF({ occasions, bookingDetails }) {
-  const doc = new jsPDF('p', 'mm', 'a4');
-
-  const customer = bookingDetails?.customerName || 'श्रीमान अशोक जी टंडन केसव जी';
-  const venue = bookingDetails?.venue || 'अनन्ता रिसोर्ट';
-  const mobile1 = bookingDetails?.mobile1 || '9252490297';
-  const mobile2 = bookingDetails?.mobile2 || '8871076396';
-
-  let y = 15;
-
-  // Header: Title + tagline
-  doc.setFontSize(10);
-  doc.setFont(undefined, 'italic');
-  doc.text('A Complete Food Solution', 105, y, { align: 'center' });
-
-  y += 7;
-  doc.setFontSize(22);
-  doc.setFont(undefined, 'bold');
-  doc.text('Shringi Food Services', 105, y, { align: 'center' });
-
-  y += 8;
-  doc.setFontSize(11);
-  doc.setFont(undefined, 'normal');
-  doc.text('Impressive Selection For Any Occasion', 105, y, { align: 'center' });
-
-  y += 10;
-  doc.setLineWidth(0.5);
-  doc.rect(10, 10, 190, 277); // outer border
-
-  // Customer Info Table
-  y += 4;
-  doc.setFontSize(10);
-  doc.text(`Name Of Customer :-`, 12, y);
-  doc.text(customer, 60, y);
-  doc.text(`M.N.:`, 150, y);
-  doc.text(mobile1, 160, y);
-  y += 6;
-  doc.text(`Venue :-`, 12, y);
-  doc.text(venue, 60, y);
-  doc.text(mobile2, 160, y);
-
-  // Divider
-  y += 8;
-  doc.setFont(undefined, 'bold');
-  doc.text('Menu:', 105, y, { align: 'center' });
-
-  y += 5;
-
-  // Loop Dates & Occasions
-  Object.keys(occasions).forEach(date => {
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.text(formatDateHindi(date), 105, y, { align: 'center' });
-    y += 4;
-
-    occasions[date].forEach((occ) => {
-      const occLabel = `${occ.occasionName || '-'} ${occ.guests || ''}आदमी ${formatTimeHindi(occ.startTime)}`;
-      doc.setFont(undefined, 'normal');
-      doc.text(`• ${occLabel}`, 12, y);
-      y += 4;
-
-      const dishList = (occ.menu.length ? occ.menu : ['राजभोग', 'गुलाब जामुन', 'पनीर']).join(' , ');
-      const lines = doc.splitTextToSize(dishList, 180);
-      lines.forEach(line => {
-        doc.text(`- ${line}`, 16, y);
-        y += 4;
-        if (y > 270) { doc.addPage(); y = 20; }
-      });
-
-      y += 2;
-    });
-
-    y += 4;
-  });
-
-  // Footer
-  y = 270;
-  doc.setFontSize(10);
-  doc.setFont(undefined, 'bold');
-  doc.text('Om Prakash Shringi', 20, y);
-  doc.text('Chandra Shekhar Shringi', 85, y);
-  doc.text('Naval Shringi', 160, y);
-  y += 5;
-  doc.setFont(undefined, 'normal');
-  doc.setFontSize(9);
-  doc.text('94143-94181', 25, y);
-  doc.text('96944-87748', 95, y);
-  doc.text('98282-89454', 165, y);
-
-  y += 8;
-  doc.setFont(undefined, 'bolditalic');
-  doc.setFontSize(11);
-  doc.text('Batak Bheru Para , Nahar Ka Chottha Bundi(Raj.)', 105, y, { align: 'center' });
-
-  doc.save('Shringi_Menu.pdf');
-}
-function formatDateHindi(dateStr) {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('hi-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-
-function formatTimeHindi(timeStr) {
-  if (!timeStr) return '';
-  const [h, m] = timeStr.split(':');
-  return `${h}:${m} बजे`;
-}
 
 
 export default function AddMenu() {
@@ -300,10 +182,7 @@ const [selectedDate, setSelectedDate] = useState("");
     });
   };
 
-  const handleSave = () => {
-    console.log("Saving data:", occasions);
-    generateMenuPDF({ occasions, bookingDetails: {} });
-  };
+  
   
   const formatDate = (dateString) => {
     return new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', {
@@ -403,11 +282,7 @@ const [selectedDate, setSelectedDate] = useState("");
       <div className="mt-8">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
           <Button
-            onClick={() => generateMenuPDF({ occasions, bookingDetails: {
-              customerName: 'John Doe',
-              eventName: 'Wedding Reception',
-              venue: 'Lawn B'
-            }})}
+            onClick={() => navigate(`/print-menu/${id}`)}
             variant="outline"
             size="lg"
             className="w-full sm:w-auto rounded-lg border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900"
@@ -416,10 +291,10 @@ const [selectedDate, setSelectedDate] = useState("");
             Print Menu
           </Button>
 
-          <Button onClick={handleSave} size="lg" className="w-full sm:w-auto rounded-lg bg-green-600 hover:bg-green-700 text-white shadow-sm">
+          {/* <Button onClick={handleSave} size="lg" className="w-full sm:w-auto rounded-lg bg-green-600 hover:bg-green-700 text-white shadow-sm">
             <SaveIcon className="mr-2 h-5 w-5" />
             Save Menu
-          </Button>
+          </Button> */}
         </div>
       </div>
 

@@ -29,6 +29,7 @@ import IngredientTypes from "./pages/Master/Ingredients/IngredientsTypes";
 import UnitTypes from "./pages/Master/UnitTypes/UnitTypes";
 import AddIngredient from "./pages/Master/Ingredients/AddIngredients";
 import IngredientList from "./pages/Master/Ingredients/IngredientsList";
+import PrintMenu from "./pages/Bookings/PrinteMenu";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -125,6 +126,11 @@ function AppWrapper() {
             <Route path="/add-menu/:id" element={
               <ProtectedRoute>
                 <AddMenu />
+              </ProtectedRoute>
+            } />
+              <Route path="/print-menu/:id" element={
+              <ProtectedRoute>
+                <PrintMenu />
               </ProtectedRoute>
             } />
             <Route path="/add-facilities" element={
