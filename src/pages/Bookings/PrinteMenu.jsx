@@ -39,7 +39,12 @@ export default function PrintMenu() {
   const handleDownloadPDF = async () => {
     if (!printRef.current) return;
     const element = printRef.current;
-    const canvas = await html2canvas(element, { scale: 2 });
+    const canvas = await html2canvas(element, { 
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff'
+    });
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF("p", "mm", "a4");
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -68,80 +73,113 @@ export default function PrintMenu() {
 
   const { customerName, mobileNumber, venueAddress, alternateContact, occasions } = bookingData;
 
+  // Filter out occasions that don't have events or menus
+  const validOccasions = occasions?.filter(occasion => 
+    occasion.events && occasion.events.length > 0 && 
+    occasion.events.some(event => event.menu && event.menu.length > 0)
+  );
+
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-2 max-w-4xl mx-auto">
       {/* Action Buttons outside the white section */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2">
         <Button variant="ghost" onClick={() => navigate(-1)}>
           <ArrowLeft className="mr-2 h-4 w-4" /> Back
         </Button>
-        <Button onClick={handleDownloadPDF}>Download PDF</Button>
+        <Button onClick={handleDownloadPDF} className="bg-blue-600 hover:bg-blue-700">Download PDF</Button>
       </div>
 
-      {/* Printable Section */}
+      {/* Printable Section - Single Bordered Card */}
       <div
         ref={printRef}
-        className="bg-white p-6 shadow-none border print:border-none print:m-0 print:w-[210mm] print:h-[297mm] print:p-6"
+        className="bg-white border border-black p-2 shadow-none print:border-black print:m-0 print:w-[210mm] print:h-[297mm] print:p-2"
+        style={{ fontFamily: 'Times New Roman, serif' }}
       >
-        <Card className="shadow-none border-none">
-          <CardContent className="p-0">
-            {/* Company Heading */}
-            <div className="text-center mb-6">
-              <h1 className="text-3xl font-bold italic">Shringi Food Services</h1>
-              <p className="text-sm italic">Impressive Selection For Any Occasion</p>
+        {/* Company Header */}
+        <div className="text-center mb-2">
+          <h1 className="text-xl font-bold mb-0.5">Shringi Food Services</h1>
+          <p className="text-xs italic mb-0.5">A Complete Food Solution</p>
+          <p className="text-xs italic">Impressive Selection For Any Occasion</p>
+        </div>
+
+        {/* Customer Details Table - Compact with Equal Columns */}
+        <div className="mb-2">
+          <table className="w-full border-collapse">
+            <tbody>
+              <tr>
+                <td className="border border-black px-1 py-0.5 text-xs font-bold w-1/4" style={{ borderWidth: '1px' }}>Name Of Customer :-</td>
+                <td className="border border-black px-1 py-0.5 text-xs w-1/4" style={{ borderWidth: '1px' }}>{customerName?.en}</td>
+                <td className="border border-black px-1 py-0.5 text-xs font-bold w-1/4" style={{ borderWidth: '1px' }}>M.N. :-</td>
+                <td className="border border-black px-1 py-0.5 text-xs w-1/4" style={{ borderWidth: '1px' }}>{mobileNumber}{alternateContact?.number ? `, ${alternateContact?.number}` : ""}</td>
+              </tr>
+              <tr>
+                <td className="border border-black px-1 py-0.5 text-xs font-bold" style={{ borderWidth: '1px' }}>Venue :-</td>
+                <td className="border border-black px-1 py-0.5 text-xs" colSpan="3" style={{ borderWidth: '1px' }}>{venueAddress}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Menu Section Header */}
+        <div className="text-center mb-1">
+          <h2 className="text-xs font-bold">Menu:</h2>
+        </div>
+
+        {/* Menu Content - Compact Tables */}
+        {validOccasions?.map((occasion, occIdx) => (
+          <div key={occasion._id} className="mb-1">
+            {/* Date Header with Horizontal Rules */}
+            <div className="text-center mb-1">
+              <hr className="border-black mb-0.5" style={{ borderWidth: '1px', height: '1px' }} />
+              <div className="font-bold text-xs">{new Date(occasion.date).toLocaleDateString('en-GB', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric' 
+              })}</div>
+              <hr className="border-black mt-0.5" style={{ borderWidth: '1px', height: '1px' }} />
             </div>
-
-            {/* Booking Info styled as table */}
-            <div className="border border-black mb-6">
-              <div className="grid grid-cols-12 border-b border-black">
-                <div className="col-span-3 border-r border-black px-2 py-1 text-sm font-semibold">Name Of Customer :-</div>
-                <div className="col-span-5 border-r border-black px-2 py-1 text-sm">{customerName?.en}</div>
-                <div className="col-span-2 border-r border-black px-2 py-1 text-sm font-semibold">M.N. :-</div>
-                <div className="col-span-2 px-2 py-1 text-sm">{mobileNumber}{alternateContact?.number ? `, ${alternateContact?.number}` : ""}</div>
-              </div>
-              <div className="grid grid-cols-12">
-                <div className="col-span-3 border-r border-black px-2 py-1 text-sm font-semibold">Venue :-</div>
-                <div className="col-span-9 px-2 py-1 text-sm">{venueAddress}</div>
-              </div>
-            </div>
-
-            {/* Menu Section */}
-            <h2 className="text-center font-bold text-lg mb-4">Menu:</h2>
-
-            {occasions?.map((occasion, occIdx) => (
-              <div
-                key={occasion._id}
-                className="border border-black mb-6 break-before-page"
-              >
-                <div className="border-b border-black text-center font-semibold py-1">
-                  {new Date(occasion.date).toLocaleDateString()}
-                </div>
-
-                {occasion.events?.map((event) => (
-                  <div key={event._id} className="grid grid-cols-12 border-b border-black">
-                    <div className="col-span-3 border-r border-black px-2 py-1 text-sm font-semibold">
-                      {event.eventTypeId?.name?.en} {event.noOfGuests} Guests {event.startTime && ` ${event.startTime}`}
-                    </div>
-                    <div className="col-span-9 px-2 py-1 text-sm">
-                      {event.menu?.map((item, idx) => (
+            
+            {/* Menu Items Table - Tight Spacing */}
+            <table className="w-full border-collapse">
+              <tbody>
+                {occasion.events?.filter(event => event.menu && event.menu.length > 0).map((event, eventIdx) => (
+                  <tr key={event._id}>
+                    <td className="border border-black px-1 py-0.5 text-xs font-bold w-1/3" style={{ borderWidth: '1px' }}>
+                      {event.eventTypeId?.name?.en} {event.noOfGuests} आदमी {event.startTime && `${event.startTime} बजे`}
+                    </td>
+                    <td className="border border-black px-1 py-0.5 text-xs w-2/3" style={{ borderWidth: '1px' }}>
+                      :- {event.menu?.map((item, idx) => (
                         <span key={item._id}>
                           {item.dishId?.name?.en}
                           {idx < event.menu.length - 1 && ", "}
                         </span>
                       ))}
-                    </div>
-                  </div>
+                    </td>
+                  </tr>
                 ))}
-              </div>
-            ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
 
-            {/* Footer */}
-            <div className="border-t pt-4 mt-8 text-center text-sm">
-              <p className="font-semibold">Shringi Food Services</p>
-              <p>Bundi (Raj.) | Contact: 94143-94181, 96944-87748, 98282-89454</p>
+        {/* Footer - Compact Contact Info */}
+        <div className="mt-2 text-center">
+          <div className="flex justify-between mb-1">
+            <div className="text-center">
+              <p className="font-bold text-xs">Om Prakash Shringi</p>
+              <p className="text-xs">94143-94181</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="text-center">
+              <p className="font-bold text-xs">Chandra Shekhar Shringi</p>
+              <p className="text-xs">96944-87748</p>
+            </div>
+            <div className="text-center">
+              <p className="font-bold text-xs">Naval Shringi</p>
+              <p className="text-xs">98282-89454</p>
+            </div>
+          </div>
+          <p className="font-bold text-xs">Batak Bheru Para, Nahar Ka Chottha Bundi(Raj.)</p>
+        </div>
       </div>
     </div>
   );
