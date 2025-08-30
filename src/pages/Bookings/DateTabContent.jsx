@@ -325,14 +325,12 @@ if (!activeOccasion) setActiveOccasion("item-0"); // ✅ only first time
           `${config.DeleteEventFromOccasion(event.delete_id)}`,  // Ensure this endpoint is correct
           token
         );
-        console.log("delete api Response",res)
-        if (res.success) {
+       
+        
           Swal.fire('Deleted!', 'The event has been deleted.', 'success');
           const updated = mergedOccasions.filter((_, i) => i !== idx);
           setMergedOccasions(updated);
-        } else {
-          Swal.fire('Error', 'Failed to delete event.', 'error');
-        }
+       
       } catch (err) {
         console.error("Delete error:", err);
         Swal.fire('Error', 'Something went wrong.', 'error');

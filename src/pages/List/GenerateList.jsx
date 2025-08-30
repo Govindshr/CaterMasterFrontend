@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { config } from "@/services/nodeconfig";
 import { protectedGetApi,protectedPostApi } from "@/services/nodeapi";
 import { useLocation } from "react-router-dom";
+import Swal from "sweetalert2";
 
 export default function MenuSummary() {
   const { id } = useParams();
@@ -297,8 +298,23 @@ export default function MenuSummary() {
   };
 
   const updateAddingRow = (tempId, field, value) => {
-    setAddingRows((prev) => prev.map((r) => (r.tempId === tempId ? { ...r, [field]: value } : r)));
-  };
+  setAddingRows((prev) =>
+    prev.map((r) => {
+      if (r.tempId !== tempId) return r;
+      let updated = { ...r, [field]: value };
+
+      // If ingredient is changed → update its unit symbol
+      if (field === "ingredientId") {
+        const ingMeta = allIngredients.find(
+          (i) => i._id === value || i.id === value
+        );
+        updated.unit = ingMeta?.unitTypeId?.symbol || "";
+      }
+      return updated;
+    })
+  );
+};
+
 
   // Save or update a custom ingredient row
   const handleSaveCustomRow = async (row) => {
@@ -402,61 +418,72 @@ export default function MenuSummary() {
   };
 
      // Delete ingredient function
-   const handleDeleteIngredient = async (ingredientName, ingredientId) => {
-     // Show confirmation dialog
-     const confirmDelete = window.confirm(`Are you sure you want to delete "${ingredientName}"?`);
-     if (!confirmDelete) return;
+  const handleDeleteIngredient = async (ingredientName, ingredientId) => {
+  const confirm = await Swal.fire({
+    title: "Are you sure?",
+    text: `Do you really want to delete "${ingredientName}"?`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, delete it!",
+  });
 
-     setSavingIngredient(ingredientId);
+  if (!confirm.isConfirmed) return;
 
-     const eventId = currentEventId;
-     const dishId = currentDishId;
-     if (!eventId || !dishId) {
-       console.error("Event/Dish not found for delete.");
-       setSavingIngredient(null);
-       return;
-     }
+  setSavingIngredient(ingredientId);
 
-     const payload = {
-       ingredientId: ingredientId || "",
-       quantity: 0, // Not used for delete but required by API
-       action: "remove",
-       notes: "Ingredient removed from frontend"
-     };
+  const eventId = currentEventId;
+  const dishId = currentDishId;
+  if (!eventId || !dishId) {
+    console.error("Event/Dish not found for delete.");
+    setSavingIngredient(null);
+    return;
+  }
 
-     try {
-       const token = localStorage.getItem("token");
-       const response = await protectedPostApi(
-         config.SaveEventDishIngredient(eventId, dishId),
-         payload,
-         token
-       );
+  const payload = {
+    ingredientId: ingredientId || "",
+    quantity: 0, // Not used for delete but required by API
+    action: "remove",
+    notes: "Ingredient removed from frontend",
+  };
 
-       if (!response.success) {
-         console.error("Failed to delete from backend:", response.message);
-         showSweetAlert("Error", "Failed to delete ingredient", "error");
-       } else {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await protectedPostApi(
+      config.SaveEventDishIngredient(eventId, dishId),
+      payload,
+      token
+    );
+
+    if (!response.success) {
+      Swal.fire("Error", "Failed to delete ingredient", "error");
+    } else {
          console.log("Deleted ingredient:", ingredientName);
          
-         // Remove from saved quantities and details
-         setSavedQuantities(prev => {
-           const newState = { ...prev };
-           delete newState[ingredientId];
-           return newState;
-         });
-         
-         setSavedIngredientDetails(prev => {
-           const newState = { ...prev };
-           delete newState[ingredientId];
-           return newState;
-         });
+        // Instead of removing → set its quantity to 0 and mark as unsaved
+  setSavedQuantities(prev => ({
+    ...prev,
+    [ingredientId]: 0
+  }));
 
-         // Remove from dishStats
-         setDishStats(prev => {
-           const currentList = prev[selectedItem] || [];
-           const filteredList = currentList.filter(ing => ing.id !== ingredientId);
-           return { ...prev, [selectedItem]: filteredList };
-         });
+  setSavedIngredientDetails(prev => ({
+    ...prev,
+    [ingredientId]: {
+      ...(prev[ingredientId] || {}),
+      customQuantity: null,
+      effectiveQuantity: 0
+    }
+  }));
+
+  setDishStats(prev => {
+    const updatedList = (prev[selectedItem] || []).map(ing =>
+      ing.id === ingredientId
+        ? { ...ing, quantity: 0 } // keep row, reset quantity
+        : ing
+    );
+    return { ...prev, [selectedItem]: updatedList };
+  });
 
          // Recompute completion for dish
          const allIds = (dishStats[selectedItem] || []).filter(ing => ing.id !== ingredientId).map((x) => x.id);
@@ -467,14 +494,15 @@ export default function MenuSummary() {
          setDishCompletionFlag(eventId, dishId, completed);
          
          showSweetAlert("Deleted!", `${ingredientName} has been removed successfully`, "success");
-       }
-     } catch (err) {
-       console.error("API error deleting ingredient:", err);
-       showSweetAlert("Error", "Failed to delete ingredient", "error");
-     } finally {
-       setSavingIngredient(null);
-     }
-   };
+    }
+  } catch (err) {
+    console.error("API error deleting ingredient:", err);
+    Swal.fire("Error", "Something went wrong while deleting", "error");
+  } finally {
+    setSavingIngredient(null);
+  }
+};
+
 
    const handleSaveQuantity = async (ingredientName, qty, ingredientId) => {
     setSavingIngredient(ingredientId);
@@ -528,7 +556,7 @@ export default function MenuSummary() {
         setSavedIngredientDetails(prev => ({
           ...prev,
           [ingredientId]: {
-            ...prev[ingredientId],
+            ...prev[ingredientId], 
             customQuantity: parseFloat(qty),
             effectiveQuantity: parseFloat(qty)
           }
@@ -894,13 +922,21 @@ export default function MenuSummary() {
                           <td className="p-3 border border-gray-200 text-gray-500">—</td>
                           <td className="p-3 border border-gray-200">
                             <div className="flex items-center space-x-2">
-                              <input
-                                type="number"
-                                className="w-24 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="Qty"
-                                value={row.quantity}
-                                onChange={(e) => updateAddingRow(tempId, 'quantity', e.target.value)}
-                              />
+                             <div className="relative">
+  <input
+    type="number"
+    className="w-24 border border-gray-300 rounded-md px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    placeholder="Qty"
+    value={row.quantity}
+    onChange={(e) => updateAddingRow(tempId, 'quantity', e.target.value)}
+  />
+  {row.unit && (
+    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-medium">
+      {row.unit}
+    </span>
+  )}
+</div>
+
                             </div>
                           </td>
                                                      <td className="p-3 border border-gray-200">
@@ -1146,13 +1182,21 @@ export default function MenuSummary() {
                           </option>
                         ))}
                       </select>
-                      <input
-                        type="number"
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Qty"
-                        value={row.quantity}
-                        onChange={(e) => updateAddingRow(row.tempId, 'quantity', e.target.value)}
-                      />
+                    <div className="relative">
+  <input
+    type="number"
+    className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    placeholder="Qty"
+    value={row.quantity}
+    onChange={(e) => updateAddingRow(row.tempId, 'quantity', e.target.value)}
+  />
+  {row.unit && (
+    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 font-medium">
+      {row.unit}
+    </span>
+  )}
+</div>
+
                       <div className="grid grid-cols-2 gap-2">
                         <Button
                           size="sm"
