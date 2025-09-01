@@ -595,7 +595,7 @@ export default function MenuSummary() {
   return (
     <>
 
-      <div className="w-full min-h-screen bg-gray-50 dark:bg-gray-900 py-8 sm:px-6 lg:px-8">
+      <div className="w-full mb-5 min-h-screen bg-gray-50 dark:bg-gray-900 py-8 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {occasions.map((occasion) => (
           <Card
