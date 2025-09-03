@@ -610,62 +610,71 @@ export default function MenuSummary() {
 
             <CardContent className="space-y-6 p-6">
               {console.log("occasion.events",occasion.events)}
-              {occasion.events?.map((event) => (
-                <div
-                  key={event._id}
-                  className="bg-white border border-blue-200 rounded-xl p-4 shadow-sm"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <h3 className="text-lg font-semibold text-gray-800">
-                        🍽️ {event.eventTypeId?.name?.en || "Unnamed Event"}
-                      </h3>
-                      <span className="text-sm text-gray-600 sm:hidden">
-                        People: <strong>{event.noOfGuests}</strong>
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between sm:justify-end gap-3">
-                      <span className="hidden sm:inline text-sm text-gray-600">
-                        People: <strong>{event.noOfGuests}</strong>
-                      </span>
-                     
-                    </div>
-                  </div>
+             {occasion.events && occasion.events.length > 0 ? (
+  occasion.events.map((event) => (
+    <div key={event._id} className="bg-white border border-blue-200 rounded-xl p-4 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-lg font-semibold text-gray-800">
+            🍽️ {event.eventTypeId?.name?.en || "Unnamed Event"}
+          </h3>
+          <span className="text-sm text-gray-600 sm:hidden">
+            People: <strong>{event.noOfGuests}</strong>
+          </span>
+        </div>
+        <div className="flex items-center justify-between sm:justify-end gap-3">
+          <span className="hidden sm:inline text-sm text-gray-600">
+            People: <strong>{event.noOfGuests}</strong>
+          </span>
+        </div>
+      </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                    {event.menu?.map((item, index) => {
-                      const key = `${event._id}:${item.dishId?._id}`;
-                      const isComplete = !!dishCompletion[key];
-                      return (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          className={`${isComplete ? 'bg-green-50 border-green-600 text-green-700 hover:bg-green-100' : 'border-blue-500 text-blue-700 hover:bg-blue-100'} rounded-full w-full justify-center`}
-                          onClick={() =>
-                            handleItemClick(
-                              item.dishId?.name?.en || "Unknown",
-                              item.dishId?._id,
-                              event.noOfGuests,
-                              event._id
-                            )
-                          }
-                        >
-                          <span className="truncate">{item.dishId?.name?.en || "Unknown"}</span>
-                        </Button>
-                      );
-                    })}
-                  </div>
-                  <span className="flex justify-end">
-                   <Button
-                        size="sm"
-                        className="bg-purple-600 hover:bg-purple-700 text-white w-full sm:w-auto mt-5 align-middle"
-                        onClick={() => navigate(`/final-ingredient-list/event/${event._id}`)}
-                      >
-                        Generate Event List
-                      </Button>
-                      </span>
-                </div>
-              ))}
+      {event.menu && event.menu.length > 0 ? (
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {event.menu.map((item, index) => {
+              const key = `${event._id}:${item.dishId?._id}`;
+              const isComplete = !!dishCompletion[key];
+              return (
+                <Button
+                  key={index}
+                  variant="outline"
+                  className={`${isComplete ? 'bg-green-50 border-green-600 text-green-700 hover:bg-green-100' : 'border-blue-500 text-blue-700 hover:bg-blue-100'} rounded-full w-full justify-center`}
+                  onClick={() =>
+                    handleItemClick(
+                      item.dishId?.name?.en || "Unknown",
+                      item.dishId?._id,
+                      event.noOfGuests,
+                      event._id
+                    )
+                  }
+                >
+                  <span className="truncate">{item.dishId?.name?.en || "Unknown"}</span>
+                </Button>
+              );
+            })}
+          </div>
+          <span className="flex justify-end">
+            <Button
+              size="sm"
+              className="bg-purple-600 hover:bg-purple-700 text-white w-full sm:w-auto mt-5 align-middle"
+              onClick={() => navigate(`/final-ingredient-list/event/${event._id}`)}
+            >
+              Generate Event List
+            </Button>
+          </span>
+        </>
+      ) : (
+        <p className="text-sm text-gray-500 italic">
+          🚧 This event has no dishes yet. Menu to be added.
+        </p>
+      )}
+    </div>
+  ))
+) : (
+  <p className="text-gray-500 italic">🚧 No events added for this occasion yet.</p>
+)}
+
             </CardContent>
           </Card>
         ))}

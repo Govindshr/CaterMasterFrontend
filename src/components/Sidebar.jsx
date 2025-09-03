@@ -1,7 +1,7 @@
 // src/components/Sidebar.jsx
 import { useState, useEffect,useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Calendar, ChevronDown, Settings, X, Users ,Cake ,SquareMenu,ShoppingBasket} from "lucide-react";
+import { LayoutDashboard, Calendar, ChevronDown, Settings, X, Users ,Cake ,SquareMenu,ShoppingBasket ,CalendarClock} from "lucide-react";
 
 export default function Sidebar({ isOpen, onClose }) {
   const [openSections, setOpenSections] = useState({}); // why: split long Master into smaller toggles
@@ -199,7 +199,7 @@ const Section = ({ title, icon: Icon, links, open, onToggle }) => {
              <div className={`${navItemBase} ${isActive('/bookings') ? activeDirectLink : hoverClass}`}>
 
                 <Link to="/bookings" className="flex items-center rounded-md w-full">
-                  <LayoutDashboard className={iconClass(isActive('/bookings'))} />
+                  <CalendarClock className={iconClass(isActive('/bookings'))} />
                   <span className={linkText(isActive('/bookings'))}>Bookings</span>
                 </Link>
               </div>

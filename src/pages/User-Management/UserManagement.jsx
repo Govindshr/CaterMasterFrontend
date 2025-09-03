@@ -281,12 +281,16 @@ export default function UserManagement() {
     setMobileError('');
   };
 
-  const filteredUsers = users.filter((user) =>
-    user.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+const filteredUsers = users.filter((user) => {
+  const nameEn = typeof user.fullName === "object" ? user.fullName.en : user.fullName;
+  return (
+    nameEn?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.mobile?.includes(searchQuery) ||
     user.userType?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+});
+
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -333,9 +337,13 @@ export default function UserManagement() {
           <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-gray-900 dark:text-gray-100 break-words whitespace-normal max-w-full text-base leading-tight">
               {user.fullName?.length > 22 ? (
-                <span title={user.fullName}>{user.fullName.slice(0, 22)}...</span>
+               <span title={user.fullName?.en}>
+    {user.fullName?.en.length > 22
+      ? user.fullName.en.slice(0, 22) + "..."
+      : user.fullName.en}
+  </span>
               ) : (
-                user.fullName
+                 user.fullName?.en
               )}
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 break-all">
@@ -481,7 +489,7 @@ export default function UserManagement() {
                             </div>
                             <div>
                               <p className="font-medium text-gray-900 dark:text-gray-100">
-                                {user.fullName}
+                                {typeof user.fullName === "object" ? user.fullName.en : user.fullName}
                               </p>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
                                 ID: {user.id}
