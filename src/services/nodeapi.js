@@ -52,6 +52,26 @@ export const postApi = async (endpoint, data = {}) => {
     }
 };
 
+export const protectedUploadFileApi = async (endpoint, file, token, params = {}) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const response = await api.post(endpoint, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      },
+      params, // allows ?dryRun=false if needed
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Protected file upload to ${endpoint} failed:`, error);
+    throw error;
+  }
+};
+
+
 // Protected POST request function
 
 // how to use this

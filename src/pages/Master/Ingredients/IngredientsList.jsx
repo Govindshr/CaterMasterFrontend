@@ -1,43 +1,92 @@
-// IngredientList component to list ingredients with pagination and delete
-
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { protectedGetApi, protectedDeleteApi } from "@/services/nodeapi";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { protectedGetApi, protectedDeleteApi, protectedUploadFileApi } from "@/services/nodeapi";
 import { config } from "@/services/nodeconfig";
+import { Button } from "@/components/ui/button";
+import { Filter, X, Plus, Trash2, Upload } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import Swal from "sweetalert2";
-import { Trash2, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export default function IngredientList() {
-  const { i18n } = useTranslation();
   const navigate = useNavigate();
   const [ingredients, setIngredients] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+const resetPageOnFilterChange = () => setPage(1);
+const [ingredientTypes, setIngredientTypes] = useState([]);
+const [unitTypes, setUnitTypes] = useState([]);
 
-  useEffect(() => {
-    fetchIngredients();
-  }, [page]);
+  // Static filter states (non-functional)
+  const [nameFilter, setNameFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [unitFilter, setUnitFilter] = useState("");
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
 
-  const fetchIngredients = async () => {
-    try {
-      setIsLoading(true);
-      const token = localStorage.getItem("token");
-      const res = await protectedGetApi(`${config.GetIngredients}?page=${page}&limit=10`, token);
-     setIngredients(res?.data?.ingredients || []);
-setTotalPages(res?.data?.pagination?.totalPages || 1);
-setPage(res?.data?.pagination?.currentPage || 1);
+useEffect(() => {
+  fetchIngredients();
+}, [page, nameFilter, typeFilter, unitFilter]);
+useEffect(() => {
+  fetchIngredientTypes();
+  fetchUnitTypes();
+}, []);
 
-    } catch (error) {
-      console.error("Failed to fetch ingredients", error);
-    } finally {
-      setIsLoading(false);
+const fetchIngredientTypes = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await protectedGetApi(config.GetIngredientTypes, token);
+    if (res.success === true) {
+      setIngredientTypes(res.data || []);
     }
-  };
+  } catch (err) {
+    console.error("Failed to fetch ingredient types", err);
+  }
+};
+
+const fetchUnitTypes = async () => {
+  try {
+    const token = localStorage.getItem("token");
+    const res = await protectedGetApi(config.GetUnitTypes, token);
+    if (res.success === true) {
+      setUnitTypes(res.data || []);
+    }
+  } catch (err) {
+    console.error("Failed to fetch unit types", err);
+  }
+};
+
+const fetchIngredients = async () => {
+  try {
+    setIsLoading(true);
+    const token = localStorage.getItem("token");
+
+    const params = new URLSearchParams({
+      page,
+      limit: 50,
+      search: nameFilter,                // 🔄 backend: search
+      ingredientTypeId: typeFilter,      // 🔄 backend: ingredientTypeId
+      unitTypeId: unitFilter,            // 🔄 backend: unitTypeId
+    });
+
+    const res = await protectedGetApi(`${config.GetIngredients}?${params}`, token);
+    setIngredients(res?.data?.ingredients || []);
+    setTotalPages(res?.data?.pagination?.totalPages || 1);
+    setPage(res?.data?.pagination?.currentPage || 1);
+  } catch (error) {
+    console.error("Failed to fetch ingredients", error);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleDelete = async (id) => {
     const result = await Swal.fire({
@@ -62,128 +111,264 @@ setPage(res?.data?.pagination?.currentPage || 1);
     }
   };
 
+  const handleBulkUpload = async () => {
+    if (!selectedFile) {
+      Swal.fire("Error!", "Please select a file first.", "error");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      await protectedUploadFileApi(config.BulkUploadIngredients, selectedFile, token, { dryRun: false });
+      Swal.fire("Success!", "Ingredients uploaded successfully.", "success");
+      setIsModalOpen(false);
+      setSelectedFile(null);
+      fetchIngredients();
+    } catch (error) {
+      Swal.fire("Error!", "Failed to upload ingredients.", "error");
+    }
+  };
+const clearFilters = () => {
+  setNameFilter("");
+  setTypeFilter("");
+  setUnitFilter("");
+  resetPageOnFilterChange();
+};
+
+
   return (
-     <div className="w-full min-h-screen bg-gray-50 dark:bg-gray-900 py-8 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-      <Card className="shadow-lg rounded-lg">
-        <CardHeader className="flex-row justify-between items-center border-b p-4">
-          <h2 className="text-2xl font-bold">Ingredients</h2>
-          <Button onClick={() => navigate("/add-ingredient")} className="flex items-center bg-blue-600 hover:bg-blue-700">
-            <Plus className="w-5 h-5 mr-2" /> Add Ingredient
+    <>
+  <div className="w-full min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
+  <div className="max-w-7xl mx-auto w-full">
+    <Card className="shadow-lg rounded-lg w-full max-w-full">
+      <CardHeader className="flex flex-wrap justify-between border-b p-4 gap-3 w-full">
+        <h2 className="text-2xl font-bold">All Ingredients</h2>
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end max-w-full">
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none w-full sm:w-auto">
+            + Add Ingredient
           </Button>
-        </CardHeader>
-        <CardContent className="p-6 overflow-x-auto bg-white dark:bg-gray-950">
-          {isLoading ? (
-            <p>Loading...</p>
-          ) : (
-            <div>
-              {/* Desktop/Tablet table */}
-              <div className="hidden md:block">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-100 dark:bg-gray-800 text-left">
-                      <th className="p-2">#</th>
-                      <th className="p-2">Name</th>
-                      <th className="p-2">Type</th>
-                      <th className="p-2">Unit</th>
-                      <th className="p-2">Price</th>
-                      <th className="p-2 text-center">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {ingredients.length > 0 ? ingredients.map((ing, idx) => (
-                      <tr key={ing._id} className="border-t">
-                        <td className="p-2">{(page - 1) * 10 + idx + 1}</td>
-                        <td className="p-2">{ing.name?.[i18n.language] || ing.name?.en}</td>
-                        <td className="p-2">{ing.ingredientTypeId?.name?.[i18n.language] || ing.ingredientTypeId?.name?.en}</td>
-                        <td className="p-2">{ing.unitTypeId?.symbol}</td>
-                        <td className="p-2">₹{ing.pricePerUnit}</td>
-                        <td className="p-2 text-center">
-                          <button
-                            onClick={() => handleDelete(ing._id)}
-                            className="inline-flex items-center rounded-md px-2 py-1 text-sm text-red-600 hover:text-red-700"
-                            title="Delete Ingredient"
-                          >
+          <Button className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none w-full sm:w-auto">
+            Bulk Upload
+          </Button>
+        </div>
+      </CardHeader>
+
+           <CardContent className="space-y-4 p-4 sm:p-6 w-full max-w-full overflow-x-hidden">
+              {/* Mobile: Filters Sheet trigger */}
+              <div className="md:hidden">
+                <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" className="w-full justify-center gap-2">
+                      <Filter className="h-4 w-4" /> Filters
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="rounded-t-2xl p-4">
+                    <SheetHeader>
+                      <SheetTitle>Filters</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-4 space-y-3">
+                      <div>
+                        <Label>Name</Label>
+                       <Input
+  placeholder="Search by name"
+  value={nameFilter}
+  onChange={(e) => { setNameFilter(e.target.value); resetPageOnFilterChange(); }}
+/>
+                      </div>
+                      <div>
+                        <Label>Type</Label>
+                   <Select
+  value={typeFilter}
+  onValueChange={(val) => { setTypeFilter(val); resetPageOnFilterChange(); }}
+>
+  <SelectTrigger className="w-full rounded-lg border-gray-300 bg-white">
+    <SelectValue placeholder="Select Type" />
+  </SelectTrigger>
+  <SelectContent>
+    {ingredientTypes.map((type) => (
+      <SelectItem key={type._id} value={type._id}>
+        {type.name?.en}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+
+                      </div>
+                      <div>
+                        <Label>Unit</Label>
+                     <Select
+  value={unitFilter}
+  onValueChange={(val) => { setUnitFilter(val); resetPageOnFilterChange(); }}
+>
+  <SelectTrigger className="w-full rounded-lg border-gray-300 bg-white">
+    <SelectValue placeholder="Select Unit" />
+  </SelectTrigger>
+  <SelectContent>
+    {unitTypes.map((unit) => (
+      <SelectItem key={unit._id} value={unit._id}>
+        {unit.name?.en} ({unit.symbol})
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+
+                      </div>
+                    </div>
+                    <div className="mt-5 flex items-center justify-between gap-2">
+                      <Button variant="ghost" onClick={clearFilters} className="text-gray-700">Clear</Button>
+                      <SheetClose asChild>
+                        <Button className="bg-blue-600 hover:bg-blue-700 text-white">Apply</Button>
+                      </SheetClose>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
+
+              {/* Desktop/Tablet Filters */}
+              <div className="hidden md:grid md:grid-cols-3 gap-4">
+                <div>
+                  <Label>Name</Label>
+                 <Input
+  placeholder="Search by name"
+  value={nameFilter}
+  onChange={(e) => { setNameFilter(e.target.value); resetPageOnFilterChange(); }}
+/>
+                </div>
+                <div>
+                  <Label>Type</Label>
+             <Select
+  value={typeFilter}
+  onValueChange={(val) => { setTypeFilter(val); resetPageOnFilterChange(); }}
+>
+  <SelectTrigger className="w-full rounded-lg border-gray-300 bg-white">
+    <SelectValue placeholder="Select Type" />
+  </SelectTrigger>
+  <SelectContent>
+    {ingredientTypes.map((type) => (
+      <SelectItem key={type._id} value={type._id}>
+        {type.name?.en}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+
+                </div>
+                <div>
+                  <Label>Unit</Label>
+                 <Select
+  value={unitFilter}
+  onValueChange={(val) => { setUnitFilter(val); resetPageOnFilterChange(); }}
+>
+  <SelectTrigger className="w-full rounded-lg border-gray-300 bg-white">
+    <SelectValue placeholder="Select Unit" />
+  </SelectTrigger>
+  <SelectContent>
+    {unitTypes.map((unit) => (
+      <SelectItem key={unit._id} value={unit._id}>
+        {unit.name?.en} ({unit.symbol})
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+
+                </div>
+              </div>
+
+              {/* Table for desktop */}
+              <div className="hidden md:block w-full max-w-full overflow-x-auto">
+          <Table className="w-full max-w-full">
+                  <TableHeader className="bg-gray-100">
+                    <TableRow>
+                      <TableHead>#</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Unit</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ingredients.map((ing, index) => (
+                      <TableRow key={ing._id}>
+                        <TableCell>{(page - 1) * 50 + index + 1}</TableCell>
+                        <TableCell>{ing.name?.en}</TableCell>
+                        <TableCell>{ing.ingredientTypeId?.name?.en}</TableCell>
+                        <TableCell>{ing.unitTypeId?.symbol}</TableCell>
+                        <TableCell>₹{ing.pricePerUnit}</TableCell>
+                        <TableCell>
+                          <button onClick={() => handleDelete(ing._id)} className="text-red-600 hover:text-red-700">
                             <Trash2 className="w-5 h-5" />
                           </button>
-                        </td>
-                      </tr>
-                    )) : (
-                      <tr>
-                        <td colSpan="6" className="p-6 text-center text-gray-500">No ingredients found</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
 
               {/* Mobile card list */}
-              <div className="md:hidden space-y-3">
-                {ingredients.map((ing, idx) => (
-                  <div
-                    key={ing._id}
-                    className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-base font-semibold text-gray-900 truncate dark:text-gray-100">
-                          {ing.name?.[i18n.language] || ing.name?.en}
-                        </p>
-                        <div className="mt-2 flex items-center gap-2 flex-wrap">
-                          <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:ring-blue-700/40">
-                            {ing.ingredientTypeId?.name?.[i18n.language] || ing.ingredientTypeId?.name?.en}
-                          </span>
-                          <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-200 dark:bg-gray-700/40 dark:text-gray-300 dark:ring-gray-600/40">
-                            Unit: {ing.unitTypeId?.symbol}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-gray-900 dark:text-gray-100">₹{ing.pricePerUnit}</p>
-                        <p className="text-xs text-gray-500">#{(page - 1) * 10 + idx + 1}</p>
-                      </div>
+               <div className="md:hidden space-y-2 w-full max-w-full">
+                {ingredients.map((ing) => (
+                  <div key={ing._id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+                    <p className="text-[14px] font-medium text-gray-900 truncate">{ing.name?.en}</p>
+                    <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 ring-1 ring-inset ring-blue-200">
+                        {ing.ingredientTypeId?.name?.en}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-700 ring-1 ring-inset ring-gray-200">
+                        Unit: {ing.unitTypeId?.symbol}
+                      </span>
                     </div>
-                    <div className="mt-3 flex items-center justify-end">
-                      <button
-                        onClick={() => handleDelete(ing._id)}
-                        className="inline-flex items-center rounded-md px-2 py-1 text-sm text-red-600 hover:text-red-700"
-                        title="Delete Ingredient"
-                      >
-                        <Trash2 className="mr-1 h-4 w-4" />
-                        Delete
+                    <div className="mt-2 text-sm text-gray-600">Price: ₹{ing.pricePerUnit}</div>
+                    <div className="mt-2 flex justify-end">
+                      <button onClick={() => handleDelete(ing._id)} className="text-red-600 hover:text-red-700 flex items-center gap-1">
+                        <Trash2 className="h-4 w-4" /> Delete
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
 
-          <div className="flex justify-center md:justify-end mt-6">
-            <Pagination>
-              <PaginationContent className="flex items-center space-x-2">
-                <PaginationItem>
-                  <PaginationPrevious onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} />
-                </PaginationItem>
-                {[...Array(totalPages)].map((_, index) => (
-                  <PaginationItem key={index}>
-                    <button
-                      className={`px-3 py-1 rounded-lg ${page === index + 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"}`}
-                      onClick={() => setPage(index + 1)}
-                    >
-                      {index + 1}
-                    </button>
-                  </PaginationItem>
-                ))}
-                <PaginationItem>
-                  <PaginationNext onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-    </div>
+              {/* Pagination */}
+               <div className="flex justify-center md:justify-end mt-4 w-full max-w-full">
+          <Pagination className="w-full max-w-full overflow-x-hidden">
+            <PaginationContent className="flex justify-center gap-2 w-full max-w-full">
+                    {/* <PaginationItem >
+                      <PaginationPrevious onClick={() => setPage((prev) => Math.max(prev - 1, 1))} disabled={page === 1} />
+                    </PaginationItem> */}
+                    {[...Array(totalPages)].map((_, index) => (
+                      <PaginationItem key={index}>
+                        <button
+                          className={`px-3 py-1 rounded-lg ${page === index + 1 ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-800"}`}
+                          onClick={() => setPage(index + 1)}
+                        >
+                          {index + 1}
+                        </button>
+                      </PaginationItem>
+                    ))}
+                    {/* <PaginationItem>
+                      <PaginationNext onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))} disabled={page === totalPages} />
+                    </PaginationItem> */}
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Bulk Upload Dialog */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bulk Upload Ingredients</DialogTitle>
+          </DialogHeader>
+          <input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => setSelectedFile(e.target.files[0])} className="mt-4" />
+          <DialogFooter>
+            <Button onClick={handleBulkUpload} disabled={!selectedFile}>Upload</Button>
+            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

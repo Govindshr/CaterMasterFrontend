@@ -49,6 +49,8 @@ export const config = {
   `${Base_URI}/events/${eventId}/dishes/${dishId}/ingredients`,
     GenerateList: (id) => `${Base_URI}/reports/booking/${id}/ingredients`,
     GenerateEventList: (eventId) => `${Base_URI}/reports/event/${eventId}/ingredients`,
+    BulkUploadIngredients: `${Base_URI}/ingredients/bulk-upload`,
+
 
 
 };

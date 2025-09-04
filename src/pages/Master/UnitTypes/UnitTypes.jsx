@@ -34,6 +34,7 @@ import {
   protectedGetApi,
   protectedPostApi,
   protectedDeleteApi,
+  postApi
 } from "@/services/nodeapi";
 
 export default function UnitTypes() {
@@ -78,17 +79,23 @@ const [errors, setErrors] = useState({});
    }
    setErrors({});
     try {
+     const user = JSON.parse(localStorage.getItem("user"));
       const token = localStorage.getItem("token");
-      const res = await protectedPostApi(
-        config.AddUnitTypes,
-        {
-          name: { en: nameEn, hi: nameHi },
-          symbol,
-          category,
-          conversionToBase: parseFloat(conversionToBase),
-        },
-        token
-      );
+      const payload = {
+        name: { en: nameEn, hi: nameHi },
+        symbol,
+        category,
+        conversionToBase: parseFloat(conversionToBase),
+      };
+
+      let res;
+      if (user?.userType === "admin") {
+        console.log("admin")
+        res = await protectedPostApi(config.AddUnitTypes, payload,token);
+      } else {
+        console.log("user")
+        res = await protectedPostApi(config.AddUnitTypes, payload, token);
+      }
       if (res?.data) {
         fetchUnits();
         setIsModalOpen(false);
