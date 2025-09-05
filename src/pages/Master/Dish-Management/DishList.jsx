@@ -7,7 +7,10 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { protectedGetApi } from "@/services/nodeapi";
+import { protectedGetApi, protectedUploadFileApi } from "@/services/nodeapi";
+import Swal from "sweetalert2";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+
 import { config } from "@/services/nodeconfig";
 import { Button } from "@/components/ui/button";
 import { Filter, X ,Plus} from "lucide-react";
@@ -26,7 +29,8 @@ export default function ItemList() {
   const [subcategories, setSubcategories] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
-
+const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
   useEffect(() => {
     fetchCategories();
     fetchSubCategories();
@@ -47,6 +51,24 @@ export default function ItemList() {
       console.error("Failed to fetch categories", err);
     }
   };
+
+const handleBulkUpload = async () => {
+    if (!selectedFile) {
+      Swal.fire("Error!", "Please select a file first.", "error");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      await protectedUploadFileApi(config.BulkUploadDishes, selectedFile, token, { dryRun: false });
+      Swal.fire("Success!", "Dishes uploaded successfully.", "success");
+       setIsModalOpen(false);
+      setSelectedFile(null);
+      fetchDishes();
+    } catch (error) {
+      Swal.fire("Error!", "Failed to upload dishes.", "error");
+    }
+  };
+
 
   const fetchSubCategories = async () => {
     try {
@@ -92,12 +114,23 @@ export default function ItemList() {
     <div className="w-full min-h-screen bg-gray-50 dark:bg-gray-900 py-8 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
       <Card className="shadow-lg rounded-lg">
-        <CardHeader className="flex-row justify-between items-center border-b p-4 gap-3">
-          <h2 className="text-2xl font-bold">Dish List</h2>
-          <div className="ml-auto">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => navigate("/add-item")}><Plus className="w-5 h-5 " />Add Dish</Button>
-          </div>
-        </CardHeader>
+    
+        <CardHeader className="flex flex-wrap justify-between border-b p-4 gap-3 w-full">
+        <h2 className="text-2xl font-bold">All Dishes</h2>
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end max-w-full">
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none w-full sm:w-auto"
+          onClick={() => navigate("/add-item")}
+          >
+             <Plus className="w-5 h-5 " /> Add Dishes
+          </Button>
+          <Button
+   className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none w-full sm:w-auto"
+  onClick={() => setIsModalOpen(true)}
+ >
+   Bulk Upload
+ </Button>
+        </div>
+      </CardHeader>
         <CardContent className="space-y-4 p-6">
           {/* Mobile: Filters Sheet trigger */}
           <div className="md:hidden">
@@ -299,6 +332,30 @@ export default function ItemList() {
         </CardContent>
       </Card>
     </div>
+
+          {/* Bulk Upload Dialog */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bulk Upload Dishes</DialogTitle>
+          </DialogHeader>
+          <input
+            type="file"
+            accept=".csv,.xlsx,.xls"
+            onChange={(e) => setSelectedFile(e.target.files[0])}
+            className="mt-4"
+          />
+          <DialogFooter>
+            <Button onClick={handleBulkUpload} disabled={!selectedFile}>
+              Upload
+            </Button>
+            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 }

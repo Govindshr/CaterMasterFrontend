@@ -233,12 +233,24 @@ const [errors, setErrors] = useState({});
                         <TableCell>{unit.category}</TableCell>
                         {/* <TableCell>{unit.conversionToBase}</TableCell> */}
                         <TableCell className="text-center">
-                          <button
-                            className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
-                            onClick={() => deleteUnit(unit._id)}
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
+                         {(
+    unit.createdBy ||
+    (() => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        return user?.userType === "admin";
+      } catch {
+        return false;
+      }
+    })()
+  ) && (
+    <button
+      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+      onClick={() => deleteUnit(unit._id)}
+    >
+      <Trash2 className="w-5 h-5" />
+    </button>
+  )}
                         </TableCell>
                       </TableRow>
                     ))

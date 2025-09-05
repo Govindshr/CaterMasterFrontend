@@ -143,12 +143,17 @@ const clearFilters = () => {
       <CardHeader className="flex flex-wrap justify-between border-b p-4 gap-3 w-full">
         <h2 className="text-2xl font-bold">All Ingredients</h2>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end max-w-full">
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none w-full sm:w-auto">
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white flex-1 sm:flex-none w-full sm:w-auto"
+          onClick={() => navigate("/add-ingredient")}
+          >
             + Add Ingredient
           </Button>
-          <Button className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none w-full sm:w-auto">
-            Bulk Upload
-          </Button>
+          <Button
+   className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none w-full sm:w-auto"
+   onClick={() => setIsModalOpen(true)}
+ >
+   Bulk Upload
+ </Button>
         </div>
       </CardHeader>
 

@@ -205,12 +205,24 @@ const [errors, setErrors] = useState({});
                           <span className="inline-block w-6 h-6 rounded-full border" style={{ backgroundColor: item.color }}></span>
                         </TableCell> */}
                         <TableCell className="text-center">
-                          <button
-                            className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
-                            onClick={() => deleteIngredient(item._id)}
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
+                          {(
+    item.createdBy || 
+    (() => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        return user?.userType === "admin";
+      } catch {
+        return false;
+      }
+    })()
+  ) && (
+    <button
+      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
+      onClick={() => deleteIngredient(item._id)}
+    >
+      <Trash2 className="w-5 h-5" />
+    </button>
+  )}
                         </TableCell>
                       </TableRow>
                     ))
