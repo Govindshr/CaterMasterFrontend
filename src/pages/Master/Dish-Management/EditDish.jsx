@@ -1,8 +1,7 @@
-// UI for adding a new dish along with ingredients
-// Design inspired by AddBooking component provided
+// src/pages/UpdateDish.jsx
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -16,12 +15,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, PlusCircle, Trash2, Leaf, Flame } from "lucide-react";
-import { protectedPostApi, protectedGetApi } from "@/services/nodeapi";
+import { ArrowLeft, PlusCircle, Trash2 } from "lucide-react";
+import { protectedGetApi, protectedUpdateApi } from "@/services/nodeapi";
 import { config } from "@/services/nodeconfig";
-import { Checkbox } from "@/components/ui/checkbox";
+import Swal from "sweetalert2";
 
-export default function AddDish() {
+export default function UpdateDish() {
+  const { id } = useParams();
   const { i18n } = useTranslation();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +43,7 @@ export default function AddDish() {
     cookingTimeMinutes: "",
     estimatedCostPerServing: "",
     sellingPricePerServing: "",
-    baseServingPeople: "", // ✅ NEW FIELD
+    baseServingPeople: "",
   });
 
   const [ingredientRows, setIngredientRows] = useState([
@@ -54,70 +54,68 @@ export default function AddDish() {
     fetchCategories();
     fetchSubCategories();
     fetchIngredients();
+    fetchDish();
   }, [i18n.language]);
 
+  const token = localStorage.getItem("token");
+
   const fetchCategories = async () => {
-    const token = localStorage.getItem("token");
     const res = await protectedGetApi(config.GetDishCategories, token);
     setDishCategories(res.data || []);
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!dishForm.nameEn.trim()) {
-      newErrors.nameEn = "Dish name in English is required";
-    }
-
-    if (!dishForm.nameHi.trim()) {
-      newErrors.nameHi = "Dish name in Hindi is required";
-    }
-
-    if (!dishForm.categoryId) {
-      newErrors.categoryId = "Category is required";
-    }
-
-    if (!dishForm.subCategoryId) {
-      newErrors.subCategoryId = "Subcategory is required";
-    }
-
-    // Ingredient validations
-    if (ingredientRows.length > 0) {
-      const mainIngredients = ingredientRows.filter((ing) => ing.isMain);
-      if (mainIngredients.length === 0) {
-        newErrors.ingredients = "At least one main ingredient is required";
-      }
-      if (mainIngredients.length > 1) {
-        newErrors.ingredients = "Only one main ingredient is allowed";
-      }
-
-      ingredientRows.forEach((ing, index) => {
-        if (!ing.ingredientId) {
-          newErrors[`ingredient_${index}`] = "Ingredient is required";
-        }
-        if (!ing.quantity || ing.quantity <= 0) {
-          newErrors[`quantity_${index}`] = "Quantity must be greater than 0";
-        }
-      });
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const fetchSubCategories = async () => {
-    const token = localStorage.getItem("token");
     const res = await protectedGetApi(config.GetDishSubCategories, token);
     setDishSubCategories(res.data || []);
   };
 
   const fetchIngredients = async () => {
-    const token = localStorage.getItem("token");
     const res = await protectedGetApi(
       `${config.GetIngredients}?page=1&limit=1000`,
       token
-    ); // large limit to load all
+    );
     setIngredients(res?.data?.ingredients || []);
+  };
+   const getUnitSymbolFor = (ingredientId) => {
+    if (!ingredientId) return "";
+    const ing = ingredients.find((i) => i._id === ingredientId);
+    return ing?.unitTypeId?.symbol || "";
+  };
+
+  const fetchDish = async () => {
+    try {
+      const res = await protectedGetApi(`${config.GetDishes}/${id}`, token);
+      const dish = res.data;
+
+      setDishForm({
+        nameEn: dish.name?.en || "",
+        nameHi: dish.name?.hi || "",
+        categoryId: dish.categoryId?._id || "",
+        subCategoryId: dish.subCategoryId?._id || "",
+        isVegetarian: dish.isVegetarian,
+        isVegan: dish.isVegan,
+        spiceLevel: dish.spiceLevel,
+        instructions: dish.instructions || "",
+        preparationTimeMinutes: dish.preparationTimeMinutes || "",
+        cookingTimeMinutes: dish.cookingTimeMinutes || "",
+        estimatedCostPerServing: dish.estimatedCostPerServing || "",
+        sellingPricePerServing: dish.sellingPricePerServing || "",
+        baseServingPeople: dish.baseServingPeople || "",
+      });
+
+      if (dish.ingredients?.length > 0) {
+        setIngredientRows(
+          dish.ingredients.map((ing) => ({
+            ingredientId: ing.ingredientId?._id,
+            quantity: ing.quantity,
+            isMain: ing.isMainIngredient,
+            unit: ing.ingredientId?.unitTypeId?.symbol || "",
+          }))
+        );
+      }
+    } catch (err) {
+      setApiError("Failed to load dish details");
+    }
   };
 
   const handleDishChange = (e) => {
@@ -126,13 +124,6 @@ export default function AddDish() {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-  };
-
-  // Returns unit symbol for a given ingredient id using the already-fetched list
-  const getUnitSymbolFor = (ingredientId) => {
-    if (!ingredientId) return "";
-    const ing = ingredients.find((i) => i._id === ingredientId);
-    return ing?.unitTypeId?.symbol || "";
   };
 
   const handleIngredientChange = (index, key, value) => {
@@ -159,31 +150,28 @@ export default function AddDish() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError("");
-
-    if (!validateForm()) return; // stop if invalid
-
     setIsLoading(true);
-    const token = localStorage.getItem("token");
+
     const payload = {
       name: { en: dishForm.nameEn, hi: dishForm.nameHi },
       categoryId: dishForm.categoryId,
       subCategoryId: dishForm.subCategoryId,
       instructions: dishForm.instructions,
-      ...(dishForm.preparationTimeMinutes
-        ? { preparationTimeMinutes: parseInt(dishForm.preparationTimeMinutes, 10) }
-        : {}),
-      ...(dishForm.cookingTimeMinutes
-        ? { cookingTimeMinutes: parseInt(dishForm.cookingTimeMinutes, 10) }
-        : {}),
-      ...(dishForm.estimatedCostPerServing
-        ? { estimatedCostPerServing: parseFloat(dishForm.estimatedCostPerServing) }
-        : {}),
-      ...(dishForm.sellingPricePerServing
-        ? { sellingPricePerServing: parseFloat(dishForm.sellingPricePerServing) }
-        : {}),
-      ...(dishForm.baseServingPeople
-        ? { baseServingPeople: parseInt(dishForm.baseServingPeople, 10) }
-        : {}),
+      ...(dishForm.preparationTimeMinutes && {
+        preparationTimeMinutes: parseInt(dishForm.preparationTimeMinutes, 10),
+      }),
+      ...(dishForm.cookingTimeMinutes && {
+        cookingTimeMinutes: parseInt(dishForm.cookingTimeMinutes, 10),
+      }),
+      ...(dishForm.estimatedCostPerServing && {
+        estimatedCostPerServing: parseFloat(dishForm.estimatedCostPerServing),
+      }),
+      ...(dishForm.sellingPricePerServing && {
+        sellingPricePerServing: parseFloat(dishForm.sellingPricePerServing),
+      }),
+      ...(dishForm.baseServingPeople && {
+        baseServingPeople: parseInt(dishForm.baseServingPeople, 10),
+      }),
       isVegetarian: dishForm.isVegetarian,
       isVegan: dishForm.isVegan,
       spiceLevel: dishForm.spiceLevel,
@@ -193,23 +181,33 @@ export default function AddDish() {
         isMainIngredient: ing.isMain,
       })),
     };
+
     try {
-      await protectedPostApi(config.AddDish, payload, token);
-      alert("Dish Created Successfully!");
-      navigate("/items-list");
+      await protectedUpdateApi(`${config.GetDishes}/${id}`, payload, token);
+     Swal.fire({
+  icon: "success",
+  title: "Success",
+  text: "Dish updated successfully!",
+  confirmButtonColor: "#16a34a", // green
+}).then(() => {
+  navigate("/items-list");
+});
+
     } catch (error) {
-      setApiError(error.message || "Error while saving dish");
+      setApiError(error.message || "Error while updating dish");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-   <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-2 sm:px-4 py-6 mb-5">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-2 sm:px-4 py-6 mb-5">
       <Card className="w-full max-w-6xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-800 mb-5">
         <CardHeader className="p-4 sm:p-5 border-b bg-white dark:bg-gray-950">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 dark:text-gray-100">Add Dish</h2>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 dark:text-gray-100">
+              Update Dish
+            </h2>
             <Button variant="outline" onClick={() => navigate("/items-list")}>
               <ArrowLeft className="w-4 h-4 mr-1" /> Back
             </Button>
@@ -304,7 +302,8 @@ export default function AddDish() {
                 </div>
               </div>
             </section>
-            {/* Informative Line  */}
+
+                        {/* Informative Line  */}
              <p className="text-sm font-bold text-gray-600 dark:text-gray-400 mb-2 italic">
     The ingredients you are filling in this are for 100 people.
   </p>
@@ -398,13 +397,14 @@ export default function AddDish() {
               </div>
             </section>
 
+
             <div className="pt-2">
               <Button
                 type="submit"
                 disabled={isLoading}
                 className="w-full md:w-auto bg-green-600 hover:bg-green-700"
               >
-                {isLoading ? "Saving Dish..." : "Save Dish"}
+                {isLoading ? "Updating Dish..." : "Update Dish"}
               </Button>
             </div>
           </form>

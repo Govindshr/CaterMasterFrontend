@@ -17,7 +17,9 @@ import {
   ChevronRight,
   Settings,
   ListChecks,
-  Zap 
+  Zap,
+  Save 
+
 } from "lucide-react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import {
@@ -34,7 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
-import { protectedGetApi, protectedDeleteApi } from "@/services/nodeapi";
+import { protectedGetApi, protectedDeleteApi,protectedUpdateApi } from "@/services/nodeapi";
 import { config } from "@/services/nodeconfig";
 import { useTranslation } from "react-i18next";
 import Swal from "sweetalert2";
@@ -56,12 +58,43 @@ export default function Bookings() {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [selectedBookingIdForGenerate, setSelectedBookingIdForGenerate] =
     useState(null);
+      const [selectedBookingID, setSelectedBookingId] =
+    useState(null);
+// State for facilities modal
+const [allFacilities, setAllFacilities] = useState([]);
+const [selectedFacilities, setSelectedFacilities] = useState([]);
+
+const [showFacilitiesModal, setShowFacilitiesModal] = useState(false);
+
 
   const navigate = useNavigate();
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+
+ useEffect(() => {
+  const fetchFacilities = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await protectedGetApi(config.GetFacilities, token);
+
+      // ✅ Only keep facilities with scope = booking
+      const bookingFacilities = (res.data || []).filter(
+        (f) => f.scope === "booking"
+      );
+
+      setAllFacilities(bookingFacilities);
+    } catch (err) {
+      console.error("Failed to load facilities:", err);
+    }
+  };
+
+  if (showFacilitiesModal) {
+    fetchFacilities();
+  }
+}, [showFacilitiesModal]);
+
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -292,7 +325,11 @@ export default function Bookings() {
   {/* View Booking */}
   <Button
     className="text-gray-800 hover:text-blue-700 hover:bg-white bg-transparent p-2"
-    onClick={() => navigate(`/view-booking/${booking._id}`)}
+   onClick={() => {
+   setSelectedBookingId(booking._id);
+   setSelectedFacilities(booking.facilities || []); // ✅ preload assigned
+   setShowFacilitiesModal(true);
+ }}
     title="View Booking"
   >
     <Eye className="w-5 h-5" />
@@ -306,6 +343,15 @@ export default function Bookings() {
   >
     <Plus className="w-5 h-5" />
   </Button>
+
+{/* Assign Facilities */}
+<Button
+  className="text-gray-800 hover:text-blue-700 hover:bg-white bg-transparent p-2"
+  onClick={() => {setShowFacilitiesModal(true),setSelectedBookingId(booking._id)}}
+  title="Assign Facilities"
+>
+  <ListChecks className="w-5 h-5" />
+</Button>
 
   {/* Generate List */}
   <Button
@@ -387,6 +433,20 @@ export default function Bookings() {
                         >
                           <Plus className="w-5 h-5" />
                         </Button>
+
+                        {/* Assign Facilities */}
+<Button
+  className="text-gray-800 hover:text-blue-700 hover:bg-white bg-transparent p-2"
+  onClick={() => {
+   setSelectedBookingId(booking._id);
+   setSelectedFacilities(booking.facilities || []); // ✅ preload assigned
+   setShowFacilitiesModal(true);
+ }}
+  title="Assign Facilities"
+>
+  <ListChecks className="w-5 h-5" />
+</Button>
+
 
                         {/* Generate List */}
                         <Button
@@ -647,6 +707,111 @@ export default function Bookings() {
     </div>
   </DialogContent>
 </Dialog>
+
+
+{/* Facilities Modal */}
+{/* Facilities Modal */}
+<Dialog open={showFacilitiesModal} onOpenChange={setShowFacilitiesModal}>
+  <DialogContent className="w-[80vw] h-[90vh] max-w-4xl bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl">
+    <DialogHeader>
+      <DialogTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">
+        Assign Facilities
+      </DialogTitle>
+    </DialogHeader>
+
+    {/* Select/Deselect All */}
+    <div className="flex justify-start gap-4 items-center mb-4">
+      <Button
+        variant="outline"
+        className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100"
+        onClick={() => setSelectedFacilities(allFacilities)}
+      >
+        ✅ Select All
+      </Button>
+      <Button
+        variant="outline"
+        className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+        onClick={() => setSelectedFacilities([])}
+      >
+        ❌ Deselect All
+      </Button>
+    </div>
+
+    {/* Facilities List - scrollable */}
+ <div className="max-h-[400px] overflow-y-auto pr-2">
+  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    {allFacilities.map((facility) => (
+      <label
+        key={facility._id}
+      className={`flex items-center gap-2 p-2 rounded-md cursor-pointer shadow-sm border text-sm transition-all
+   ${
+     selectedFacilities.some(
+   (f) => (f.facilityId || f._id) === facility._id
+ )
+       ? "bg-blue-50 border-blue-400 text-blue-800 font-medium"
+       : "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600"
+   }`}
+      >
+        <input
+          type="checkbox"
+          checked={selectedFacilities.some((f) => (f.facilityId || f._id) === facility._id)}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedFacilities((prev) => [...prev, { ...facility, facilityId: facility._id }]);
+            } else {
+              setSelectedFacilities((prev) =>
+                prev.filter((f) => f.facilityId !== facility._id && f._id !== facility._id)
+              );
+            }
+          }}
+        />
+        <span className="text-gray-800 dark:text-gray-200">
+          {facility.name?.[i18n.language] || facility.name?.en}
+        </span>
+      </label>
+    ))}
+  </div>
+</div>
+
+
+
+    {/* Save Button */}
+    <div className="mt-6 flex justify-end">
+     <Button
+  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+  onClick={async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const payload = {
+       facilities: selectedFacilities.map((f) => ({
+    facilityId: f.facilityId || f._id, // ✅ handle both cases
+    quantity: f.quantity || 1,
+  })),
+      };
+
+      await protectedUpdateApi(
+        `${config.AddBooking}/${selectedBookingID}`,
+        payload,
+        token
+      );
+
+      Swal.fire("Success!", "Facilities updated successfully!", "success");
+      setShowFacilitiesModal(false);
+      fetchBookings(currentPage);
+    } catch (error) {
+      Swal.fire("Error!", "Failed to update facilities", "error");
+    }
+  }}
+>
+  <Save/> Save Facilities
+</Button>
+
+
+    </div>
+  </DialogContent>
+</Dialog>
+
+
 
     </>
   );

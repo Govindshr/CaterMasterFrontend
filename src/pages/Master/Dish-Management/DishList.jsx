@@ -7,13 +7,12 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { protectedGetApi, protectedUploadFileApi } from "@/services/nodeapi";
+import { protectedGetApi, protectedUploadFileApi ,protectedDeleteApi} from "@/services/nodeapi";
 import Swal from "sweetalert2";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-
 import { config } from "@/services/nodeconfig";
 import { Button } from "@/components/ui/button";
-import { Filter, X ,Plus} from "lucide-react";
+import { Filter, X ,Plus  , Eye , Pencil , Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 
@@ -103,6 +102,32 @@ const handleBulkUpload = async () => {
 
   const resetPageOnFilterChange = () => setCurrentPage(1);
 
+    const handleDeleteBooking = async (bookingId) => {
+      const confirmed = await Swal.fire({
+        title: "Are you sure?",
+        text: "This will permanently delete the Dish.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!",
+      });
+  
+      if (confirmed.isConfirmed) {
+        try {
+          const token = localStorage.getItem("token");
+          await protectedDeleteApi(`${config.AddDish}/${bookingId}`, token);
+          Swal.fire("Deleted!", "Dish has been deleted.", "success");
+          fetchDishes(currentPage); // Refresh list
+        } catch (error) {
+          Swal.fire(
+            "Error!",
+            error.response?.data?.message || "Failed to delete",
+            "error"
+          );
+        }
+      }
+    };
   const clearFilters = () => {
     setCategoryFilter("");
     setSubcategoryFilter("");
@@ -273,6 +298,33 @@ const handleBulkUpload = async () => {
                     <TableCell>{item.name?.en}</TableCell>
                     <TableCell>{item.categoryId?.name?.en}</TableCell>
                     <TableCell>{item.subCategoryId?.name?.en}</TableCell>
+                     <TableCell className="flex justify-center space-x-2">
+
+  <Button
+    className="text-gray-800 hover:text-blue-700 hover:bg-white bg-transparent p-2"
+    onClick={() => navigate(`/view-item/${item._id}`)}
+    title="View Booking"
+  >
+    <Eye className="w-5 h-5" />
+  </Button>
+
+  <Button
+    className="text-gray-800 hover:text-blue-700 hover:bg-white bg-transparent p-2"
+    onClick={() => navigate(`/edit-item/${item._id}`)}
+    title="Add Menu"
+  >
+    <Pencil className="w-5 h-5" />
+  </Button>
+
+  {/* Delete Booking */}
+  <Button
+   className="text-gray-800 hover:text-blue-700 hover:bg-white bg-transparent p-2"
+    onClick={() => handleDeleteBooking(item._id)}
+    title="Delete Booking"
+  >
+    <Trash2 className="w-5 h-5" />
+  </Button>
+</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -297,6 +349,37 @@ const handleBulkUpload = async () => {
                     <span className="opacity-70">Sub:</span> {item.subCategoryId?.name?.en || "-"}
                   </span>
                 </div>
+                
+                  <div className="flex justify-end mt-2 gap-2 relative">
+                        <Button
+                          className="text-blue-800 hover:text-blue-700 hover:bg-white bg-transparent p-2"
+                          onClick={() =>
+                            navigate(`/view-item/${item._id}`)
+                          }
+                          title="View Booking"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </Button>
+
+
+                        {/* Generate List */}
+                        <Button
+                          className="text-green-800 hover:text-green-700 hover:bg-white bg-transparent p-2"
+                        onClick={() => navigate(`/edit-item/${item._id}`)}
+                          title="Edit Dish"
+                        >
+                          <Pencil className="w-5 h-5" />
+                        </Button>
+
+                        {/* Delete Booking */}
+                        <Button
+                          className="text-red-800 hover:text-red-700 hover:bg-white bg-transparent p-2"
+                          onClick={() => handleDeleteBooking(item._id)}
+                          title="Delete "
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </Button>
+                      </div>
               </div>
             ))}
           </div>

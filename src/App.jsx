@@ -30,6 +30,8 @@ import UnitTypes from "./pages/Master/UnitTypes/UnitTypes";
 import AddIngredient from "./pages/Master/Ingredients/AddIngredients";
 import IngredientList from "./pages/Master/Ingredients/IngredientsList";
 import PrintMenu from "./pages/Bookings/PrinteMenu";
+import UpdateDish from "./pages/Master/Dish-Management/EditDish";
+import ViewDish from "./pages/Master/Dish-Management/ViewDIsh";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -217,6 +219,16 @@ function AppWrapper() {
             <Route path="/add-item" element={
               <ProtectedRoute>
                 <AddNewItem />
+              </ProtectedRoute>
+            } />
+            <Route path="/view-item/:id" element={
+              <ProtectedRoute>
+                <ViewDish />
+              </ProtectedRoute>
+            } />
+            <Route path="/edit-item/:id" element={
+              <ProtectedRoute>
+                <UpdateDish />
               </ProtectedRoute>
             } />
             <Route path="/user-management" element={
