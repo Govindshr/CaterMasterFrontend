@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { protectedGetApi, protectedDeleteApi, protectedUploadFileApi } from "@/services/nodeapi";
 import { config } from "@/services/nodeconfig";
 import { Button } from "@/components/ui/button";
-import { Filter, X, Plus, Trash2, Upload } from "lucide-react";
+import { Filter, X, Plus, Trash2, Upload ,FilePlus2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import Swal from "sweetalert2";
@@ -102,7 +102,7 @@ const fetchIngredients = async () => {
     if (result.isConfirmed) {
       try {
         const token = localStorage.getItem("token");
-        await protectedDeleteApi(`${config.DeleteIngredient}/${id}`, token);
+        await protectedDeleteApi(`${config.AddIngredients}/${id}`, token);
         Swal.fire("Deleted!", "Ingredient has been deleted.", "success");
         fetchIngredients();
       } catch (error) {
@@ -152,7 +152,7 @@ const clearFilters = () => {
    className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none w-full sm:w-auto"
    onClick={() => setIsModalOpen(true)}
  >
-   Bulk Upload
+ <FilePlus2/>  Bulk Upload
  </Button>
         </div>
       </CardHeader>
@@ -299,10 +299,26 @@ const clearFilters = () => {
                         <TableCell>{ing.ingredientTypeId?.name?.en}</TableCell>
                         <TableCell>{ing.unitTypeId?.symbol}</TableCell>
                         <TableCell>₹{ing.pricePerUnit}</TableCell>
-                        <TableCell>
-                          <button onClick={() => handleDelete(ing._id)} className="text-red-600 hover:text-red-700">
-                            <Trash2 className="w-5 h-5" />
-                          </button>
+                       
+                         <TableCell className="text-center">
+                        <button
+  className="text-red-600 hover:text-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+  onClick={() => handleDelete(ing._id)}
+  disabled={!(
+    ing.createdBy ||
+    (() => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        return user?.userType === "admin";
+      } catch {
+        return false;
+      }
+    })()
+  )}
+>
+  <Trash2 className="w-5 h-5" />
+</button>
+
                         </TableCell>
                       </TableRow>
                     ))}

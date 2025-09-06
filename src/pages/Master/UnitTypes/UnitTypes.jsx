@@ -233,7 +233,10 @@ const [errors, setErrors] = useState({});
                         <TableCell>{unit.category}</TableCell>
                         {/* <TableCell>{unit.conversionToBase}</TableCell> */}
                         <TableCell className="text-center">
-                         {(
+                         <button
+  className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+  onClick={() => deleteUnit(unit._id)}
+  disabled={!(
     unit.createdBy ||
     (() => {
       try {
@@ -243,14 +246,11 @@ const [errors, setErrors] = useState({});
         return false;
       }
     })()
-  ) && (
-    <button
-      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
-      onClick={() => deleteUnit(unit._id)}
-    >
-      <Trash2 className="w-5 h-5" />
-    </button>
   )}
+>
+  <Trash2 className="w-5 h-5" />
+</button>
+
                         </TableCell>
                       </TableRow>
                     ))

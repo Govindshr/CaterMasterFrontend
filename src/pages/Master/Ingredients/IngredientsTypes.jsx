@@ -205,8 +205,11 @@ const [errors, setErrors] = useState({});
                           <span className="inline-block w-6 h-6 rounded-full border" style={{ backgroundColor: item.color }}></span>
                         </TableCell> */}
                         <TableCell className="text-center">
-                          {(
-    item.createdBy || 
+                          <button
+  className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+  onClick={() => deleteIngredient(item._id)}
+  disabled={!(
+    item.createdBy ||
     (() => {
       try {
         const user = JSON.parse(localStorage.getItem("user"));
@@ -215,14 +218,11 @@ const [errors, setErrors] = useState({});
         return false;
       }
     })()
-  ) && (
-    <button
-      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg"
-      onClick={() => deleteIngredient(item._id)}
-    >
-      <Trash2 className="w-5 h-5" />
-    </button>
   )}
+>
+  <Trash2 className="w-5 h-5" />
+</button>
+
                         </TableCell>
                       </TableRow>
                     ))

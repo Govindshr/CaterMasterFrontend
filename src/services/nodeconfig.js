@@ -43,6 +43,7 @@ export const config = {
   DeleteUnitTypes: (id) => `${Base_URI}/dropdowns/unit-types/${id}`,
    GetIngredients: `${Base_URI}/ingredients`,
    AddIngredients: `${Base_URI}/ingredients`,
+   
    AddDish: `${Base_URI}/dishes`,
    GetDishes: `${Base_URI}/dishes`,
    SaveEventDishIngredient: (eventId, dishId) =>

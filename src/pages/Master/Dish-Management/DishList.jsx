@@ -12,7 +12,7 @@ import Swal from "sweetalert2";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { config } from "@/services/nodeconfig";
 import { Button } from "@/components/ui/button";
-import { Filter, X ,Plus  , Eye , Pencil , Trash2 } from "lucide-react";
+import { Filter, X ,Plus  , Eye , Pencil , Trash2 ,FilePlus2} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 
@@ -152,7 +152,7 @@ const handleBulkUpload = async () => {
    className="bg-green-600 hover:bg-green-700 text-white flex-1 sm:flex-none w-full sm:w-auto"
   onClick={() => setIsModalOpen(true)}
  >
-   Bulk Upload
+  <FilePlus2/> Bulk Upload
  </Button>
         </div>
       </CardHeader>
@@ -317,13 +317,26 @@ const handleBulkUpload = async () => {
   </Button>
 
   {/* Delete Booking */}
-  <Button
-   className="text-gray-800 hover:text-blue-700 hover:bg-white bg-transparent p-2"
-    onClick={() => handleDeleteBooking(item._id)}
-    title="Delete Booking"
-  >
-    <Trash2 className="w-5 h-5" />
-  </Button>
+ 
+<Button
+  className="text-gray-800 hover:text-blue-700 hover:bg-white bg-transparent p-2"
+  onClick={() => handleDeleteBooking(item._id)}
+  title="Delete Booking"
+  disabled={!(
+    item.createdBy ||
+    (() => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user"));
+        return user?.userType === "admin";
+      } catch {
+        return false;
+      }
+    })()
+  )}
+>
+  <Trash2 className="w-5 h-5" />
+</Button>
+
 </TableCell>
                   </TableRow>
                 ))}
