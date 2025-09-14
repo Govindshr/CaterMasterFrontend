@@ -86,7 +86,7 @@ const handleBulkUpload = async () => {
       const token = localStorage.getItem("token");
       const params = new URLSearchParams({
         page: currentPage,
-        limit: 10,
+        limit: 50,
        search: nameFilter,        // 🔄 backend uses `search`
        categoryId: categoryFilter, // 🔄 backend uses `categoryId`
        subCategoryId: subcategoryFilter, // 🔄 backend uses `subCategoryId`

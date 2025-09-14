@@ -325,11 +325,9 @@ const [showFacilitiesModal, setShowFacilitiesModal] = useState(false);
   {/* View Booking */}
   <Button
     className="text-gray-800 hover:text-blue-700 hover:bg-white bg-transparent p-2"
-   onClick={() => {
-   setSelectedBookingId(booking._id);
-   setSelectedFacilities(booking.facilities || []); // ✅ preload assigned
-   setShowFacilitiesModal(true);
- }}
+  onClick={() =>
+                            navigate(`/view-booking/${booking._id}`)
+                          }
     title="View Booking"
   >
     <Eye className="w-5 h-5" />

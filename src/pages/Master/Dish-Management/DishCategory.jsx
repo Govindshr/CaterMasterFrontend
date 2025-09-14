@@ -197,6 +197,7 @@ export default function DishCategory() {
               <Table>
                 <TableHeader className="bg-gray-50 dark:bg-gray-800/50">
                   <TableRow>
+                    <TableHead>#</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead>Sort Order</TableHead>
@@ -207,6 +208,7 @@ export default function DishCategory() {
                   {categories.length > 0 ? (
                     categories.map((cat, index) => (
                       <TableRow key={index}>
+                         <TableCell>{index + 1}</TableCell>
                         <TableCell>{cat.name?.[i18n.language] || cat.name?.en}</TableCell>
                         <TableCell>{cat.description?.[i18n.language] || cat.description?.en}</TableCell>
                         <TableCell>{cat.sortOrder}</TableCell>

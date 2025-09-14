@@ -239,6 +239,7 @@ const [errors, setErrors] = useState({});
               <Table>
                 <TableHeader className="bg-gray-50 dark:bg-gray-800/50">
                   <TableRow>
+                    <TableHead>#</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead>Description</TableHead>
                     <TableHead>Category</TableHead>
@@ -250,6 +251,7 @@ const [errors, setErrors] = useState({});
                   {subCategories.length > 0 ? (
                     subCategories.map((sub, index) => (
                       <TableRow key={index}>
+                         <TableCell>{index + 1}</TableCell>
                         <TableCell>{sub.name?.[i18n.language] || sub.name?.en}</TableCell>
                         <TableCell>{sub.description?.[i18n.language] || sub.description?.en}</TableCell>
                         <TableCell>
