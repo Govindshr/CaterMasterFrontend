@@ -285,6 +285,7 @@ const clearFilters = () => {
                     <TableRow>
                       <TableHead>#</TableHead>
                       <TableHead>Name</TableHead>
+                      <TableHead>Name (Hindi)</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Unit</TableHead>
                       <TableHead>Price</TableHead>
@@ -296,6 +297,7 @@ const clearFilters = () => {
                       <TableRow key={ing._id}>
                         <TableCell>{(page - 1) * 50 + index + 1}</TableCell>
                         <TableCell>{ing.name?.en}</TableCell>
+                         <TableCell>{ing.name?.hi}</TableCell>
                         <TableCell>{ing.ingredientTypeId?.name?.en}</TableCell>
                         <TableCell>{ing.unitTypeId?.symbol}</TableCell>
                         <TableCell>₹{ing.pricePerUnit}</TableCell>
