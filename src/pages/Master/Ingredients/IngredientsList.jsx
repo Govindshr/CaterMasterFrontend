@@ -332,7 +332,10 @@ const clearFilters = () => {
                <div className="md:hidden space-y-2 w-full max-w-full">
                 {ingredients.map((ing) => (
                   <div key={ing._id} className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+                    <div className="flex justify-between">
                     <p className="text-[14px] font-medium text-gray-900 truncate">{ing.name?.en}</p>
+                     <p className="text-[14px] font-medium text-gray-900 truncate">{ing.name?.hi}</p>
+                    </div>
                     <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
                       <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 ring-1 ring-inset ring-blue-200">
                         {ing.ingredientTypeId?.name?.en}
