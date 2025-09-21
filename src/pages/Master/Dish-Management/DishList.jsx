@@ -287,8 +287,10 @@ const handleBulkUpload = async () => {
                 <TableRow>
                   <TableHead>#</TableHead>
                   <TableHead>Name</TableHead>
+                  <TableHead>Name(hindi)</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Subcategory</TableHead>
+                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -296,6 +298,7 @@ const handleBulkUpload = async () => {
                   <TableRow key={item._id} className="hover:bg-gray-50">
                      <TableCell>{index+1}</TableCell>
                     <TableCell>{item.name?.en}</TableCell>
+                    <TableCell>{item.name?.hi}</TableCell>
                     <TableCell>{item.categoryId?.name?.en}</TableCell>
                     <TableCell>{item.subCategoryId?.name?.en}</TableCell>
                      <TableCell className="flex justify-center space-x-2">
@@ -353,6 +356,9 @@ const handleBulkUpload = async () => {
               >
                 <p className="text-[14px] font-medium text-gray-900 truncate dark:text-gray-100 leading-5">
                   {item.name?.en}
+                </p>
+                 <p className="text-[14px] font-medium text-gray-900 truncate dark:text-gray-100 leading-5  mt-3">
+                  {item.name?.hi}
                 </p>
                 <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
                   <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700 ring-1 ring-inset ring-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:ring-blue-700/40">

@@ -29,6 +29,7 @@ export default function UpdateDish() {
   const [dishCategories, setDishCategories] = useState([]);
   const [dishSubCategories, setDishSubCategories] = useState([]);
   const [ingredients, setIngredients] = useState([]);
+  const [dishData, setDishData] = useState(null);
   const [errors, setErrors] = useState({});
   const [dishForm, setDishForm] = useState({
     nameEn: "",
@@ -81,42 +82,49 @@ export default function UpdateDish() {
     const ing = ingredients.find((i) => i._id === ingredientId);
     return ing?.unitTypeId?.symbol || "";
   };
+  useEffect(() => {
+  if (dishData && ingredients.length > 0) {
+    setIngredientRows(
+      dishData.ingredients?.map((ing) => ({
+        ingredientId: ing.ingredientId?._id,
+        quantity: ing.quantity,
+        isMain: ing.isMainIngredient,
+        unit:
+          ingredients.find((i) => i._id === ing.ingredientId?._id)?.unitTypeId
+            ?.symbol || "",
+      })) || []
+    );
+  }
+}, [dishData, ingredients]);
 
-  const fetchDish = async () => {
-    try {
-      const res = await protectedGetApi(`${config.GetDishes}/${id}`, token);
-      const dish = res.data;
 
-      setDishForm({
-        nameEn: dish.name?.en || "",
-        nameHi: dish.name?.hi || "",
-        categoryId: dish.categoryId?._id || "",
-        subCategoryId: dish.subCategoryId?._id || "",
-        isVegetarian: dish.isVegetarian,
-        isVegan: dish.isVegan,
-        spiceLevel: dish.spiceLevel,
-        instructions: dish.instructions || "",
-        preparationTimeMinutes: dish.preparationTimeMinutes || "",
-        cookingTimeMinutes: dish.cookingTimeMinutes || "",
-        estimatedCostPerServing: dish.estimatedCostPerServing || "",
-        sellingPricePerServing: dish.sellingPricePerServing || "",
-        baseServingPeople: dish.baseServingPeople || "",
-      });
+const fetchDish = async () => {
+  try {
+    const res = await protectedGetApi(`${config.GetDishes}/${id}`, token);
+    const dish = res.data;
 
-      if (dish.ingredients?.length > 0) {
-        setIngredientRows(
-          dish.ingredients.map((ing) => ({
-            ingredientId: ing.ingredientId?._id,
-            quantity: ing.quantity,
-            isMain: ing.isMainIngredient,
-            unit: ing.ingredientId?.unitTypeId?.symbol || "",
-          }))
-        );
-      }
-    } catch (err) {
-      setApiError("Failed to load dish details");
-    }
-  };
+    setDishData(dish); // keep full dish
+
+    setDishForm({
+      nameEn: dish.name?.en || "",
+      nameHi: dish.name?.hi || "",
+      categoryId: dish.categoryId?._id || "",
+      subCategoryId: dish.subCategoryId?._id || "",
+      isVegetarian: dish.isVegetarian,
+      isVegan: dish.isVegan,
+      spiceLevel: dish.spiceLevel,
+      instructions: dish.instructions || "",
+      preparationTimeMinutes: dish.preparationTimeMinutes || "",
+      cookingTimeMinutes: dish.cookingTimeMinutes || "",
+      estimatedCostPerServing: dish.estimatedCostPerServing || "",
+      sellingPricePerServing: dish.sellingPricePerServing || "",
+      baseServingPeople: dish.baseServingPeople || "",
+    });
+  } catch (err) {
+    setApiError("Failed to load dish details");
+  }
+};
+
 
   const handleDishChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -199,6 +207,9 @@ export default function UpdateDish() {
       setIsLoading(false);
     }
   };
+const filteredSubCategories = dishSubCategories.filter(
+  (sub) => sub.categoryId === dishForm.categoryId
+);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-2 sm:px-4 py-6 mb-5">
@@ -246,51 +257,58 @@ export default function UpdateDish() {
                 </div>
                 <div>
                   <Label>Category</Label>
-                  <Select
-                    value={dishForm.categoryId}
-                    onValueChange={(val) =>
-                      setDishForm((prev) => ({ ...prev, categoryId: val }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {dishCategories.map((cat) => (
-                        <SelectItem key={cat._id} value={cat._id}>
-                          {cat.name?.[i18n.language] || cat.name?.en}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+               <Select
+  value={dishForm.categoryId}
+  onValueChange={(val) =>
+    setDishForm((prev) => ({
+      ...prev,
+      categoryId: val,
+      subCategoryId: "", // ✅ reset subcategory when category changes
+    }))
+  }
+>
+  <SelectTrigger>
+    <SelectValue placeholder="Select Category" />
+  </SelectTrigger>
+  <SelectContent>
+    {dishCategories.map((cat) => (
+      <SelectItem key={cat._id} value={cat._id}>
+        {cat.name?.[i18n.language] || cat.name?.en}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+
                   {errors.categoryId && (
                     <p className="text-red-500 text-sm">{errors.categoryId}</p>
                   )}
                 </div>
 
-                <div>
-                  <Label>Subcategory</Label>
-                  <Select
-                    value={dishForm.subCategoryId}
-                    onValueChange={(val) =>
-                      setDishForm((prev) => ({ ...prev, subCategoryId: val }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Subcategory" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {dishSubCategories.map((sub) => (
-                        <SelectItem key={sub._id} value={sub._id}>
-                          {sub.name?.[i18n.language] || sub.name?.en}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                   {errors.subCategoryId && (
-                    <p className="text-red-500 text-sm">{errors.subCategoryId}</p>
-                  )}
-                </div>
+              <div>
+  <Label>Subcategory</Label>
+  <Select
+    value={dishForm.subCategoryId}
+    onValueChange={(val) =>
+      setDishForm((prev) => ({ ...prev, subCategoryId: val }))
+    }
+    disabled={!dishForm.categoryId} // ✅ disable until category is selected
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Select Subcategory" />
+    </SelectTrigger>
+    <SelectContent>
+      {filteredSubCategories.map((sub) => (
+        <SelectItem key={sub._id} value={sub._id}>
+          {sub.name?.[i18n.language] || sub.name?.en}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+  {errors.subCategoryId && (
+    <p className="text-red-500 text-sm">{errors.subCategoryId}</p>
+  )}
+</div>
+
                 <div className="md:col-span-2">
                   <Label>Instructions</Label>
                   <Textarea

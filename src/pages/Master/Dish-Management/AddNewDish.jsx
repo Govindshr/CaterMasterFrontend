@@ -203,6 +203,10 @@ export default function AddDish() {
       setIsLoading(false);
     }
   };
+// Add this derived variable inside your component
+const filteredSubCategories = dishSubCategories.filter(
+  (sub) => sub.categoryId === dishForm.categoryId
+);
 
   return (
    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-2 sm:px-4 py-6 mb-5">
@@ -270,29 +274,31 @@ export default function AddDish() {
                   )}
                 </div>
 
-                <div>
-                  <Label>Subcategory</Label>
-                  <Select
-                    value={dishForm.subCategoryId}
-                    onValueChange={(val) =>
-                      setDishForm((prev) => ({ ...prev, subCategoryId: val }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select Subcategory" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {dishSubCategories.map((sub) => (
-                        <SelectItem key={sub._id} value={sub._id}>
-                          {sub.name?.[i18n.language] || sub.name?.en}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                   {errors.subCategoryId && (
-                    <p className="text-red-500 text-sm">{errors.subCategoryId}</p>
-                  )}
-                </div>
+              <div>
+  <Label>Subcategory</Label>
+  <Select
+    value={dishForm.subCategoryId}
+    onValueChange={(val) =>
+      setDishForm((prev) => ({ ...prev, subCategoryId: val }))
+    }
+    disabled={!dishForm.categoryId} // ✅ disable until category selected
+  >
+    <SelectTrigger>
+      <SelectValue placeholder="Select Subcategory" />
+    </SelectTrigger>
+    <SelectContent>
+      {filteredSubCategories.map((sub) => (
+        <SelectItem key={sub._id} value={sub._id}>
+          {sub.name?.[i18n.language] || sub.name?.en}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+  {errors.subCategoryId && (
+    <p className="text-red-500 text-sm">{errors.subCategoryId}</p>
+  )}
+</div>
+
                 <div className="md:col-span-2">
                   <Label>Instructions</Label>
                   <Textarea
